@@ -17,18 +17,7 @@ services:
       - "traefik.http.middlewares.georgeai-https-redirect.redirectscheme.scheme=https"
       - "traefik.http.middlewares.georgeai-https-redirect.redirectscheme.permanent=true"
 
-      # ---- temporary subdomain: live immediately (DNS already resolves) ----
-      - "traefik.http.routers.georgeai-temp-http.rule=Host(`georgeai.get-hub.io`)"
-      - "traefik.http.routers.georgeai-temp-http.entrypoints=web"
-      - "traefik.http.routers.georgeai-temp-http.middlewares=georgeai-https-redirect"
-      - "traefik.http.routers.georgeai-temp-http.service=georgeai"
-      - "traefik.http.routers.georgeai-temp.rule=Host(`georgeai.get-hub.io`)"
-      - "traefik.http.routers.georgeai-temp.entrypoints=websecure"
-      - "traefik.http.routers.georgeai-temp.tls=true"
-      - "traefik.http.routers.georgeai-temp.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.georgeai-temp.service=georgeai"
-
-      # ---- production domain: activates automatically once georgeai.dev -> 85.215.69.83 ----
+      # ---- production domain ----
       - "traefik.http.routers.georgeai-http.rule=Host(`georgeai.dev`) || Host(`www.georgeai.dev`)"
       - "traefik.http.routers.georgeai-http.entrypoints=web"
       - "traefik.http.routers.georgeai-http.middlewares=georgeai-https-redirect"

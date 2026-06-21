@@ -13,22 +13,26 @@
 #   ./deploy.sh --help
 #
 # Config via env (sensible defaults for this project):
-#   GEORGEAI_SSH_HOST   ssh host/alias          (default: macmini)
+#   GEORGEAI_SSH_HOST   ssh host/alias          (default: macbook-air)
 #   GEORGEAI_REMOTE_DIR remote project dir       (default: /opt/georgeai)
+#   GEORGEAI_HOMEPAGE   export file to serve as index.html (default: GeorgeAI.dc.html)
+#   GEORGEAI_TEMPLATE_DIR  mirror each export here too (default: frontend/template; empty = skip)
 #
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
 # config
 # ---------------------------------------------------------------------------
-SSH_HOST="${GEORGEAI_SSH_HOST:-macmini}"
+SSH_HOST="${GEORGEAI_SSH_HOST:-macbook-air}"
 REMOTE_DIR="${GEORGEAI_REMOTE_DIR:-/opt/georgeai}"
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SITE_DIR="$PROJECT_DIR/site"
 EXPORTS_DIR="$PROJECT_DIR/exports"
+# also mirror each unpacked export here so the Django frontend (backend/) can build
+# against it. Set GEORGEAI_TEMPLATE_DIR= (empty) to skip the mirror.
+TEMPLATE_DIR="${GEORGEAI_TEMPLATE_DIR-$PROJECT_DIR/frontend/template}"
 
 PROD_HOSTS=("georgeai.dev" "www.georgeai.dev")
-TEMP_HOST="georgeai.get-hub.io"
 
 # ---------------------------------------------------------------------------
 # pretty output
@@ -83,12 +87,37 @@ if [ "$NO_CONTENT" -eq 0 ] && [ -n "$ZIP" ]; then
     info "flattened wrapper folder: $(basename "$SRC")"
   fi
 
-  [ -f "$SRC/index.html" ] || warn "no index.html at archive root — check the export structure"
-
   rm -rf "${SITE_DIR:?}"/*
   mkdir -p "$SITE_DIR"
   cp -R "$SRC"/. "$SITE_DIR"/
   ok "unpacked $(find "$SITE_DIR" -type f | wc -l | tr -d ' ') files into ./site"
+
+  # The export contains no index.html. It also ships a "Bundled Page"
+  # (GeorgeAI - Portfolio.html), but that is a STALE one-off snapshot that is NOT
+  # regenerated on re-export. The real homepage is GeorgeAI.dc.html, which renders
+  # client-side from ./support.js + ./services-data.js (both refreshed every export).
+  # Serve that as index.html so nginx (index index.html;) picks it up.
+  if [ ! -f "$SITE_DIR/index.html" ]; then
+    HOMEPAGE="${GEORGEAI_HOMEPAGE:-GeorgeAI.dc.html}"
+    if [ -f "$SITE_DIR/$HOMEPAGE" ]; then
+      cp "$SITE_DIR/$HOMEPAGE" "$SITE_DIR/index.html"
+      info "using $HOMEPAGE as index.html"
+    elif home="$(ls -S "$SITE_DIR"/*.html 2>/dev/null | head -1)" && [ -n "$home" ]; then
+      cp "$home" "$SITE_DIR/index.html"
+      warn "$HOMEPAGE not found — falling back to largest html: $(basename "$home")"
+    else
+      warn "no .html to use as index.html — check the export structure"
+    fi
+  fi
+
+  # mirror the unpacked content (incl. the derived index.html) into the frontend
+  # template dir so the Django backend in backend/ can build against the same export.
+  if [ -n "$TEMPLATE_DIR" ]; then
+    rm -rf "${TEMPLATE_DIR:?}"/*
+    mkdir -p "$TEMPLATE_DIR"
+    cp -R "$SITE_DIR"/. "$TEMPLATE_DIR"/
+    ok "mirrored into ${TEMPLATE_DIR#$PROJECT_DIR/}"
+  fi
 else
   step "Using existing ./site (no zip)"
 fi
@@ -137,13 +166,11 @@ check_url() {
   elif [ "$code" = "000" ]; then warn "$url → no response (DNS not pointing here yet?)"
   else warn "$url → $code"; fi
 }
-check_url "https://$TEMP_HOST"
 for h in "${PROD_HOSTS[@]}"; do check_url "https://$h"; done
 
 # ---------------------------------------------------------------------------
 # done
 # ---------------------------------------------------------------------------
 step "Done"
-ok "Live (temp):  https://$TEMP_HOST"
-info "Production:   https://georgeai.dev  (active once DNS A record → 85.215.69.83)"
+ok "Live:  https://georgeai.dev"
 printf "\n%sTip:%s drop a new export in ./exports and re-run ./deploy.sh to publish.\n" "$C_BOLD" "$C_RST"

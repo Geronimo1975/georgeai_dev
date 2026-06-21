@@ -167,6 +167,9 @@ venv.bak/
 # mkdocs documentation
 /site
 
+# generated frontend export (mirrored from exports/ by deploy.sh)
+/frontend/template/
+
 # mypy
 .mypy_cache/
 .dmypy.json
@@ -220,8 +223,9 @@ __marimo__/
 # Brainstorm visual companion
 .superpowers/
 
-# georgeai deploy
+# georgeai deploy — export zips are build inputs, not source
 exports/*.zip
+update/*.zip
 
 # macOS
 .DS_Store
