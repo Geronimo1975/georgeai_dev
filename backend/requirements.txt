@@ -1,0 +1,7 @@
+# georgeai.dev — Django backend
+Django>=5.2,<5.3
+django-environ>=0.12,<0.13
+psycopg[binary]>=3.2,<4      # PostgreSQL driver
+djangorestframework>=3.15,<4  # API layer (session auth)
+django-jazzmin>=3.0,<4       # admin theme
+gunicorn>=23,<24            # production WSGI server (used when we replace nginx)

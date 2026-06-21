@@ -170,6 +170,13 @@ venv.bak/
 # generated frontend export (mirrored from exports/ by deploy.sh)
 /frontend/template/
 
+# Django backend
+/backend/.env
+/backend/.venv/
+/backend/logs/
+/staticfiles/
+/media/
+
 # mypy
 .mypy_cache/
 .dmypy.json
@@ -230,3 +237,6 @@ update/*.zip
 # macOS
 .DS_Store
 **/.DS_Store
+
+# playwright test artifacts
+.playwright-mcp/

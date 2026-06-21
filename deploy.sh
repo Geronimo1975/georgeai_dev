@@ -110,6 +110,25 @@ if [ "$NO_CONTENT" -eq 0 ] && [ -n "$ZIP" ]; then
     fi
   fi
 
+  # inject the auth bridge so the static signin form talks to the Django auth API.
+  # kept out of the export (added here) so it survives re-exports. Idempotent.
+  if [ -f "$SITE_DIR/index.html" ] && ! grep -q '/auth.js' "$SITE_DIR/index.html"; then
+    if command -v python3 >/dev/null; then
+      python3 - "$SITE_DIR/index.html" <<'PY'
+import re, sys
+p = sys.argv[1]
+html = open(p, encoding="utf-8").read()
+tag = '<script src="/auth.js" defer></script>'
+html = re.sub(r"</body>", tag + "</body>", html, count=1, flags=re.I) \
+    if re.search(r"</body>", html, re.I) else html + "\n" + tag + "\n"
+open(p, "w", encoding="utf-8").write(html)
+PY
+      ok "injected auth.js into index.html"
+    else
+      warn "python3 not found — skipped auth.js injection"
+    fi
+  fi
+
   # mirror the unpacked content (incl. the derived index.html) into the frontend
   # template dir so the Django backend in backend/ can build against the same export.
   if [ -n "$TEMPLATE_DIR" ]; then
