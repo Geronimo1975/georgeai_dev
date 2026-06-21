@@ -14,7 +14,7 @@ TLS.
                                                        │
                                               Traefik (TLS, Let's Encrypt)
                                                        │
-                                          https://georgeai.dev  ·  https://georgeai.get-hub.io
+                                          https://georgeai.dev
 ```
 
 - **Static hosting:** `nginx:1.27-alpine` serving `./site` (bind-mounted, read-only).
@@ -57,15 +57,13 @@ health-checks the live URLs.
 
 | URL | Status |
 |-----|--------|
-| `https://georgeai.get-hub.io` | live immediately (DNS already resolves to the VPS) |
 | `https://georgeai.dev` / `www` | **activates automatically** once the registrar A record points `@` and `www` → `85.215.69.83` |
 
-Until the `georgeai.dev` A record is changed (currently parked at `2.57.91.91`),
-Let's Encrypt cannot issue its certificate — use the `get-hub.io` URL meanwhile.
+Until the `georgeai.dev` A record is changed (currently parked at `2.57.91.91`), Let's Encrypt cannot issue its certificate. To test locally before the DNS change propagates, you can map `georgeai.dev` and `www.georgeai.dev` to `85.215.69.83` in your local `/etc/hosts` file.
 
 ## Config
 
 | Env var | Default | Notes |
 |---------|---------|-------|
-| `GEORGEAI_SSH_HOST` | `macmini` | ssh alias → `root@85.215.69.83` |
+| `GEORGEAI_SSH_HOST` | `macbook-air` | ssh alias → `root@85.215.69.83` |
 | `GEORGEAI_REMOTE_DIR` | `/opt/georgeai` | project dir on the VPS |
