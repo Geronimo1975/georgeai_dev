@@ -216,3 +216,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Brainstorm visual companion
+.superpowers/
+
+# georgeai deploy
+exports/*.zip
+
+# macOS
+.DS_Store
+**/.DS_Store

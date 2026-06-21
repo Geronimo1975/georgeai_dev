@@ -1,0 +1,45 @@
+services:
+  georgeai-web:
+    image: nginx:1.27-alpine
+    container_name: georgeai-web
+    restart: unless-stopped
+    volumes:
+      - ./site:/usr/share/nginx/html:ro
+      - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - gethub-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=gethub_gethub-network"
+
+      # ---- shared service + https redirect middleware ----
+      - "traefik.http.services.georgeai.loadbalancer.server.port=80"
+      - "traefik.http.middlewares.georgeai-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.georgeai-https-redirect.redirectscheme.permanent=true"
+
+      # ---- temporary subdomain: live immediately (DNS already resolves) ----
+      - "traefik.http.routers.georgeai-temp-http.rule=Host(`georgeai.get-hub.io`)"
+      - "traefik.http.routers.georgeai-temp-http.entrypoints=web"
+      - "traefik.http.routers.georgeai-temp-http.middlewares=georgeai-https-redirect"
+      - "traefik.http.routers.georgeai-temp-http.service=georgeai"
+      - "traefik.http.routers.georgeai-temp.rule=Host(`georgeai.get-hub.io`)"
+      - "traefik.http.routers.georgeai-temp.entrypoints=websecure"
+      - "traefik.http.routers.georgeai-temp.tls=true"
+      - "traefik.http.routers.georgeai-temp.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.georgeai-temp.service=georgeai"
+
+      # ---- production domain: activates automatically once georgeai.dev -> 85.215.69.83 ----
+      - "traefik.http.routers.georgeai-http.rule=Host(`georgeai.dev`) || Host(`www.georgeai.dev`)"
+      - "traefik.http.routers.georgeai-http.entrypoints=web"
+      - "traefik.http.routers.georgeai-http.middlewares=georgeai-https-redirect"
+      - "traefik.http.routers.georgeai-http.service=georgeai"
+      - "traefik.http.routers.georgeai.rule=Host(`georgeai.dev`) || Host(`www.georgeai.dev`)"
+      - "traefik.http.routers.georgeai.entrypoints=websecure"
+      - "traefik.http.routers.georgeai.tls=true"
+      - "traefik.http.routers.georgeai.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.georgeai.service=georgeai"
+
+networks:
+  gethub-network:
+    external: true
+    name: gethub_gethub-network

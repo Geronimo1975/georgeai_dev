@@ -1,0 +1,421 @@
+{
+  "categories": [
+    "Automation & AI",
+    "Growth & Marketing",
+    "Software & Data",
+    "Web"
+  ],
+  "services": [
+    {
+      "name": "Automation",
+      "cat": 0,
+      "stack": [
+        "n8n",
+        "Python",
+        "OpenAI",
+        "Webhooks"
+      ],
+      "label": "[ workflow canvas ]",
+      "category": "Automation & AI",
+      "tagline": "Connect every tool and kill the busywork.",
+      "intro": "Custom n8n workflows that move data between your apps automatically — CRMs, email, sheets, APIs and LLMs — so repetitive manual steps disappear.",
+      "includes": [
+        "Audit of your manual processes",
+        "Custom n8n flows with error handling & retries",
+        "OpenAI / Claude steps for smart decisions"
+      ],
+      "steps": [
+        "Map the process and the bottleneck",
+        "Build, test and harden the flow",
+        "Deploy, monitor and hand over"
+      ],
+      "outcome": "Hours of manual work removed every week — reliably, around the clock."
+    },
+    {
+      "name": "AI Chatbot",
+      "cat": 0,
+      "stack": [
+        "OpenAI",
+        "RAG",
+        "WhatsApp",
+        "n8n"
+      ],
+      "label": "[ chat widget ]",
+      "category": "Automation & AI",
+      "tagline": "A website assistant that never sleeps.",
+      "intro": "A chatbot trained on your own content (RAG) that answers questions, qualifies leads and books appointments directly on your site.",
+      "includes": [
+        "Chatbot trained on your docs & site (RAG)",
+        "Lead capture and appointment booking",
+        "WhatsApp & social-channel integration"
+      ],
+      "steps": [
+        "Train the bot on your knowledge base",
+        "Design the conversation flow",
+        "Embed, launch and refine"
+      ],
+      "outcome": "Every visitor gets an instant, accurate answer."
+    },
+    {
+      "name": "AI Phone Calls",
+      "cat": 0,
+      "stack": [
+        "Phone AI",
+        "OpenAI",
+        "Twilio",
+        "n8n"
+      ],
+      "label": "[ call agent ]",
+      "category": "Automation & AI",
+      "tagline": "An AI voice on your phone line.",
+      "intro": "AI phone agents with a custom voice and avatar that answer calls, qualify callers and book appointments 24/7 — so no enquiry is ever missed.",
+      "includes": [
+        "AI phone agent with custom voice",
+        "Call routing, qualification & booking",
+        "Transcripts and CRM sync"
+      ],
+      "steps": [
+        "Define call scripts & voice",
+        "Connect your number and CRM",
+        "Launch and continuously improve"
+      ],
+      "outcome": "Every call answered — even outside office hours."
+    },
+    {
+      "name": "SEO / AIO / GEO",
+      "cat": 1,
+      "stack": [
+        "DataForSEO",
+        "WordPress",
+        "Python",
+        "OpenAI"
+      ],
+      "label": "[ rankings dashboard ]",
+      "category": "Growth & Marketing",
+      "tagline": "Be found by people and by AI.",
+      "intro": "Optimisation for search engines (SEO), AI answers (AIO) and generative engines like ChatGPT and Perplexity (GEO) — on your current site or a new one.",
+      "includes": [
+        "Technical + content SEO audit",
+        "AIO/GEO optimisation for AI answer engines",
+        "Automated content & keyword pipelines"
+      ],
+      "steps": [
+        "Audit visibility across search & AI",
+        "Fix technical and content gaps",
+        "Automate content and track rankings"
+      ],
+      "outcome": "More qualified traffic from Google and AI assistants."
+    },
+    {
+      "name": "Email Marketing",
+      "cat": 1,
+      "stack": [
+        "Mautic",
+        "Brevo",
+        "Sendy",
+        "Amazon SES"
+      ],
+      "label": "[ campaign flow ]",
+      "category": "Growth & Marketing",
+      "tagline": "Campaigns that land and convert.",
+      "intro": "Automated email marketing with Mautic, Brevo and Amazon SES — segmented flows, newsletters and nurture sequences that run themselves.",
+      "includes": [
+        "Email platform setup & deliverability",
+        "Automated nurture & newsletter flows",
+        "Segmentation and A/B testing"
+      ],
+      "steps": [
+        "Set up platform & domain authentication",
+        "Design segments and automations",
+        "Launch, measure and optimise"
+      ],
+      "outcome": "A self-running channel that nurtures leads into customers."
+    },
+    {
+      "name": "Lead Generation",
+      "cat": 1,
+      "stack": [
+        "n8n",
+        "Python",
+        "CRM",
+        "LinkedIn"
+      ],
+      "label": "[ lead pipeline ]",
+      "category": "Growth & Marketing",
+      "tagline": "A predictable pipeline of qualified leads.",
+      "intro": "Automated lead-generation systems that find, enrich and route prospects into your CRM — combining scraping, enrichment and AI scoring.",
+      "includes": [
+        "Lead sourcing & enrichment pipelines",
+        "AI lead scoring and routing",
+        "CRM integration and reporting"
+      ],
+      "steps": [
+        "Define your ideal customer profile",
+        "Build sourcing & enrichment flows",
+        "Score, route and report"
+      ],
+      "outcome": "A steady flow of qualified leads, on autopilot."
+    },
+    {
+      "name": "Python Programming",
+      "cat": 2,
+      "stack": [
+        "Python",
+        "FastAPI",
+        "PostgreSQL",
+        "Docker"
+      ],
+      "label": "[ code editor ]",
+      "category": "Software & Data",
+      "tagline": "Custom backends, scripts and integrations.",
+      "intro": "Python development for backends, APIs, automations and data tooling — clean, tested code that scales with your business.",
+      "includes": [
+        "Backend & API development",
+        "Automation scripts and integrations",
+        "Testing, documentation and deployment"
+      ],
+      "steps": [
+        "Define requirements and architecture",
+        "Build and test iteratively",
+        "Deploy with monitoring"
+      ],
+      "outcome": "Reliable software tailored exactly to your process."
+    },
+    {
+      "name": "Django",
+      "cat": 2,
+      "stack": [
+        "Django",
+        "Python",
+        "PostgreSQL",
+        "REST"
+      ],
+      "label": "[ web platform ]",
+      "category": "Software & Data",
+      "tagline": "Full-stack web platforms, built to scale.",
+      "intro": "Scalable Django applications — dashboards, portals and data platforms — with secure APIs, auth and clean admin tooling.",
+      "includes": [
+        "Django app & data models",
+        "Secure REST APIs and authentication",
+        "Admin dashboards and deployment"
+      ],
+      "steps": [
+        "Model the domain and data",
+        "Build app, APIs and admin",
+        "Deploy, secure and scale"
+      ],
+      "outcome": "A robust platform your business can grow on."
+    },
+    {
+      "name": "Micro ERP",
+      "cat": 2,
+      "stack": [
+        "Django",
+        "PostgreSQL",
+        "Supabase",
+        "REST"
+      ],
+      "label": "[ erp modules ]",
+      "category": "Software & Data",
+      "tagline": "Run your whole operation in one place.",
+      "intro": "A lightweight, custom ERP that fits how you actually work — inventory, invoicing, orders and reporting, without the bloat of off-the-shelf suites.",
+      "includes": [
+        "Custom modules for your workflow",
+        "Inventory, orders & invoicing",
+        "Dashboards and exportable reports"
+      ],
+      "steps": [
+        "Map your operational processes",
+        "Build the modules you need",
+        "Roll out, train and support"
+      ],
+      "outcome": "One system replacing a dozen spreadsheets."
+    },
+    {
+      "name": "CRM",
+      "cat": 2,
+      "stack": [
+        "Django",
+        "PostgreSQL",
+        "n8n",
+        "REST"
+      ],
+      "label": "[ crm pipeline ]",
+      "category": "Software & Data",
+      "tagline": "Know every customer, never drop a lead.",
+      "intro": "A tailored CRM that tracks contacts, deals and conversations — integrated with your email, phone and automation so nothing slips.",
+      "includes": [
+        "Custom CRM tailored to your sales flow",
+        "Pipeline, tasks and reminders",
+        "Email, phone & automation integration"
+      ],
+      "steps": [
+        "Define your pipeline and stages",
+        "Build and migrate your data",
+        "Integrate and automate"
+      ],
+      "outcome": "A single source of truth for every relationship."
+    },
+    {
+      "name": "Web Design",
+      "cat": 3,
+      "stack": [
+        "Next.js",
+        "WordPress",
+        "HTML/CSS",
+        "Figma"
+      ],
+      "label": "[ website mockup ]",
+      "category": "Web",
+      "tagline": "Sites that look sharp and convert.",
+      "intro": "Modern, responsive websites — fast, multilingual and built to turn visitors into enquiries, with SEO and automation baked in.",
+      "includes": [
+        "Responsive, multilingual design",
+        "SEO-ready, fast-loading build",
+        "Integrations for chat, forms & analytics"
+      ],
+      "steps": [
+        "Define goals, content and structure",
+        "Design and build responsively",
+        "Launch, measure and iterate"
+      ],
+      "outcome": "A site that works as hard as you do."
+    },
+    {
+      "name": "RAG",
+      "cat": 0,
+      "stack": [
+        "RAG",
+        "Vector DB",
+        "OpenAI",
+        "Embeddings"
+      ],
+      "label": "[ rag pipeline ]",
+      "category": "Automation & AI",
+      "tagline": "Give your AI your knowledge.",
+      "intro": "Retrieval-Augmented Generation that grounds chatbots and phone agents in your own documents — accurate, source-backed answers instead of guesses.",
+      "includes": [
+        "Document ingestion & vector indexing",
+        "Retrieval pipeline wired into your AI",
+        "Source citations and continuous updates"
+      ],
+      "steps": [
+        "Collect and clean your knowledge base",
+        "Build the embedding & retrieval pipeline",
+        "Connect to chat and phone agents"
+      ],
+      "outcome": "AI that answers from your facts, not its imagination."
+    },
+    {
+      "name": "Web Design Optimization",
+      "cat": 1,
+      "stack": [
+        "CRO",
+        "SEO",
+        "Analytics",
+        "A/B testing"
+      ],
+      "label": "[ landing optimization ]",
+      "category": "Growth & Marketing",
+      "tagline": "Turn more visitors into enquiries.",
+      "intro": "Conversion-focused optimisation of your existing site — speed, layout, copy and SEO — so the traffic you already have converts better.",
+      "includes": [
+        "Speed, UX and SEO audit",
+        "Conversion-focused redesign of key pages",
+        "A/B testing and analytics setup"
+      ],
+      "steps": [
+        "Audit performance and drop-off points",
+        "Redesign and optimise key pages",
+        "Test, measure and iterate"
+      ],
+      "outcome": "More leads from the same traffic."
+    },
+    {
+      "name": "SaaS Projects",
+      "cat": 2,
+      "stack": [
+        "Django",
+        "React",
+        "Stripe",
+        "PostgreSQL"
+      ],
+      "label": "[ saas dashboard ]",
+      "category": "Software & Data",
+      "tagline": "From idea to launched product.",
+      "intro": "End-to-end development of SaaS products — auth, billing, dashboards and APIs — built on Django and React and ready to scale.",
+      "includes": [
+        "Product architecture & MVP scope",
+        "Auth, billing and multi-tenant setup",
+        "Dashboards, APIs and deployment"
+      ],
+      "steps": [
+        "Define the product and MVP",
+        "Build core features and billing",
+        "Launch, monitor and iterate"
+      ],
+      "outcome": "A market-ready SaaS, built to grow."
+    },
+    {
+      "name": "API Integration & Data Analytics",
+      "cat": 2,
+      "stack": [
+        "REST",
+        "Python",
+        "n8n",
+        "PostgreSQL"
+      ],
+      "label": "[ api integration ]",
+      "category": "Software & Data",
+      "tagline": "Connect every platform, see every number.",
+      "intro": "API integrations that make your platforms talk to each other in one place — plus the data analytics that turn the combined data into insight.",
+      "includes": [
+        "API integration across your platforms",
+        "Unified data layer and pipelines",
+        "Analytics dashboards and reporting"
+      ],
+      "steps": [
+        "Map your platforms and data flows",
+        "Build and install the integrations",
+        "Centralise data and build dashboards"
+      ],
+      "outcome": "One connected system with analytics you can act on."
+    }
+  ],
+  "configurator": {
+    "scales": [
+      {
+        "name": "Pilot",
+        "desc": "A focused first build to prove value.",
+        "scale_base_weeks": 2
+      },
+      {
+        "name": "Business",
+        "desc": "A complete solution for one workflow.",
+        "scale_base_weeks": 4
+      },
+      {
+        "name": "Scale-up",
+        "desc": "Multiple systems, integrated and scaled.",
+        "scale_base_weeks": 8
+      }
+    ],
+    "addons": [
+      "Multilingual (5 languages)",
+      "Ongoing support & maintenance",
+      "Hosting & monitoring",
+      "Team training"
+    ],
+    "complexity_levels": [
+      "Low",
+      "Medium",
+      "High"
+    ],
+    "logic": {
+      "timeline_weeks_min": "scale_base + selected_count",
+      "timeline_weeks_max": "min + ceil(min*0.4)",
+      "complexity_score": "selected_count + scale_index*2",
+      "complexity_thresholds": "<=3 Low, <=7 Medium, else High"
+    }
+  }
+}
