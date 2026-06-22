@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#e7e5df}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  </style>
+</helmet>
+<div style="width:max-content;min-width:100%;min-height:100vh;box-sizing:border-box;padding:48px;background:#e7e5df;display:flex;flex-direction:column;gap:14px;font-family:Inter,sans-serif">
+
+  <div style="font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:1px;color:#6c6a64;text-transform:uppercase">Studio Marlowe — portfolio &amp; shop · 3 directions on the warm-canvas editorial system</div>
+
+  <div style="display:flex;gap:48px;align-items:flex-start">
+
+    <!-- ============================ OPTION 1 — EDITORIAL ============================ -->
+    <div style="flex:none;width:1180px;display:flex;flex-direction:column;gap:14px">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#6c6a64">Option 1 — Editorial · cream canvas, serif-led</div>
+      <div style="background:#faf9f5;border-radius:2px;box-shadow:0 1px 3px rgba(20,20,19,.08);overflow:hidden;color:#141413">
+
+        <!-- nav -->
+        <div style="height:64px;padding:0 40px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ebe6df">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:13px;height:13px;background:#141413;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)"></div>
+            <span style="font-family:Newsreader,serif;font-size:20px;letter-spacing:-.5px">Marlowe</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:28px;font-size:14px;font-weight:500;color:#3d3d3a">
+            <span>Work</span><span>Shop</span><span>Studio</span><span>Journal</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:18px;font-size:14px;font-weight:500">
+            <span style="color:#3d3d3a">Cart ({{ cart }})</span>
+            <span style="background:#cc785c;color:#fff;padding:10px 18px;border-radius:8px;cursor:pointer">Get in touch</span>
+          </div>
+        </div>
+
+        <!-- hero -->
+        <div style="padding:96px 40px 72px;display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center;animation:fadeUp .7s ease both">
+          <div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#cc785c;margin-bottom:22px">Independent design &amp; making</div>
+            <h1 style="font-family:Newsreader,serif;font-weight:400;font-size:62px;line-height:1.04;letter-spacing:-1.5px;color:#141413">Objects, type, and quiet interfaces — made by hand.</h1>
+            <p style="font-size:17px;line-height:1.6;color:#3d3d3a;max-width:440px;margin-top:24px">I'm Ilse Marlowe, a designer and maker working across print, product, and the web. A small studio practice, an open shop, and the occasional commission.</p>
+            <div style="display:flex;gap:12px;margin-top:32px">
+              <span style="background:#cc785c;color:#fff;padding:13px 22px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer">View selected work</span>
+              <span style="background:#faf9f5;color:#141413;border:1px solid #e6dfd8;padding:13px 22px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer">Browse the shop</span>
+            </div>
+          </div>
+          <div style="background:repeating-linear-gradient(135deg,#efe9de,#efe9de 11px,#e8e0d2 11px,#e8e0d2 22px);border-radius:16px;aspect-ratio:4/5;display:flex;align-items:center;justify-content:center;border:1px solid #e6dfd8">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#8e8b82">[ studio portrait — 4:5 ]</span>
+          </div>
+        </div>
+
+        <!-- selected work -->
+        <div style="padding:64px 40px;border-top:1px solid #ebe6df">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:36px">
+            <h2 style="font-family:Newsreader,serif;font-weight:400;font-size:36px;letter-spacing:-.5px">Selected work</h2>
+            <span style="font-size:14px;font-weight:500;color:#cc785c;cursor:pointer">All projects →</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px">
+            <div style="cursor:pointer">
+              <div style="overflow:hidden;border-radius:12px;aspect-ratio:3/2;background:repeating-linear-gradient(135deg,#efe9de,#efe9de 10px,#e8e0d2 10px,#e8e0d2 20px);display:flex;align-items:center;justify-content:center;border:1px solid #e6dfd8">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#8e8b82;transition:transform .5s ease" style-hover="transform:scale(1.05)">[ project cover ]</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:16px">
+                <h3 style="font-family:Newsreader,serif;font-weight:400;font-size:22px;letter-spacing:-.3px">Field Notes — a serif for reading</h3>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#8e8b82">Type · 2025</span>
+              </div>
+              <p style="font-size:15px;line-height:1.55;color:#6c6a64;margin-top:6px">A humanist text family designed across six optical sizes.</p>
+            </div>
+            <div style="cursor:pointer">
+              <div style="overflow:hidden;border-radius:12px;aspect-ratio:3/2;background:#181715;display:flex;align-items:center;justify-content:center">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#a09d96">[ interface mockup ]</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:16px">
+                <h3 style="font-family:Newsreader,serif;font-weight:400;font-size:22px;letter-spacing:-.3px">Ledger — a calm budgeting app</h3>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#8e8b82">Product · 2024</span>
+              </div>
+              <p style="font-size:15px;line-height:1.55;color:#6c6a64;margin-top:6px">End-to-end product design for a personal finance tool.</p>
+            </div>
+            <div style="cursor:pointer">
+              <div style="overflow:hidden;border-radius:12px;aspect-ratio:3/2;background:repeating-linear-gradient(135deg,#f5f0e8,#f5f0e8 10px,#efe9de 10px,#efe9de 20px);display:flex;align-items:center;justify-content:center;border:1px solid #e6dfd8">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#8e8b82">[ print spreads ]</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:16px">
+                <h3 style="font-family:Newsreader,serif;font-weight:400;font-size:22px;letter-spacing:-.3px">The Maker's Almanac</h3>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#8e8b82">Print · 2024</span>
+              </div>
+              <p style="font-size:15px;line-height:1.55;color:#6c6a64;margin-top:6px">A 220-page editorial annual, designed and risograph-printed.</p>
+            </div>
+            <div style="cursor:pointer">
+              <div style="overflow:hidden;border-radius:12px;aspect-ratio:3/2;background:repeating-linear-gradient(135deg,#efe9de,#efe9de 10px,#e8e0d2 10px,#e8e0d2 20px);display:flex;align-items:center;justify-content:center;border:1px solid #e6dfd8">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#8e8b82">[ object photography ]</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:16px">
+                <h3 style="font-family:Newsreader,serif;font-weight:400;font-size:22px;letter-spacing:-.3px">Vessels — ceramic series</h3>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#8e8b82">Object · 2023</span>
+              </div>
+              <p style="font-size:15px;line-height:1.55;color:#6c6a64;margin-top:6px">A run of twelve thrown-and-glazed stoneware pieces.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- shop -->
+        <div style="padding:64px 40px;background:#f5f0e8;border-top:1px solid #ebe6df">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:36px">
+            <div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#cc785c;margin-bottom:10px">From the shop</div>
+              <h2 style="font-family:Newsreader,serif;font-weight:400;font-size:36px;letter-spacing:-.5px">Take a little of the studio home</h2>
+            </div>
+            <span style="font-size:14px;font-weight:500;color:#cc785c;cursor:pointer">Everything →</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px">
+            <div style="background:#faf9f5;border:1px solid #e6dfd8;border-radius:12px;padding:20px">
+              <div style="border-radius:8px;aspect-ratio:1/1;background:repeating-linear-gradient(135deg,#efe9de,#efe9de 9px,#e8e0d2 9px,#e8e0d2 18px);border:1px solid #e6dfd8;display:flex;align-items:center;justify-content:center;margin-bottom:16px"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8e8b82">[ print ]</span></div>
+              <h3 style="font-size:16px;font-weight:500">Risograph print — "Tide"</h3>
+              <p style="font-size:14px;color:#6c6a64;margin-top:4px">A2 · two-colour · edition of 50</p>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px">
+                <span style="font-family:Newsreader,serif;font-size:24px;letter-spacing:-.3px">$48</span>
+                <span onClick="{{ addToCart }}" style="background:#cc785c;color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer">Add to cart</span>
+              </div>
+            </div>
+            <div style="background:#faf9f5;border:1px solid #e6dfd8;border-radius:12px;padding:20px">
+              <div style="border-radius:8px;aspect-ratio:1/1;background:repeating-linear-gradient(135deg,#f5f0e8,#f5f0e8 9px,#efe9de 9px,#efe9de 18px);border:1px solid #e6dfd8;display:flex;align-items:center;justify-content:center;margin-bottom:16px"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8e8b82">[ book ]</span></div>
+              <h3 style="font-size:16px;font-weight:500">The Maker's Almanac</h3>
+              <p style="font-size:14px;color:#6c6a64;margin-top:4px">220pp · hardback · signed</p>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px">
+                <span style="font-family:Newsreader,serif;font-size:24px;letter-spacing:-.3px">$36</span>
+                <span onClick="{{ addToCart }}" style="background:#cc785c;color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer">Add to cart</span>
+              </div>
+            </div>
+            <div style="background:#181715;border-radius:12px;padding:20px;color:#faf9f5">
+              <div style="border-radius:8px;aspect-ratio:1/1;background:#252320;display:flex;align-items:center;justify-content:center;margin-bottom:16px"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#a09d96">[ service ]</span></div>
+              <h3 style="font-size:16px;font-weight:500">Design commission — 1 day</h3>
+              <p style="font-size:14px;color:#a09d96;margin-top:4px">Identity, type or product · remote</p>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px">
+                <span style="font-family:Newsreader,serif;font-size:24px;letter-spacing:-.3px">$1,200</span>
+                <span onClick="{{ addToCart }}" style="background:#252320;color:#faf9f5;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer">Enquire</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- coral CTA -->
+        <div style="padding:64px 40px">
+          <div style="background:#cc785c;border-radius:12px;padding:56px 48px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:32px">
+            <div>
+              <h2 style="font-family:Newsreader,serif;font-weight:400;font-size:34px;letter-spacing:-.5px;line-height:1.15">Have something in mind?<br>Let's make it well.</h2>
+              <p style="font-size:16px;line-height:1.55;opacity:.9;margin-top:12px;max-width:420px">Commissions open for Q3. Tell me about the project and I'll come back within two days.</p>
+            </div>
+            <span style="background:#faf9f5;color:#141413;padding:14px 26px;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer;white-space:nowrap">Start a project</span>
+          </div>
+        </div>
+
+        <!-- footer -->
+        <div style="background:#181715;padding:56px 40px;color:#a09d96;display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:13px;height:13px;background:#faf9f5;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)"></div>
+            <span style="font-family:Newsreader,serif;font-size:20px;color:#faf9f5;letter-spacing:-.5px">Marlowe</span>
+          </div>
+          <div style="display:flex;gap:56px;font-size:14px">
+            <div style="display:flex;flex-direction:column;gap:10px"><span style="color:#faf9f5;font-weight:500;margin-bottom:4px">Studio</span><span>Work</span><span>Journal</span><span>About</span></div>
+            <div style="display:flex;flex-direction:column;gap:10px"><span style="color:#faf9f5;font-weight:500;margin-bottom:4px">Shop</span><span>Prints</span><span>Books</span><span>Commissions</span></div>
+            <div style="display:flex;flex-direction:column;gap:10px"><span style="color:#faf9f5;font-weight:500;margin-bottom:4px">Elsewhere</span><span>Instagram</span><span>Are.na</span><span>Email</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ============================ OPTION 2 — GALLERY (DARK) ============================ -->
+    <div style="flex:none;width:1180px;display:flex;flex-direction:column;gap:14px">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#6c6a64">Option 2 — Gallery-forward · dark immersive, image-first</div>
+      <div style="background:#181715;border-radius:2px;box-shadow:0 1px 3px rgba(20,20,19,.08);overflow:hidden;color:#faf9f5">
+
+        <!-- nav -->
+        <div style="height:64px;padding:0 40px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #252320">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:13px;height:13px;background:#faf9f5;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)"></div>
+            <span style="font-family:Newsreader,serif;font-size:20px;letter-spacing:-.5px">Marlowe</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:28px;font-size:14px;font-weight:500;color:#a09d96">
+            <span>Work</span><span>Shop</span><span>Studio</span><span>Journal</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:18px;font-size:14px;font-weight:500">
+            <span style="color:#a09d96">Cart ({{ cart }})</span>
+            <span style="background:#cc785c;color:#fff;padding:10px 18px;border-radius:8px;cursor:pointer">Get in touch</span>
+          </div>
+        </div>
+
+        <!-- full-bleed hero -->
+        <div style="position:relative;height:560px;background:repeating-linear-gradient(135deg,#1f1e1b,#1f1e1b 14px,#252320 14px,#252320 28px);display:flex;align-items:flex-end;padding:56px 40px;animation:fadeIn .9s ease both">
+          <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(24,23,21,.1),rgba(24,23,21,.85))"></div>
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'JetBrains Mono',monospace;font-size:13px;color:#6c6a64">[ full-bleed studio film — 16:9 ]</div>
+          <div style="position:relative">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#e8a55a;margin-bottom:20px">Designer &amp; maker — open studio</div>
+            <h1 style="font-family:Newsreader,serif;font-weight:400;font-size:72px;line-height:1;letter-spacing:-2px;max-width:780px">A practice built around objects you'll keep.</h1>
+            <div style="display:flex;gap:12px;margin-top:32px">
+              <span style="background:#cc785c;color:#fff;padding:13px 24px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer">Enter the work</span>
+              <span style="background:#252320;color:#faf9f5;padding:13px 24px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer">Visit the shop</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- work — large alternating -->
+        <div style="padding:80px 40px;display:flex;flex-direction:column;gap:72px">
+          <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:40px;align-items:center">
+            <div style="overflow:hidden;border-radius:12px;aspect-ratio:16/10;background:repeating-linear-gradient(135deg,#1f1e1b,#1f1e1b 12px,#252320 12px,#252320 24px);display:flex;align-items:center;justify-content:center"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#6c6a64">[ project 01 — wide ]</span></div>
+            <div>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#a09d96">01 — Type · 2025</span>
+              <h2 style="font-family:Newsreader,serif;font-weight:400;font-size:40px;letter-spacing:-.8px;line-height:1.08;margin:14px 0">Field Notes, a serif for long reading</h2>
+              <p style="font-size:16px;line-height:1.6;color:#a09d96">Six optical sizes, drawn over a year. Built for editorial bodies of text that hold the eye for hours.</p>
+              <span style="display:inline-block;margin-top:20px;font-size:14px;font-weight:500;color:#cc785c;cursor:pointer">View project →</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:40px;align-items:center">
+            <div>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#a09d96">02 — Product · 2024</span>
+              <h2 style="font-family:Newsreader,serif;font-weight:400;font-size:40px;letter-spacing:-.8px;line-height:1.08;margin:14px 0">Ledger, a calm place for money</h2>
+              <p style="font-size:16px;line-height:1.6;color:#a09d96">End-to-end product design for a budgeting app that refuses to nag. Soft surfaces, generous type, no red.</p>
+              <span style="display:inline-block;margin-top:20px;font-size:14px;font-weight:500;color:#cc785c;cursor:pointer">View project →</span>
+            </div>
+            <div style="overflow:hidden;border-radius:12px;aspect-ratio:16/10;background:repeating-linear-gradient(135deg,#1f1e1b,#1f1e1b 12px,#252320 12px,#252320 24px);display:flex;align-items:center;justify-content:center"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#6c6a64">[ project 02 — wide ]</span></div>
+          </div>
+        </div>
+
+        <!-- shop strip on cream -->
+        <div style="background:#faf9f5;color:#141413;padding:80px 40px">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:40px">
+            <h2 style="font-family:Newsreader,serif;font-weight:400;font-size:40px;letter-spacing:-.8px">The shop</h2>
+            <span style="font-size:14px;font-weight:500;color:#cc785c;cursor:pointer">Everything →</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:28px">
+            <div>
+              <div style="overflow:hidden;border-radius:12px;aspect-ratio:1/1;background:repeating-linear-gradient(135deg,#efe9de,#efe9de 9px,#e8e0d2 9px,#e8e0d2 18px);border:1px solid #e6dfd8;display:flex;align-items:center;justify-content:center"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8e8b82">[ print ]</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:14px"><h3 style="font-size:16px;font-weight:500">Risograph — "Tide"</h3><span style="font-family:Newsreader,serif;font-size:22px">$48</span></div>
+              <span onClick="{{ addToCart }}" style="display:block;text-align:center;margin-top:14px;background:#cc785c;color:#fff;padding:11px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer">Add to cart</span>
+            </div>
+            <div>
+              <div style="overflow:hidden;border-radius:12px;aspect-ratio:1/1;background:repeating-linear-gradient(135deg,#f5f0e8,#f5f0e8 9px,#efe9de 9px,#efe9de 18px);border:1px solid #e6dfd8;display:flex;align-items:center;justify-content:center"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8e8b82">[ book ]</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:14px"><h3 style="font-size:16px;font-weight:500">Maker's Almanac</h3><span style="font-family:Newsreader,serif;font-size:22px">$36</span></div>
+              <span onClick="{{ addToCart }}" style="display:block;text-align:center;margin-top:14px;background:#cc785c;color:#fff;padding:11px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer">Add to cart</span>
+            </div>
+            <div>
+              <div style="overflow:hidden;border-radius:12px;aspect-ratio:1/1;background:repeating-linear-gradient(135deg,#efe9de,#efe9de 9px,#e8e0d2 9px,#e8e0d2 18px);border:1px solid #e6dfd8;display:flex;align-items:center;justify-content:center"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8e8b82">[ object ]</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:14px"><h3 style="font-size:16px;font-weight:500">Vessel no. 4</h3><span style="font-family:Newsreader,serif;font-size:22px">$120</span></div>
+              <span onClick="{{ addToCart }}" style="display:block;text-align:center;margin-top:14px;background:#cc785c;color:#fff;padding:11px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer">Add to cart</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- footer -->
+        <div style="padding:56px 40px;color:#a09d96;display:flex;justify-content:space-between;align-items:flex-start;border-top:1px solid #252320">
+          <div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+              <div style="width:13px;height:13px;background:#faf9f5;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)"></div>
+              <span style="font-family:Newsreader,serif;font-size:20px;color:#faf9f5;letter-spacing:-.5px">Marlowe</span>
+            </div>
+            <p style="font-size:14px;max-width:260px;line-height:1.55">A small studio for type, product, and objects. Based in Lisbon, working anywhere.</p>
+          </div>
+          <div style="display:flex;gap:56px;font-size:14px">
+            <div style="display:flex;flex-direction:column;gap:10px"><span style="color:#faf9f5;font-weight:500;margin-bottom:4px">Studio</span><span>Work</span><span>Journal</span><span>About</span></div>
+            <div style="display:flex;flex-direction:column;gap:10px"><span style="color:#faf9f5;font-weight:500;margin-bottom:4px">Elsewhere</span><span>Instagram</span><span>Are.na</span><span>Email</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ============================ OPTION 3 — TYPOGRAPHIC INDEX ============================ -->
+    <div style="flex:none;width:1180px;display:flex;flex-direction:column;gap:14px">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#6c6a64">Option 3 — Index · typographic, list-led, minimal</div>
+      <div style="background:#faf9f5;border-radius:2px;box-shadow:0 1px 3px rgba(20,20,19,.08);overflow:hidden;color:#141413">
+
+        <!-- nav -->
+        <div style="height:64px;padding:0 48px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ebe6df">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:13px;height:13px;background:#141413;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)"></div>
+            <span style="font-family:Newsreader,serif;font-size:20px;letter-spacing:-.5px">Ilse Marlowe</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:28px;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#6c6a64">
+            <span>Work</span><span>Shop</span><span>Studio</span><span>Cart ({{ cart }})</span>
+          </div>
+        </div>
+
+        <!-- giant statement hero -->
+        <div style="padding:88px 48px 64px;animation:fadeUp .7s ease both">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#6c6a64;display:flex;justify-content:space-between;border-bottom:1px solid #e6dfd8;padding-bottom:16px;margin-bottom:36px">
+            <span>Ilse Marlowe</span><span>Designer &amp; maker</span><span>Lisbon — est. 2016</span><span>Index ↓</span>
+          </div>
+          <h1 style="font-family:Newsreader,serif;font-weight:400;font-size:80px;line-height:1.02;letter-spacing:-2.5px;max-width:980px">I design type, products and objects — and sell a few of them here.</h1>
+          <div style="display:flex;gap:14px;margin-top:36px;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase">
+            <span style="border-bottom:2px solid #cc785c;color:#cc785c;padding-bottom:3px;cursor:pointer">View the index</span>
+            <span style="border-bottom:2px solid #141413;padding-bottom:3px;cursor:pointer">Shop goods</span>
+          </div>
+        </div>
+
+        <!-- work index -->
+        <div style="padding:0 48px 72px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#6c6a64;margin-bottom:8px">Selected work — 2023–2025</div>
+          <div style="border-top:1px solid #141413">
+            <div style="display:grid;grid-template-columns:48px 1fr 200px 110px;gap:20px;align-items:center;padding:22px 0;border-bottom:1px solid #e6dfd8;cursor:pointer;transition:padding-left .3s ease" style-hover="padding-left:14px">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#8e8b82">01</span>
+              <span style="font-family:Newsreader,serif;font-size:30px;letter-spacing:-.5px">Field Notes</span>
+              <span style="font-size:14px;color:#6c6a64">Type family · 6 sizes</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#8e8b82;text-align:right">2025</span>
+            </div>
+            <div style="display:grid;grid-template-columns:48px 1fr 200px 110px;gap:20px;align-items:center;padding:22px 0;border-bottom:1px solid #e6dfd8;cursor:pointer;transition:padding-left .3s ease" style-hover="padding-left:14px">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#8e8b82">02</span>
+              <span style="font-family:Newsreader,serif;font-size:30px;letter-spacing:-.5px">Ledger</span>
+              <span style="font-size:14px;color:#6c6a64">Product design · iOS</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#8e8b82;text-align:right">2024</span>
+            </div>
+            <div style="display:grid;grid-template-columns:48px 1fr 200px 110px;gap:20px;align-items:center;padding:22px 0;border-bottom:1px solid #e6dfd8;cursor:pointer;transition:padding-left .3s ease" style-hover="padding-left:14px">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#8e8b82">03</span>
+              <span style="font-family:Newsreader,serif;font-size:30px;letter-spacing:-.5px">The Maker's Almanac</span>
+              <span style="font-size:14px;color:#6c6a64">Editorial · 220pp</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#8e8b82;text-align:right">2024</span>
+            </div>
+            <div style="display:grid;grid-template-columns:48px 1fr 200px 110px;gap:20px;align-items:center;padding:22px 0;border-bottom:1px solid #e6dfd8;cursor:pointer;transition:padding-left .3s ease" style-hover="padding-left:14px">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#8e8b82">04</span>
+              <span style="font-family:Newsreader,serif;font-size:30px;letter-spacing:-.5px">Vessels</span>
+              <span style="font-size:14px;color:#6c6a64">Ceramic series · 12 pcs</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#8e8b82;text-align:right">2023</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- shop as index list -->
+        <div style="padding:64px 48px;background:#f5f0e8;border-top:1px solid #ebe6df">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#cc785c;margin-bottom:32px">Shop — ships worldwide</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#e6dfd8;border:1px solid #e6dfd8">
+            <div style="background:#faf9f5;padding:28px">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8e8b82;margin-bottom:18px">PRINT / EDITION OF 50</div>
+              <h3 style="font-family:Newsreader,serif;font-size:26px;letter-spacing:-.4px">Tide</h3>
+              <p style="font-size:14px;color:#6c6a64;margin-top:6px;line-height:1.5">A2 risograph in two warm colours.</p>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:24px"><span style="font-family:Newsreader,serif;font-size:26px">$48</span><span onClick="{{ addToCart }}" style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#cc785c;border-bottom:2px solid #cc785c;padding-bottom:2px;cursor:pointer">Add +</span></div>
+            </div>
+            <div style="background:#faf9f5;padding:28px">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8e8b82;margin-bottom:18px">BOOK / SIGNED</div>
+              <h3 style="font-family:Newsreader,serif;font-size:26px;letter-spacing:-.4px">The Almanac</h3>
+              <p style="font-size:14px;color:#6c6a64;margin-top:6px;line-height:1.5">220 pages, hardback, hand-numbered.</p>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:24px"><span style="font-family:Newsreader,serif;font-size:26px">$36</span><span onClick="{{ addToCart }}" style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#cc785c;border-bottom:2px solid #cc785c;padding-bottom:2px;cursor:pointer">Add +</span></div>
+            </div>
+            <div style="background:#181715;padding:28px;color:#faf9f5">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#a09d96;margin-bottom:18px">SERVICE / COMMISSION</div>
+              <h3 style="font-family:Newsreader,serif;font-size:26px;letter-spacing:-.4px">A day with the studio</h3>
+              <p style="font-size:14px;color:#a09d96;margin-top:6px;line-height:1.5">Identity, type or product, start to finish.</p>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:24px"><span style="font-family:Newsreader,serif;font-size:26px">$1,200</span><span onClick="{{ addToCart }}" style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#e8a55a;border-bottom:2px solid #e8a55a;padding-bottom:2px;cursor:pointer">Enquire +</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- footer -->
+        <div style="padding:48px;display:flex;justify-content:space-between;align-items:flex-end;border-top:1px solid #141413">
+          <h2 style="font-family:Newsreader,serif;font-weight:400;font-size:30px;letter-spacing:-.5px;max-width:460px;line-height:1.12">Let's make something worth keeping.</h2>
+          <div style="display:flex;gap:40px;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#6c6a64">
+            <span>hello@marlowe.studio</span><span>Instagram</span><span>Are.na</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { cart: 0 };
+  renderVals() {
+    return {
+      cart: this.state.cart,
+      addToCart: () => this.setState(s => ({ cart: s.cart + 1 })),
+    };
+  }
+}
+</script>
+</body>
+</html>

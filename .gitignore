@@ -165,17 +165,16 @@ venv.bak/
 .ropeproject
 
 # mkdocs documentation
-/site
-
+# /site
 # generated frontend export (mirrored from exports/ by deploy.sh)
-/frontend/template/
+# /frontend/template/
 
 # Django backend
 /backend/.env
 /backend/.venv/
 /backend/logs/
-/staticfiles/
-/media/
+# /staticfiles/
+# /media/
 
 # mypy
 .mypy_cache/
@@ -220,23 +219,23 @@ tempCodeRunnerFile.py
 .pypirc
 
 # Marimo
-marimo/_static/
-marimo/_lsp/
+# marimo/_static/
+# marimo/_lsp/
 __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
 
 # Brainstorm visual companion
-.superpowers/
+# .superpowers/
 
 # georgeai deploy — export zips are build inputs, not source
-exports/*.zip
-update/*.zip
+# exports/*.zip
+# update/*.zip
 
 # macOS
 .DS_Store
 **/.DS_Store
 
 # playwright test artifacts
-.playwright-mcp/
+# .playwright-mcp/
