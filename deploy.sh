@@ -3,7 +3,7 @@
 # deploy.sh — georgeai.dev deployment pipeline
 #
 # Takes an HTML export (.zip) from the design tool, unpacks it into ./site,
-# syncs the project to the VPS, (re)starts the nginx container behind Traefik,
+# syncs the project to the VPS, brings up the nginx container behind Traefik,
 # and verifies the site is live.
 #
 # Usage:
@@ -34,6 +34,9 @@ TEMPLATE_DIR="${GEORGEAI_TEMPLATE_DIR-$PROJECT_DIR/frontend/template}"
 
 PROD_HOSTS=("georgeai.dev" "www.georgeai.dev")
 
+# spaces in the remote path would break the remote shell commands and rsync below
+case "$REMOTE_DIR" in *" "*) printf 'GEORGEAI_REMOTE_DIR must not contain spaces\n' >&2; exit 1 ;; esac
+
 # ---------------------------------------------------------------------------
 # pretty output
 # ---------------------------------------------------------------------------
@@ -49,7 +52,10 @@ info() { printf "  %s·%s %s\n" "$C_DIM" "$C_RST" "$1"; }
 warn() { printf "  %s!%s %s\n" "$C_YEL" "$C_RST" "$1"; }
 die()  { printf "\n%s✗ %s%s\n" "$C_RED$C_BOLD" "$1" "$C_RST" >&2; exit 1; }
 
-[ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] && { sed -n '2,30p' "$0" | sed 's/^#//'; exit 0; }
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+  sed -n '9,19p' "$0" | sed 's/^# \{0,1\}//'
+  exit 0
+fi
 
 # ---------------------------------------------------------------------------
 # 1. resolve the zip to unpack
@@ -87,7 +93,13 @@ if [ "$NO_CONTENT" -eq 0 ] && [ -n "$ZIP" ]; then
     info "flattened wrapper folder: $(basename "$SRC")"
   fi
 
-  rm -rf "${SITE_DIR:?}"/*
+  # validate the export is non-empty BEFORE wiping ./site, so a broken/empty
+  # archive can't destroy the currently-deployed content.
+  [ -n "$(ls -A "$SRC" 2>/dev/null)" ] || die "export is empty — ./site left untouched"
+
+  # remove the whole dir (not just *) so stale dotfiles from a prior export
+  # don't survive and get re-synced; then repopulate.
+  rm -rf "$SITE_DIR"
   mkdir -p "$SITE_DIR"
   cp -R "$SRC"/. "$SITE_DIR"/
   ok "unpacked $(find "$SITE_DIR" -type f | wc -l | tr -d ' ') files into ./site"
@@ -132,7 +144,7 @@ PY
   # mirror the unpacked content (incl. the derived index.html) into the frontend
   # template dir so the Django backend in backend/ can build against the same export.
   if [ -n "$TEMPLATE_DIR" ]; then
-    rm -rf "${TEMPLATE_DIR:?}"/*
+    rm -rf "${TEMPLATE_DIR:?}"
     mkdir -p "$TEMPLATE_DIR"
     cp -R "$SITE_DIR"/. "$TEMPLATE_DIR"/
     ok "mirrored into ${TEMPLATE_DIR#$PROJECT_DIR/}"
@@ -148,20 +160,24 @@ ok "content ready: ./site ($(du -sh "$SITE_DIR" | cut -f1))"
 # 3. sync project to the VPS
 # ---------------------------------------------------------------------------
 step "Syncing to VPS"
-ssh -o BatchMode=yes -o ConnectTimeout=10 "$SSH_HOST" "mkdir -p $REMOTE_DIR/site $REMOTE_DIR/deploy" \
+ssh -o BatchMode=yes -o ConnectTimeout=10 "$SSH_HOST" "mkdir -p \"$REMOTE_DIR/site\" \"$REMOTE_DIR/deploy\"" \
   || die "cannot reach $SSH_HOST over ssh"
 
 rsync -az --delete -e ssh "$SITE_DIR"/ "$SSH_HOST:$REMOTE_DIR/site/"
 ok "site/ synced"
-rsync -az -e ssh "$PROJECT_DIR/deploy/" "$SSH_HOST:$REMOTE_DIR/deploy/"
+# compose runs from $REMOTE_DIR and references ./deploy/nginx.conf — sync only what
+# it needs (avoids shipping a second, unused copy of docker-compose.yml under deploy/).
+rsync -az -e ssh "$PROJECT_DIR/deploy/nginx.conf"         "$SSH_HOST:$REMOTE_DIR/deploy/nginx.conf"
 rsync -az -e ssh "$PROJECT_DIR/deploy/docker-compose.yml" "$SSH_HOST:$REMOTE_DIR/docker-compose.yml"
 ok "deploy config synced"
 
 # ---------------------------------------------------------------------------
-# 4. (re)start the container behind Traefik
+# 4. bring up the container behind Traefik
 # ---------------------------------------------------------------------------
-step "Restarting container"
-ssh "$SSH_HOST" "cd $REMOTE_DIR && docker compose up -d --remove-orphans && docker compose restart georgeai-web" \
+step "Bringing up container"
+# `up -d` recreates on any config/label change and is a no-op otherwise; the
+# bind-mounted ./site is live the instant rsync finishes, so no restart needed.
+ssh "$SSH_HOST" "cd \"$REMOTE_DIR\" && docker compose up -d --remove-orphans" \
   || die "docker compose failed on VPS"
 ok "georgeai-web is up"
 
@@ -170,20 +186,27 @@ ok "georgeai-web is up"
 # ---------------------------------------------------------------------------
 step "Verifying"
 sleep 3
-# internal check (container reachable on the docker network, independent of DNS)
+# internal check (container reachable on the docker network, independent of DNS).
+# This is the real gate — fail the deploy if the container isn't serving.
 if ssh "$SSH_HOST" "docker exec georgeai-web wget -qO- http://localhost/healthz 2>/dev/null" | grep -q ok; then
   ok "container healthy (internal /healthz)"
 else
-  warn "internal health check did not return ok — check: ssh $SSH_HOST 'docker logs georgeai-web'"
+  die "internal health check failed — inspect: ssh $SSH_HOST 'docker logs georgeai-web'"
 fi
 
+DEPLOY_FAIL=0
 check_url() {
-  local url="$1"
-  local code
-  code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 12 "$url" 2>/dev/null || echo 000)"
-  if [ "$code" = "200" ]; then ok "$url → $code"
-  elif [ "$code" = "000" ]; then warn "$url → no response (DNS not pointing here yet?)"
-  else warn "$url → $code"; fi
+  local url="$1" code
+  # curl prints "000" on connect failure; capture it without a spurious extra echo
+  code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 12 "$url")" || code="000"
+  if [ "$code" = "200" ]; then
+    ok "$url → 200"
+  elif [ "$code" = "000" ]; then
+    warn "$url → no response yet (DNS not pointing to this VPS?)"
+  else
+    warn "$url → $code (reachable but not serving 200)"
+    DEPLOY_FAIL=1
+  fi
 }
 for h in "${PROD_HOSTS[@]}"; do check_url "https://$h"; done
 
@@ -191,5 +214,6 @@ for h in "${PROD_HOSTS[@]}"; do check_url "https://$h"; done
 # done
 # ---------------------------------------------------------------------------
 step "Done"
+[ "$DEPLOY_FAIL" -eq 0 ] || die "a host is reachable but returned a non-200 status — see above"
 ok "Live:  https://georgeai.dev"
 printf "\n%sTip:%s drop a new export in ./exports and re-run ./deploy.sh to publish.\n" "$C_BOLD" "$C_RST"
