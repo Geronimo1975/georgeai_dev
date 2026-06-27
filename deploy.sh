@@ -28,6 +28,9 @@ REMOTE_DIR="${GEORGEAI_REMOTE_DIR:-/opt/georgeai}"
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SITE_DIR="$PROJECT_DIR/site"
 EXPORTS_DIR="$PROJECT_DIR/exports"
+# SEO/GEO assets kept OUT of the design export (robots, sitemap, llms.txt, favicon,
+# and the <head> meta block) so they survive every re-export. Injected into ./site below.
+SEO_DIR="$PROJECT_DIR/seo"
 # also mirror each unpacked export here so the Django frontend (backend/) can build
 # against it. Set GEORGEAI_TEMPLATE_DIR= (empty) to skip the mirror.
 TEMPLATE_DIR="${GEORGEAI_TEMPLATE_DIR-$PROJECT_DIR/frontend/template}"
@@ -155,6 +158,40 @@ fi
 
 [ -f "$SITE_DIR/index.html" ] || die "./site has no index.html — nothing to deploy"
 ok "content ready: ./site ($(du -sh "$SITE_DIR" | cut -f1))"
+
+# ---------------------------------------------------------------------------
+# 2b. inject SEO/GEO assets (kept out of the export so they survive re-exports)
+#     - copy static files (robots.txt, sitemap.xml, llms.txt, favicon.svg) into ./site
+#     - inject the <head> meta/OG/JSON-LD block + <html lang> into index.html (idempotent)
+# ---------------------------------------------------------------------------
+if [ -d "$SEO_DIR" ]; then
+  step "Injecting SEO/GEO assets"
+  for f in robots.txt sitemap.xml llms.txt favicon.svg; do
+    if [ -f "$SEO_DIR/$f" ]; then
+      cp "$SEO_DIR/$f" "$SITE_DIR/$f"
+      info "copied $f"
+    fi
+  done
+  if [ -f "$SEO_DIR/head.html" ] && command -v python3 >/dev/null; then
+    python3 - "$SITE_DIR/index.html" "$SEO_DIR/head.html" <<'PY'
+import re, sys
+idx, headfile = sys.argv[1], sys.argv[2]
+html = open(idx, encoding="utf-8").read()
+if "seo:head" not in html:
+    block = open(headfile, encoding="utf-8").read().rstrip()
+    if re.search(r"</head>", html, re.I):
+        html = re.sub(r"</head>", lambda m: block + "\n</head>", html, count=1, flags=re.I)
+    else:  # no <head> in the export — prepend the block
+        html = block + "\n" + html
+# add lang to <html> if it has none
+html = re.sub(r"<html(?![^>]*\blang=)", '<html lang="en"', html, count=1, flags=re.I)
+open(idx, "w", encoding="utf-8").write(html)
+PY
+    ok "injected <head> SEO block into index.html"
+  elif [ -f "$SEO_DIR/head.html" ]; then
+    warn "python3 not found — skipped <head> SEO injection"
+  fi
+fi
 
 # ---------------------------------------------------------------------------
 # 3. sync project to the VPS

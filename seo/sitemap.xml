@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  georgeai.dev is a client-side single-page app: navigation (services, about,
+  contact, configurator) is JS state with no distinct URLs, so only the
+  homepage is independently crawlable today. If/when real routes are added
+  (e.g. /services, /services/seo-aio-geo, /about, /contact), list them here —
+  that is the single biggest GEO/SEO win available to this site.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://georgeai.dev/</loc>
+    <lastmod>2026-06-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>

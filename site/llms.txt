@@ -1,0 +1,40 @@
+# GeorgeAI
+
+> GeorgeAI is the studio of George Sebastian Cucuiet, a Germany-based AI automation
+> and full-stack developer. The studio builds AI automations, chatbots, AI phone
+> agents, and growth systems (SEO/AIO/GEO, email, lead generation), plus custom
+> software (Python, Django, CRMs, micro-ERPs, SaaS) for small and mid-sized businesses.
+
+Contact: contact@georgeai.dev · +49 160 4155546 · Germany (services delivered remotely, EU & worldwide). Languages: English, German, Romanian, Arabic.
+
+## Services — Automation & AI
+- [Automation](https://georgeai.dev/): Custom n8n workflows that move data between CRMs, email, sheets, APIs and LLMs so repetitive manual work disappears. Stack: n8n, Python, OpenAI, Webhooks.
+- [AI Chatbot](https://georgeai.dev/): A website assistant trained on your own content (RAG) that answers questions, qualifies leads and books appointments. Stack: OpenAI, RAG, WhatsApp, n8n.
+- [AI Phone Calls](https://georgeai.dev/): AI voice phone agents with a custom voice that answer, qualify and book 24/7. Stack: Phone AI, OpenAI, Twilio, n8n.
+- [RAG](https://georgeai.dev/): Retrieval-Augmented Generation that grounds chatbots and phone agents in your own documents for source-backed answers. Stack: Vector DB, OpenAI, Embeddings.
+
+## Services — Growth & Marketing
+- [SEO / AIO / GEO](https://georgeai.dev/): Optimisation for search engines (SEO), AI Overviews (AIO) and generative engines like ChatGPT and Perplexity (GEO). Stack: DataForSEO, WordPress, Python, OpenAI.
+- [Email Marketing](https://georgeai.dev/): Automated, segmented email flows with strong deliverability. Stack: Mautic, Brevo, Sendy, Amazon SES.
+- [Lead Generation](https://georgeai.dev/): Automated sourcing, enrichment, AI scoring and CRM routing of qualified prospects. Stack: n8n, Python, CRM, LinkedIn.
+- [Web Design Optimization](https://georgeai.dev/): Conversion-focused optimisation of an existing site — speed, layout, copy, SEO. Stack: CRO, SEO, Analytics, A/B testing.
+
+## Services — Software & Data
+- [Python Programming](https://georgeai.dev/): Backends, APIs, automations and data tooling. Stack: Python, FastAPI, PostgreSQL, Docker.
+- [Django](https://georgeai.dev/): Full-stack web platforms, dashboards and portals with secure APIs. Stack: Django, Python, PostgreSQL, REST.
+- [Micro ERP](https://georgeai.dev/): Lightweight custom ERP — inventory, invoicing, orders, reporting. Stack: Django, PostgreSQL, Supabase, REST.
+- [CRM](https://georgeai.dev/): Tailored CRM integrated with email, phone and automation. Stack: Django, PostgreSQL, n8n, REST.
+- [SaaS Projects](https://georgeai.dev/): End-to-end SaaS — auth, billing, dashboards, APIs. Stack: Django, React, Stripe, PostgreSQL.
+- [API Integration & Data Analytics](https://georgeai.dev/): Integrations across platforms plus unified analytics dashboards. Stack: REST, Python, n8n, PostgreSQL.
+
+## Services — Web
+- [Web Design](https://georgeai.dev/): Fast, responsive, multilingual websites with SEO and automation built in. Stack: Next.js, WordPress, HTML/CSS, Figma.
+
+## Engagement
+- Pilot: a focused first build to prove value (~2 weeks base).
+- Business: a complete solution for one workflow (~4 weeks base).
+- Scale-up: multiple integrated systems (~8 weeks base).
+- Add-ons: multilingual (5 languages), ongoing support & maintenance, hosting & monitoring, team training.
+
+## Contact
+- [Book a call / get a quote](https://georgeai.dev/): contact@georgeai.dev, +49 160 4155546, WhatsApp +49 160 4155546.
