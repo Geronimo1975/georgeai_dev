@@ -41,6 +41,7 @@ PROD_HOSTS=("georgeai.dev" "www.georgeai.dev")
 case "$REMOTE_DIR" in *" "*) printf 'GEORGEAI_REMOTE_DIR must not contain spaces\n' >&2; exit 1 ;; esac
 
 ASSETS_DIR="$PROJECT_DIR/backend/assets"
+PAGES_DIR="$PROJECT_DIR/pages"
 
 # ---------------------------------------------------------------------------
 # frontend assets — JS kept out of the export (backend/assets/) so it survives
@@ -130,6 +131,17 @@ PYEOF
       warn "service page generation failed — deploy continues with static sitemap"
     fi
   fi
+}
+
+# ---------------------------------------------------------------------------
+# repo-owned pages (e.g. pages/pricing/) — kept out of the export so they
+# survive re-exports. Copied verbatim into site/. Runs on every deploy,
+# including --no-content. Idempotent.
+# ---------------------------------------------------------------------------
+apply_pages() {
+  [ -d "$PAGES_DIR" ] || return 0
+  cp -R "$PAGES_DIR"/. "$SITE_DIR"/
+  ok "pages: $(find "$PAGES_DIR" -name index.html | sed "s|$PAGES_DIR/||;s|/index.html||" | tr '\n' ' ')"
 }
 
 
@@ -241,6 +253,7 @@ PY
   # the same asset- and SEO-complete content.
   apply_assets
   apply_seo
+  apply_pages
 
   # mirror the unpacked content (incl. the derived index.html) into the frontend
   # template dir so the Django backend in backend/ can build against the same export.
@@ -255,6 +268,7 @@ else
   # keep assets + SEO layer current even on content-less redeploys
   apply_assets
   apply_seo
+  apply_pages
 fi
 
 [ -f "$SITE_DIR/index.html" ] || die "./site has no index.html — nothing to deploy"
