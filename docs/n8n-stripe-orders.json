@@ -3,7 +3,8 @@
   "id": "hGndKGfKRk9tKIoG",
   "instance": "https://n8n.rotocon.world",
   "active": true,
-  "description": "georgeai.dev orders: Stripe checkout.session.completed webhook → notify George (Gmail) + create item on monday.com Orders board (5099628523) + client onboarding email. Webhook path: /webhook/stripe-orders.",
+  "description": "georgeai.dev orders: Stripe checkout.session.completed webhook → fetch-back session from Stripe API (anti-forgery) → notify George (Gmail) + create item on monday.com Orders board (5099628523) + client onboarding email. Webhook path: /webhook/stripe-orders.",
+  "security": "The webhook payload is NOT trusted. The session is re-fetched from api.stripe.com by id with the 'Stripe API' credential; forged events fail the fetch and stop the workflow. All order data (incl. the onboarding email recipient) comes from Stripe's API response.",
   "nodes": [
     {
       "id": "7486c32c-5342-4136-9119-ba90b4223d9e",
@@ -39,22 +40,36 @@
       }
     },
     {
+      "name": "Fetch Session from Stripe",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [448, 192],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.stripe.com/v1/checkout/sessions/{{ $json.body.data.object.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "stripeApi",
+        "options": {}
+      },
+      "credentials": { "stripeApi": { "name": "Stripe API" } }
+    },
+    {
       "id": "91a6c39d-a053-4b11-b77e-17d86eb88e35",
       "name": "Extract Order",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [448, 192],
+      "position": [672, 192],
       "parameters": {
         "mode": "manual",
         "includeOtherFields": false,
         "assignments": {
           "assignments": [
-            { "id": "order-email", "name": "email", "value": "={{ $json.body.data.object.customer_details?.email ?? \"\" }}", "type": "string" },
-            { "id": "order-name", "name": "clientName", "value": "={{ $json.body.data.object.customer_details?.name ?? \"there\" }}", "type": "string" },
-            { "id": "order-amount", "name": "amount", "value": "={{ ($json.body.data.object.amount_total ?? 0) / 100 }}", "type": "number" },
-            { "id": "order-product", "name": "product", "value": "={{ $json.body.data.object.metadata?.data_product ?? \"unknown\" }}", "type": "string" },
-            { "id": "order-session", "name": "sessionId", "value": "={{ $json.body.data.object.id }}", "type": "string" },
-            { "id": "order-leadpack", "name": "isLeadPack", "value": "={{ ($json.body.data.object.metadata?.data_product ?? \"\").startsWith(\"lead-pack\") }}", "type": "boolean" }
+            { "id": "order-email", "name": "email", "value": "={{ $json.customer_details?.email ?? \"\" }}", "type": "string" },
+            { "id": "order-name", "name": "clientName", "value": "={{ $json.customer_details?.name ?? \"there\" }}", "type": "string" },
+            { "id": "order-amount", "name": "amount", "value": "={{ ($json.amount_total ?? 0) / 100 }}", "type": "number" },
+            { "id": "order-product", "name": "product", "value": "={{ $json.metadata?.data_product ?? \"unknown\" }}", "type": "string" },
+            { "id": "order-session", "name": "sessionId", "value": "={{ $json.id }}", "type": "string" },
+            { "id": "order-leadpack", "name": "isLeadPack", "value": "={{ ($json.metadata?.data_product ?? \"\").startsWith(\"lead-pack\") }}", "type": "boolean" }
           ]
         }
       }
@@ -117,7 +132,8 @@
   ],
   "connections": {
     "Stripe Webhook": { "main": [[{ "node": "Is Checkout Completed?", "type": "main", "index": 0 }]] },
-    "Is Checkout Completed?": { "main": [[{ "node": "Extract Order", "type": "main", "index": 0 }]] },
+    "Is Checkout Completed?": { "main": [[{ "node": "Fetch Session from Stripe", "type": "main", "index": 0 }]] },
+    "Fetch Session from Stripe": { "main": [[{ "node": "Extract Order", "type": "main", "index": 0 }]] },
     "Extract Order": {
       "main": [[
         { "node": "Notify George", "type": "main", "index": 0 },

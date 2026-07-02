@@ -45,7 +45,9 @@ setup fee lands on the first invoice).
 
 - workflow `stripe-orders` (`hGndKGfKRk9tKIoG`) on https://n8n.rotocon.world — ACTIVE; export in `docs/n8n-stripe-orders.json`
 - webhook (production): `https://n8n.rotocon.world/webhook/stripe-orders` (POST)
-- flow: checkout.session.completed → Extract Order → (Gmail notify George) + (monday Orders item, Status=New) + (Gmail onboarding email to client; lead packs get the ICP questionnaire)
-- **MANUAL STEP (2 min):** the Stripe MCP cannot create webhook endpoints. In the Stripe dashboard (test mode) → Developers → Webhooks → Add endpoint: URL `https://n8n.rotocon.world/webhook/stripe-orders`, event `checkout.session.completed`. Repeat in live mode when switching the links live.
+- flow: checkout.session.completed → **fetch-back session from Stripe API** (anti-forgery: forged webhook posts die on the fetch; all order data incl. the client email comes from Stripe, never from the raw POST) → (Gmail notify George) + (monday Orders item, Status=New) + (Gmail onboarding email to client; lead packs get the ICP questionnaire)
+- **MANUAL STEP 1 (2 min):** create an n8n credential named **"Stripe API"** (type: Stripe API) with a restricted key (read access to Checkout Sessions is enough) and assign it to the "Fetch Session from Stripe" node.
+- **MANUAL STEP 2 (2 min):** the Stripe MCP cannot create webhook endpoints. In the Stripe dashboard (test mode) → Developers → Webhooks → Add endpoint: URL `https://n8n.rotocon.world/webhook/stripe-orders`, event `checkout.session.completed`. Repeat in live mode when switching the links live.
+- known limitation (accepted for Phase 1): no dedup on session id — a Stripe webhook retry could create a duplicate monday item/email. Add a lookup-before-create if it ever happens in practice.
 
 
