@@ -1,4 +1,4 @@
-<!-- seo:head — injected by deploy.sh after each export; edit here, not in site/index.html -->
+<!-- seo:head — injected by deploy.sh from seo/head.html on every deploy; edit seo/head.html, never site/index.html -->
 <title>GeorgeAI — AI Automation, Chatbots & GEO/SEO for Business</title>
 <meta name="description" content="GeorgeAI builds AI automations, chatbots, AI phone agents and growth systems (SEO/AIO/GEO, email, lead gen) plus custom Python & Django software for small and mid-sized businesses.">
 <meta name="author" content="George Sebastian Cucuiet">
@@ -18,7 +18,9 @@
 <meta property="og:image" content="https://georgeai.dev/assets/SEO_AI.png">
 <meta property="og:locale" content="en">
 <meta property="og:locale:alternate" content="de">
+<meta property="og:locale:alternate" content="fr">
 <meta property="og:locale:alternate" content="ro">
+<meta property="og:locale:alternate" content="ar">
 
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image">
@@ -43,7 +45,12 @@
       "description": "AI automation, chatbots, AI phone agents, GEO/SEO and custom software (Python, Django) for small and mid-sized businesses.",
       "areaServed": "Worldwide",
       "founder": { "@id": "https://georgeai.dev/#george" },
-      "knowsLanguage": ["en", "de", "ro", "ar"],
+      "knowsLanguage": ["en", "de", "fr", "ro", "ar"],
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "GeorgeAI services",
+        "url": "https://georgeai.dev/services/"
+      },
       "sameAs": []
     },
     {
@@ -63,7 +70,17 @@
       "url": "https://georgeai.dev/",
       "name": "GeorgeAI",
       "publisher": { "@id": "https://georgeai.dev/#organization" },
-      "inLanguage": ["en", "de", "ro", "ar"]
+      "inLanguage": ["en", "de", "fr", "ro", "ar"]
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://georgeai.dev/",
+      "url": "https://georgeai.dev/",
+      "name": "GeorgeAI — AI Automation, Chatbots & GEO/SEO for Business",
+      "description": "AI automations, chatbots, AI phone agents, GEO/SEO and custom Python & Django software for small and mid-sized businesses.",
+      "isPartOf": { "@id": "https://georgeai.dev/#website" },
+      "about": { "@id": "https://georgeai.dev/#organization" },
+      "inLanguage": "en"
     }
   ]
 }

@@ -40,6 +40,99 @@ PROD_HOSTS=("georgeai.dev" "www.georgeai.dev")
 # spaces in the remote path would break the remote shell commands and rsync below
 case "$REMOTE_DIR" in *" "*) printf 'GEORGEAI_REMOTE_DIR must not contain spaces\n' >&2; exit 1 ;; esac
 
+ASSETS_DIR="$PROJECT_DIR/backend/assets"
+
+# ---------------------------------------------------------------------------
+# frontend assets — JS kept out of the export (backend/assets/) so it survives
+# re-exports. Copied into site/ so nginx can serve it (Django serves the same
+# files from backend/assets/). Runs on every deploy, incl. --no-content.
+# Idempotent.
+# ---------------------------------------------------------------------------
+apply_assets() {
+  local f copied=""
+  for f in auth.js audit.js; do
+    [ -f "$ASSETS_DIR/$f" ] && { cp "$ASSETS_DIR/$f" "$SITE_DIR/$f"; copied="$copied $f"; }
+  done
+  [ -n "$copied" ] && ok "frontend assets:$copied"
+
+  # inject the audit widget into the homepage (auth.js tag is injected during unpack)
+  if [ -f "$SITE_DIR/index.html" ] && ! grep -q '/audit.js' "$SITE_DIR/index.html"; then
+    if command -v python3 >/dev/null; then
+      python3 - "$SITE_DIR/index.html" <<'PY'
+import re, sys
+p = sys.argv[1]
+html = open(p, encoding="utf-8").read()
+tag = '<script src="/audit.js" defer></script>'
+html = re.sub(r"</body>", tag + "</body>", html, count=1, flags=re.I) \
+    if re.search(r"</body>", html, re.I) else html + "\n" + tag + "\n"
+open(p, "w", encoding="utf-8").write(html)
+PY
+      ok "injected audit.js into index.html"
+    else
+      warn "python3 not found — skipped audit.js injection"
+    fi
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# SEO layer — files in seo/ are kept out of the export so they survive
+# re-exports (same rationale as backend/assets/auth.js). Runs on every deploy,
+# including --no-content. Idempotent via the seo:head / seo:footer markers.
+# ---------------------------------------------------------------------------
+apply_seo() {
+  [ -d "$SEO_DIR" ] || { warn "seo/ not found — skipping SEO layer"; return 0; }
+
+  local f copied=""
+  for f in robots.txt sitemap.xml llms.txt favicon.svg; do
+    [ -f "$SEO_DIR/$f" ] && { cp "$SEO_DIR/$f" "$SITE_DIR/$f"; copied="$copied $f"; }
+  done
+  [ -n "$copied" ] && ok "seo files:$copied"
+
+  if [ -f "$SITE_DIR/index.html" ] && [ -f "$SEO_DIR/head.html" ] \
+     && ! grep -q 'seo:head' "$SITE_DIR/index.html"; then
+    if command -v python3 >/dev/null; then
+      python3 - "$SITE_DIR/index.html" "$SEO_DIR/head.html" <<'PYEOF'
+import re, sys
+p, head_p = sys.argv[1], sys.argv[2]
+html = open(p, encoding="utf-8").read()
+head = open(head_p, encoding="utf-8").read().rstrip() + "\n"
+if re.search(r"</head>", html, re.I):
+    html = re.sub(r"</head>", lambda m: head + m.group(0), html, count=1, flags=re.I)
+else:  # no <head> in the export — prepend the block
+    html = head + html
+# add lang to <html> if it has none
+html = re.sub(r"<html(?![^>]*\blang=)", '<html lang="en"', html, count=1, flags=re.I)
+# crawlable internal links to the static pages (the SPA nav is JS-only)
+footer = ('<div id="seo:footer" style="padding:16px 24px;text-align:center;'
+          "font-family:'JetBrains Mono',monospace;font-size:12px\">"
+          '<a href="/services/" style="color:#8e8b82;text-decoration:none">'
+          'Browse all services &rarr;</a>'
+          '&nbsp;&nbsp;·&nbsp;&nbsp;'
+          '<a href="/blog/" style="color:#8e8b82;text-decoration:none">'
+          'Blog &rarr;</a></div>')
+if "seo:footer" not in html and re.search(r"</body>", html, re.I):
+    html = re.sub(r"</body>", lambda m: footer + m.group(0), html, count=1, flags=re.I)
+open(p, "w", encoding="utf-8").write(html)
+PYEOF
+      ok "injected seo/head.html into index.html"
+    else
+      warn "python3 not found — skipped SEO head injection"
+    fi
+  fi
+
+  # real, crawlable per-service pages + blog + sitemap (overwrites the static
+  # seo/sitemap.xml copy with the full URL list). Failure must not block deploy.
+  if [ -f "$SEO_DIR/generate_service_pages.py" ] && [ -f "$PROJECT_DIR/georgeai_services.json" ] \
+     && command -v python3 >/dev/null; then
+    if python3 "$SEO_DIR/generate_service_pages.py" "$PROJECT_DIR/georgeai_services.json" "$SITE_DIR" "$PROJECT_DIR/blog"; then
+      ok "generated service pages + blog + sitemap"
+    else
+      warn "service page generation failed — deploy continues with static sitemap"
+    fi
+  fi
+}
+
+
 # ---------------------------------------------------------------------------
 # pretty output
 # ---------------------------------------------------------------------------
@@ -144,6 +237,11 @@ PY
     fi
   fi
 
+  # frontend assets + SEO layer BEFORE the mirror, so frontend/template gets
+  # the same asset- and SEO-complete content.
+  apply_assets
+  apply_seo
+
   # mirror the unpacked content (incl. the derived index.html) into the frontend
   # template dir so the Django backend in backend/ can build against the same export.
   if [ -n "$TEMPLATE_DIR" ]; then
@@ -154,44 +252,13 @@ PY
   fi
 else
   step "Using existing ./site (no zip)"
+  # keep assets + SEO layer current even on content-less redeploys
+  apply_assets
+  apply_seo
 fi
 
 [ -f "$SITE_DIR/index.html" ] || die "./site has no index.html — nothing to deploy"
 ok "content ready: ./site ($(du -sh "$SITE_DIR" | cut -f1))"
-
-# ---------------------------------------------------------------------------
-# 2b. inject SEO/GEO assets (kept out of the export so they survive re-exports)
-#     - copy static files (robots.txt, sitemap.xml, llms.txt, favicon.svg) into ./site
-#     - inject the <head> meta/OG/JSON-LD block + <html lang> into index.html (idempotent)
-# ---------------------------------------------------------------------------
-if [ -d "$SEO_DIR" ]; then
-  step "Injecting SEO/GEO assets"
-  for f in robots.txt sitemap.xml llms.txt favicon.svg; do
-    if [ -f "$SEO_DIR/$f" ]; then
-      cp "$SEO_DIR/$f" "$SITE_DIR/$f"
-      info "copied $f"
-    fi
-  done
-  if [ -f "$SEO_DIR/head.html" ] && command -v python3 >/dev/null; then
-    python3 - "$SITE_DIR/index.html" "$SEO_DIR/head.html" <<'PY'
-import re, sys
-idx, headfile = sys.argv[1], sys.argv[2]
-html = open(idx, encoding="utf-8").read()
-if "seo:head" not in html:
-    block = open(headfile, encoding="utf-8").read().rstrip()
-    if re.search(r"</head>", html, re.I):
-        html = re.sub(r"</head>", lambda m: block + "\n</head>", html, count=1, flags=re.I)
-    else:  # no <head> in the export — prepend the block
-        html = block + "\n" + html
-# add lang to <html> if it has none
-html = re.sub(r"<html(?![^>]*\blang=)", '<html lang="en"', html, count=1, flags=re.I)
-open(idx, "w", encoding="utf-8").write(html)
-PY
-    ok "injected <head> SEO block into index.html"
-  elif [ -f "$SEO_DIR/head.html" ]; then
-    warn "python3 not found — skipped <head> SEO injection"
-  fi
-fi
 
 # ---------------------------------------------------------------------------
 # 3. sync project to the VPS
