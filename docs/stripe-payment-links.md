@@ -36,16 +36,16 @@ setup fee lands on the first invoice).
 
 ## Order storage: n8n data table `orders`
 
-- data table `orders` (`Safgo17NCrOS579A`) on **n8n.rotocon.world** (George's personal n8n project) — columns: status, product, amount, email, client_name, session_id, ordered_at
+- data table `orders` (`MGvuy74ouTb6vUpB`) on **app.n8n-studio.com** (George's OWN n8n, his VPS) — columns: status, product, amount, email, client_name, session_id, ordered_at
 - REPLACES the earlier monday.com Orders board (`5099628523`), which was **deleted 2026-07-02**: it had been created on the Rotocon company monday account by mistake — order data must never live on the employer's account. If monday tracking is wanted later, use a personal/georgeai monday account + its own n8n credential.
 
 ## n8n stripe-orders workflow
 
-- workflow `stripe-orders` (`hGndKGfKRk9tKIoG`) on https://n8n.rotocon.world — ACTIVE; export in `docs/n8n-stripe-orders.json`
-- webhook (production): `https://n8n.rotocon.world/webhook/stripe-orders` (POST)
+- workflow `stripe-orders` (`Nx1WqOlQ1k3IWdgB`) on https://app.n8n-studio.com — ACTIVE, E2E-tested 2026-07-02 (real test purchase → all 4 nodes success); export in `docs/n8n-stripe-orders.json`. Old copy on n8n.rotocon.world (`hGndKGfKRk9tKIoG`) DEACTIVATED — wrong instance, see .claude/skills/georgeai-n8n.
+- webhook (production): `https://app.n8n-studio.com/webhook/stripe-orders` (POST) — Stripe endpoint `we_1TopbREffkWmXH1rTlxClClL` (sandbox, name georgeai-stripe-orders)
 - flow: checkout.session.completed → **fetch-back session from Stripe API** (anti-forgery: forged webhook posts die on the fetch; all order data incl. the client email comes from Stripe, never from the raw POST) → (Gmail notify George) + (monday Orders item, Status=New) + (Gmail onboarding email to client; lead packs get the ICP questionnaire)
-- **MANUAL STEP 1 (2 min):** create an n8n credential named **"Stripe API"** (type: Stripe API) with a restricted key (read access to Checkout Sessions is enough) and assign it to the "Fetch Session from Stripe" node.
-- **MANUAL STEP 2 (2 min):** the Stripe MCP cannot create webhook endpoints. In the Stripe dashboard (test mode) → Developers → Webhooks → Add endpoint: URL `https://n8n.rotocon.world/webhook/stripe-orders`, event `checkout.session.completed`. Repeat in live mode when switching the links live.
+- credentials on app.n8n-studio.com: `Stripe account` (`OnWk28SXJXBAkCl0`, restricted test key) for the fetch-back; `Brevo SMTP` (`aK6Bete8OTRMNACY`, sender george.cucuiet@gmx.de) for both emails.
+- go-live checklist: recreate products/prices/payment links in live mode; swap the 7 hrefs in pages/pricing/index.html; redeploy; add a LIVE-mode webhook endpoint with the same URL; swap the n8n Stripe credential to a live restricted key. Optional: verify contact@georgeai.dev as Brevo sender for nicer branding.
 - known limitation (accepted for Phase 1): no dedup on session id — a Stripe webhook retry could create a duplicate monday item/email. Add a lookup-before-create if it ever happens in practice.
 
 

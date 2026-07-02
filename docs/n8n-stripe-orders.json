@@ -1,37 +1,53 @@
 {
   "name": "stripe-orders",
-  "id": "hGndKGfKRk9tKIoG",
-  "instance": "https://n8n.rotocon.world",
+  "id": "Nx1WqOlQ1k3IWdgB",
+  "instance": "https://app.n8n-studio.com",
   "active": true,
-  "description": "georgeai.dev orders: Stripe checkout.session.completed webhook → fetch-back session from Stripe API (anti-forgery) → notify George (Gmail) + insert row in n8n data table 'orders' (Safgo17NCrOS579A) + client onboarding email. Webhook path: /webhook/stripe-orders.",
-  "security": "The webhook payload is NOT trusted. The session is re-fetched from api.stripe.com by id with the 'Stripe API' credential; forged events fail the fetch and stop the workflow. All order data (incl. the onboarding email recipient) comes from Stripe's API response.",
+  "description": "georgeai.dev orders: Stripe checkout.session.completed webhook -> fetch-back session from Stripe API (anti-forgery) -> notify George (Brevo SMTP) + insert row in data table 'orders' (MGvuy74ouTb6vUpB) + client onboarding email. Webhook: https://app.n8n-studio.com/webhook/stripe-orders",
+  "security": "The webhook payload is NOT trusted. The session is re-fetched from api.stripe.com by id with the 'Stripe account' credential; forged events fail the fetch and stop the workflow. All order data (incl. the onboarding email recipient) comes from Stripe's API response.",
+  "settings": {
+    "executionOrder": "v1"
+  },
   "nodes": [
     {
-      "id": "7486c32c-5342-4136-9119-ba90b4223d9e",
+      "id": "a1000000-0000-4000-8000-000000000001",
       "name": "Stripe Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
-      "position": [0, 192],
+      "position": [
+        0,
+        192
+      ],
       "parameters": {
         "httpMethod": "POST",
         "path": "stripe-orders",
         "responseMode": "onReceived"
-      },
-      "webhookId": "ee1e18c9-10d0-488f-9913-13a729f6f5dc"
+      }
     },
     {
-      "id": "c8633d71-6c91-4676-a662-bb8e7dfdfd5a",
+      "id": "a1000000-0000-4000-8000-000000000002",
       "name": "Is Checkout Completed?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [224, 192],
+      "position": [
+        224,
+        192
+      ],
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
           "conditions": [
             {
               "leftValue": "={{ $json.body?.type ?? \"\" }}",
-              "operator": { "type": "string", "operation": "equals" },
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
               "rightValue": "checkout.session.completed"
             }
           ],
@@ -40,10 +56,14 @@
       }
     },
     {
+      "id": "a1000000-0000-4000-8000-000000000003",
       "name": "Fetch Session from Stripe",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [448, 192],
+      "position": [
+        448,
+        192
+      ],
       "parameters": {
         "method": "GET",
         "url": "=https://api.stripe.com/v1/checkout/sessions/{{ $json.body.data.object.id }}",
@@ -51,57 +71,113 @@
         "nodeCredentialType": "stripeApi",
         "options": {}
       },
-      "credentials": { "stripeApi": { "name": "Stripe API" } }
+      "credentials": {
+        "stripeApi": {
+          "id": "OnWk28SXJXBAkCl0",
+          "name": "Stripe account"
+        }
+      }
     },
     {
-      "id": "91a6c39d-a053-4b11-b77e-17d86eb88e35",
+      "id": "a1000000-0000-4000-8000-000000000004",
       "name": "Extract Order",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [672, 192],
+      "position": [
+        672,
+        192
+      ],
       "parameters": {
         "mode": "manual",
         "includeOtherFields": false,
         "assignments": {
           "assignments": [
-            { "id": "order-email", "name": "email", "value": "={{ $json.customer_details?.email ?? \"\" }}", "type": "string" },
-            { "id": "order-name", "name": "clientName", "value": "={{ $json.customer_details?.name ?? \"there\" }}", "type": "string" },
-            { "id": "order-amount", "name": "amount", "value": "={{ ($json.amount_total ?? 0) / 100 }}", "type": "number" },
-            { "id": "order-product", "name": "product", "value": "={{ $json.metadata?.data_product ?? \"unknown\" }}", "type": "string" },
-            { "id": "order-session", "name": "sessionId", "value": "={{ $json.id }}", "type": "string" },
-            { "id": "order-leadpack", "name": "isLeadPack", "value": "={{ ($json.metadata?.data_product ?? \"\").startsWith(\"lead-pack\") }}", "type": "boolean" }
+            {
+              "id": "order-email",
+              "name": "email",
+              "value": "={{ $json.customer_details?.email ?? \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "order-name",
+              "name": "clientName",
+              "value": "={{ $json.customer_details?.name ?? \"there\" }}",
+              "type": "string"
+            },
+            {
+              "id": "order-amount",
+              "name": "amount",
+              "value": "={{ ($json.amount_total ?? 0) / 100 }}",
+              "type": "number"
+            },
+            {
+              "id": "order-product",
+              "name": "product",
+              "value": "={{ $json.metadata?.data_product ?? \"unknown\" }}",
+              "type": "string"
+            },
+            {
+              "id": "order-session",
+              "name": "sessionId",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "order-leadpack",
+              "name": "isLeadPack",
+              "value": "={{ ($json.metadata?.data_product ?? \"\").startsWith(\"lead-pack\") }}",
+              "type": "boolean"
+            }
           ]
         }
       }
     },
     {
-      "id": "6559ae8a-aecd-4ae8-93e8-4b0e2d008f38",
+      "id": "a1000000-0000-4000-8000-000000000005",
       "name": "Notify George",
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2.2,
-      "position": [672, 0],
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        896,
+        0
+      ],
       "onError": "continueRegularOutput",
       "parameters": {
-        "resource": "message",
-        "operation": "send",
-        "sendTo": "contact@georgeai.dev",
+        "fromEmail": "GeorgeAI <george.cucuiet@gmx.de>",
+        "toEmail": "contact@georgeai.dev",
         "subject": "=New order: {{ $json.product }} — €{{ $json.amount }}",
-        "emailType": "text",
-        "message": "=New paid order on georgeai.dev\n\nProduct: {{ $json.product }}\nAmount: €{{ $json.amount }}\nClient: {{ $json.clientName }} <{{ $json.email }}>\nStripe session: {{ $json.sessionId }}\n\nOrder stored in the n8n 'orders' data table (n8n.rotocon.world).",
-        "options": { "appendAttribution": false }
+        "emailFormat": "text",
+        "text": "=New paid order on georgeai.dev\n\nProduct: {{ $json.product }}\nAmount: €{{ $json.amount }}\nClient: {{ $json.clientName }} <{{ $json.email }}>\nStripe session: {{ $json.sessionId }}\n\nOrder stored in the n8n 'orders' data table (app.n8n-studio.com).",
+        "options": {
+          "appendAttribution": false
+        }
       },
-      "credentials": { "gmailOAuth2": { "id": "ahEoxGuMkBRjQ9YF", "name": "Gmail account" } }
+      "credentials": {
+        "smtp": {
+          "id": "aK6Bete8OTRMNACY",
+          "name": "Brevo SMTP"
+        }
+      }
     },
     {
+      "id": "a1000000-0000-4000-8000-000000000006",
       "name": "Store Order",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
-      "position": [896, 192],
+      "position": [
+        896,
+        192
+      ],
       "onError": "continueRegularOutput",
       "parameters": {
         "resource": "row",
         "operation": "insert",
-        "dataTableId": { "__rl": true, "mode": "id", "value": "Safgo17NCrOS579A", "cachedResultName": "orders" },
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "MGvuy74ouTb6vUpB",
+          "cachedResultName": "orders"
+        },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
@@ -112,40 +188,157 @@
             "client_name": "={{ $json.clientName }}",
             "session_id": "={{ $json.sessionId }}",
             "ordered_at": "={{ $now.toISO() }}"
-          }
+          },
+          "schema": [
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "product",
+              "displayName": "product",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "amount",
+              "displayName": "amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "client_name",
+              "displayName": "client_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ordered_at",
+              "displayName": "ordered_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "date",
+              "canBeUsedToMatch": true
+            }
+          ]
         }
       }
     },
     {
-      "id": "fac2b745-a819-479f-bc21-d99c58616bd4",
+      "id": "a1000000-0000-4000-8000-000000000007",
       "name": "Onboard Client",
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2.2,
-      "position": [672, 384],
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        896,
+        384
+      ],
       "onError": "continueRegularOutput",
       "parameters": {
-        "resource": "message",
-        "operation": "send",
-        "sendTo": "={{ $json.email }}",
-        "subject": "=Your order is confirmed — next step",
-        "emailType": "text",
-        "message": "=Hi {{ $json.clientName }},\n\nThank you for your order ({{ $json.product }}, €{{ $json.amount }}) — payment received.\n\n{{ $json.isLeadPack ? \"To start building your contact list, please reply with your target profile:\\n\\n- Target industry (e.g. dental clinics, machine builders)\\n- Region (e.g. Bavaria, DACH, all of Germany)\\n- Company size (e.g. 10-200 employees)\\n- Roles to contact (e.g. owner, head of sales)\\n- Anyone to exclude (competitors, existing customers)\\n\\nAs soon as I have this, delivery starts — you will receive your verified contacts within the promised timeframe.\" : \"I will contact you within one business day to schedule your setup. If you want to get started sooner, just reply to this email with a time that suits you.\" }}\n\nBest regards,\nGeorge Sebastian Cucuiet\ngeorgeai.dev · contact@georgeai.dev",
-        "options": { "appendAttribution": false }
+        "fromEmail": "GeorgeAI <george.cucuiet@gmx.de>",
+        "toEmail": "={{ $json.email }}",
+        "subject": "Your order is confirmed — next step",
+        "emailFormat": "text",
+        "text": "=Hi {{ $json.clientName }},\n\nThank you for your order ({{ $json.product }}, €{{ $json.amount }}) — payment received.\n\n{{ $json.isLeadPack ? \"To start building your contact list, please reply with your target profile:\\n\\n- Target industry (e.g. dental clinics, machine builders)\\n- Region (e.g. Bavaria, DACH, all of Germany)\\n- Company size (e.g. 10-200 employees)\\n- Roles to contact (e.g. owner, head of sales)\\n- Anyone to exclude (competitors, existing customers)\\n\\nAs soon as I have this, delivery starts — you will receive your verified contacts within the promised timeframe.\" : \"I will contact you within one business day to schedule your setup. If you want to get started sooner, just reply to this email with a time that suits you.\" }}\n\nBest regards,\nGeorge Sebastian Cucuiet\ngeorgeai.dev · contact@georgeai.dev",
+        "options": {
+          "appendAttribution": false
+        }
       },
-      "credentials": { "gmailOAuth2": { "id": "ahEoxGuMkBRjQ9YF", "name": "Gmail account" } }
+      "credentials": {
+        "smtp": {
+          "id": "aK6Bete8OTRMNACY",
+          "name": "Brevo SMTP"
+        }
+      }
     }
   ],
   "connections": {
-    "Stripe Webhook": { "main": [[{ "node": "Is Checkout Completed?", "type": "main", "index": 0 }]] },
-    "Is Checkout Completed?": { "main": [[{ "node": "Fetch Session from Stripe", "type": "main", "index": 0 }]] },
-    "Fetch Session from Stripe": { "main": [[{ "node": "Extract Order", "type": "main", "index": 0 }]] },
+    "Stripe Webhook": {
+      "main": [
+        [
+          {
+            "node": "Is Checkout Completed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Checkout Completed?": {
+      "main": [
+        [
+          {
+            "node": "Fetch Session from Stripe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Session from Stripe": {
+      "main": [
+        [
+          {
+            "node": "Extract Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Extract Order": {
-      "main": [[
-        { "node": "Notify George", "type": "main", "index": 0 },
-        { "node": "Onboard Client", "type": "main", "index": 0 },
-        { "node": "Store Order", "type": "main", "index": 0 }
-      ]]
+      "main": [
+        [
+          {
+            "node": "Notify George",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Store Order",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Onboard Client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
-  },
-  "settings": { "executionOrder": "v1" }
+  }
 }
