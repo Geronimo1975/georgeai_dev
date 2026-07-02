@@ -41,3 +41,11 @@ setup fee lands on the first invoice).
 - email column payload must be an object: `{"email": "...", "text": "..."}` (plain string is rejected)
 - smoke-test item "TEST — delete me" (`3043643341`) left on the board — delete after verifying
 
+## n8n stripe-orders workflow
+
+- workflow `stripe-orders` (`hGndKGfKRk9tKIoG`) on https://n8n.rotocon.world — ACTIVE; export in `docs/n8n-stripe-orders.json`
+- webhook (production): `https://n8n.rotocon.world/webhook/stripe-orders` (POST)
+- flow: checkout.session.completed → Extract Order → (Gmail notify George) + (monday Orders item, Status=New) + (Gmail onboarding email to client; lead packs get the ICP questionnaire)
+- **MANUAL STEP (2 min):** the Stripe MCP cannot create webhook endpoints. In the Stripe dashboard (test mode) → Developers → Webhooks → Add endpoint: URL `https://n8n.rotocon.world/webhook/stripe-orders`, event `checkout.session.completed`. Repeat in live mode when switching the links live.
+
+

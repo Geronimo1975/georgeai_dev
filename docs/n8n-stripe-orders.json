@@ -1,0 +1,130 @@
+{
+  "name": "stripe-orders",
+  "id": "hGndKGfKRk9tKIoG",
+  "instance": "https://n8n.rotocon.world",
+  "active": true,
+  "description": "georgeai.dev orders: Stripe checkout.session.completed webhook → notify George (Gmail) + create item on monday.com Orders board (5099628523) + client onboarding email. Webhook path: /webhook/stripe-orders.",
+  "nodes": [
+    {
+      "id": "7486c32c-5342-4136-9119-ba90b4223d9e",
+      "name": "Stripe Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [0, 192],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "stripe-orders",
+        "responseMode": "onReceived"
+      },
+      "webhookId": "ee1e18c9-10d0-488f-9913-13a729f6f5dc"
+    },
+    {
+      "id": "c8633d71-6c91-4676-a662-bb8e7dfdfd5a",
+      "name": "Is Checkout Completed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [224, 192],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.body?.type ?? \"\" }}",
+              "operator": { "type": "string", "operation": "equals" },
+              "rightValue": "checkout.session.completed"
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "91a6c39d-a053-4b11-b77e-17d86eb88e35",
+      "name": "Extract Order",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [448, 192],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            { "id": "order-email", "name": "email", "value": "={{ $json.body.data.object.customer_details?.email ?? \"\" }}", "type": "string" },
+            { "id": "order-name", "name": "clientName", "value": "={{ $json.body.data.object.customer_details?.name ?? \"there\" }}", "type": "string" },
+            { "id": "order-amount", "name": "amount", "value": "={{ ($json.body.data.object.amount_total ?? 0) / 100 }}", "type": "number" },
+            { "id": "order-product", "name": "product", "value": "={{ $json.body.data.object.metadata?.data_product ?? \"unknown\" }}", "type": "string" },
+            { "id": "order-session", "name": "sessionId", "value": "={{ $json.body.data.object.id }}", "type": "string" },
+            { "id": "order-leadpack", "name": "isLeadPack", "value": "={{ ($json.body.data.object.metadata?.data_product ?? \"\").startsWith(\"lead-pack\") }}", "type": "boolean" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "6559ae8a-aecd-4ae8-93e8-4b0e2d008f38",
+      "name": "Notify George",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [672, 0],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "contact@georgeai.dev",
+        "subject": "=New order: {{ $json.product }} — €{{ $json.amount }}",
+        "emailType": "text",
+        "message": "=New paid order on georgeai.dev\n\nProduct: {{ $json.product }}\nAmount: €{{ $json.amount }}\nClient: {{ $json.clientName }} <{{ $json.email }}>\nStripe session: {{ $json.sessionId }}\n\nOrder tracked on the monday.com Orders board.",
+        "options": { "appendAttribution": false }
+      },
+      "credentials": { "gmailOAuth2": { "id": "ahEoxGuMkBRjQ9YF", "name": "Gmail account" } }
+    },
+    {
+      "id": "29716c65-2f03-4df2-9f32-2d0736913113",
+      "name": "Create Order Item",
+      "type": "n8n-nodes-base.mondayCom",
+      "typeVersion": 1,
+      "position": [672, 192],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "resource": "boardItem",
+        "operation": "create",
+        "boardId": "5099628523",
+        "groupId": "topics",
+        "name": "={{ $json.product }} — {{ $json.email }}",
+        "additionalFields": {
+          "columnValues": "={{ JSON.stringify({ color_mm4wwx4p: { label: \"New\" }, text_mm4w8h7g: $json.product, numeric_mm4w1shj: String($json.amount), email_mm4wv0kj: { email: $json.email, text: $json.email }, text_mm4wv6td: $json.sessionId }) }}"
+        }
+      },
+      "credentials": { "mondayComApi": { "id": "F8aRAeMebU8kAo2S", "name": "Monday.com account" } }
+    },
+    {
+      "id": "fac2b745-a819-479f-bc21-d99c58616bd4",
+      "name": "Onboard Client",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [672, 384],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $json.email }}",
+        "subject": "=Your order is confirmed — next step",
+        "emailType": "text",
+        "message": "=Hi {{ $json.clientName }},\n\nThank you for your order ({{ $json.product }}, €{{ $json.amount }}) — payment received.\n\n{{ $json.isLeadPack ? \"To start building your contact list, please reply with your target profile:\\n\\n- Target industry (e.g. dental clinics, machine builders)\\n- Region (e.g. Bavaria, DACH, all of Germany)\\n- Company size (e.g. 10-200 employees)\\n- Roles to contact (e.g. owner, head of sales)\\n- Anyone to exclude (competitors, existing customers)\\n\\nAs soon as I have this, delivery starts — you will receive your verified contacts within the promised timeframe.\" : \"I will contact you within one business day to schedule your setup. If you want to get started sooner, just reply to this email with a time that suits you.\" }}\n\nBest regards,\nGeorge Sebastian Cucuiet\ngeorgeai.dev · contact@georgeai.dev",
+        "options": { "appendAttribution": false }
+      },
+      "credentials": { "gmailOAuth2": { "id": "ahEoxGuMkBRjQ9YF", "name": "Gmail account" } }
+    }
+  ],
+  "connections": {
+    "Stripe Webhook": { "main": [[{ "node": "Is Checkout Completed?", "type": "main", "index": 0 }]] },
+    "Is Checkout Completed?": { "main": [[{ "node": "Extract Order", "type": "main", "index": 0 }]] },
+    "Extract Order": {
+      "main": [[
+        { "node": "Notify George", "type": "main", "index": 0 },
+        { "node": "Create Order Item", "type": "main", "index": 0 },
+        { "node": "Onboard Client", "type": "main", "index": 0 }
+      ]]
+    }
+  },
+  "settings": { "executionOrder": "v1" }
+}
