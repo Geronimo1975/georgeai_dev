@@ -55,6 +55,8 @@ site/ → rsync → VPS:/opt/georgeai → nginx (georgeai-web) → Traefik → h
 
 - The export ships **no `index.html`**. The real homepage is `GeorgeAI.dc.html` (renders client-side from `support.js` + `services-data.js`, both refreshed every export). `GeorgeAI - Portfolio.html` is a **stale one-off "Bundled Page" snapshot** — never use it as the homepage.
 - It injects `<script src="/auth.js" defer>` into `index.html` (idempotent). `auth.js` lives in `backend/assets/`, *not* in the export, so it survives re-exports.
+- It applies the **SEO layer** from `seo/` (idempotent, runs even with `--no-content`): injects `seo/head.html` (title/meta/OG/JSON-LD, marker `seo:head`) before `</head>`, a crawlable footer link block (marker `seo:footer`) before `</body>`, sets `lang="en"` on `<html>`, and copies `robots.txt`, `sitemap.xml`, `llms.txt`, `favicon.svg` into `site/`. Edit SEO in `seo/`, never in `site/`.
+- It then runs `seo/generate_service_pages.py`, which generates **static crawlable pages** — `/services/` hub + one page per service from `georgeai_services.json`, plus `/blog/` from the HTML-fragment posts in `blog/` (meta in a `<!--meta {json} -->` header: title, description, date, tags, faq) — and regenerates `sitemap.xml` with all URLs. Service names in the JSON must stay in sync with the design-tool export.
 - `site/` and `frontend/template/` are **wiped and regenerated on every deploy** — never hand-edit files there; changes belong in the design tool, `deploy.sh`, or `backend/assets/`.
 
 ### Django backend (`backend/`)
