@@ -34,12 +34,10 @@ phone number collection **on**. Each payment link and product carries
 Setup + subscription products combine both prices in one payment link (the
 setup fee lands on the first invoice).
 
-## monday.com Orders board
+## Order storage: n8n data table `orders`
 
-- board_id: `5099628523` (private, workspace rotocon-world) — https://rotocon-world.monday.com/boards/5099628523
-- columns: status=`color_mm4wwx4p` (New / In progress / Delivered / Canceled), product=`text_mm4w8h7g`, amount=`numeric_mm4w1shj`, email=`email_mm4wv0kj`, stripe_session=`text_mm4wv6td`
-- email column payload must be an object: `{"email": "...", "text": "..."}` (plain string is rejected)
-- smoke-test item "TEST — delete me" (`3043643341`) left on the board — delete after verifying
+- data table `orders` (`Safgo17NCrOS579A`) on **n8n.rotocon.world** (George's personal n8n project) — columns: status, product, amount, email, client_name, session_id, ordered_at
+- REPLACES the earlier monday.com Orders board (`5099628523`), which was **deleted 2026-07-02**: it had been created on the Rotocon company monday account by mistake — order data must never live on the employer's account. If monday tracking is wanted later, use a personal/georgeai monday account + its own n8n credential.
 
 ## n8n stripe-orders workflow
 

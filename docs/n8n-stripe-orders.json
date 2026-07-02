@@ -3,7 +3,7 @@
   "id": "hGndKGfKRk9tKIoG",
   "instance": "https://n8n.rotocon.world",
   "active": true,
-  "description": "georgeai.dev orders: Stripe checkout.session.completed webhook → fetch-back session from Stripe API (anti-forgery) → notify George (Gmail) + create item on monday.com Orders board (5099628523) + client onboarding email. Webhook path: /webhook/stripe-orders.",
+  "description": "georgeai.dev orders: Stripe checkout.session.completed webhook → fetch-back session from Stripe API (anti-forgery) → notify George (Gmail) + insert row in n8n data table 'orders' (Safgo17NCrOS579A) + client onboarding email. Webhook path: /webhook/stripe-orders.",
   "security": "The webhook payload is NOT trusted. The session is re-fetched from api.stripe.com by id with the 'Stripe API' credential; forged events fail the fetch and stop the workflow. All order data (incl. the onboarding email recipient) comes from Stripe's API response.",
   "nodes": [
     {
@@ -87,29 +87,34 @@
         "sendTo": "contact@georgeai.dev",
         "subject": "=New order: {{ $json.product }} — €{{ $json.amount }}",
         "emailType": "text",
-        "message": "=New paid order on georgeai.dev\n\nProduct: {{ $json.product }}\nAmount: €{{ $json.amount }}\nClient: {{ $json.clientName }} <{{ $json.email }}>\nStripe session: {{ $json.sessionId }}\n\nOrder tracked on the monday.com Orders board.",
+        "message": "=New paid order on georgeai.dev\n\nProduct: {{ $json.product }}\nAmount: €{{ $json.amount }}\nClient: {{ $json.clientName }} <{{ $json.email }}>\nStripe session: {{ $json.sessionId }}\n\nOrder stored in the n8n 'orders' data table (n8n.rotocon.world).",
         "options": { "appendAttribution": false }
       },
       "credentials": { "gmailOAuth2": { "id": "ahEoxGuMkBRjQ9YF", "name": "Gmail account" } }
     },
     {
-      "id": "29716c65-2f03-4df2-9f32-2d0736913113",
-      "name": "Create Order Item",
-      "type": "n8n-nodes-base.mondayCom",
-      "typeVersion": 1,
-      "position": [672, 192],
+      "name": "Store Order",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [896, 192],
       "onError": "continueRegularOutput",
       "parameters": {
-        "resource": "boardItem",
-        "operation": "create",
-        "boardId": "5099628523",
-        "groupId": "topics",
-        "name": "={{ $json.product }} — {{ $json.email }}",
-        "additionalFields": {
-          "columnValues": "={{ JSON.stringify({ color_mm4wwx4p: { label: \"New\" }, text_mm4w8h7g: $json.product, numeric_mm4w1shj: String($json.amount), email_mm4wv0kj: { email: $json.email, text: $json.email }, text_mm4wv6td: $json.sessionId }) }}"
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": { "__rl": true, "mode": "id", "value": "Safgo17NCrOS579A", "cachedResultName": "orders" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "New",
+            "product": "={{ $json.product }}",
+            "amount": "={{ $json.amount }}",
+            "email": "={{ $json.email }}",
+            "client_name": "={{ $json.clientName }}",
+            "session_id": "={{ $json.sessionId }}",
+            "ordered_at": "={{ $now.toISO() }}"
+          }
         }
-      },
-      "credentials": { "mondayComApi": { "id": "F8aRAeMebU8kAo2S", "name": "Monday.com account" } }
+      }
     },
     {
       "id": "fac2b745-a819-479f-bc21-d99c58616bd4",
@@ -137,8 +142,8 @@
     "Extract Order": {
       "main": [[
         { "node": "Notify George", "type": "main", "index": 0 },
-        { "node": "Create Order Item", "type": "main", "index": 0 },
-        { "node": "Onboard Client", "type": "main", "index": 0 }
+        { "node": "Onboard Client", "type": "main", "index": 0 },
+        { "node": "Store Order", "type": "main", "index": 0 }
       ]]
     }
   },
