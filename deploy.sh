@@ -42,6 +42,9 @@ case "$REMOTE_DIR" in *" "*) printf 'GEORGEAI_REMOTE_DIR must not contain spaces
 
 ASSETS_DIR="$PROJECT_DIR/backend/assets"
 PAGES_DIR="$PROJECT_DIR/pages"
+# brand accent layer — rewrites the export's hard-coded coral into theme-aware,
+# WCAG-passing accents (see brand/apply_brand.py). Survives re-exports.
+BRAND_DIR="$PROJECT_DIR/brand"
 
 # ---------------------------------------------------------------------------
 # frontend assets — JS kept out of the export (backend/assets/) so it survives
@@ -106,6 +109,9 @@ html = re.sub(r"<html(?![^>]*\blang=)", '<html lang="en"', html, count=1, flags=
 # crawlable internal links to the static pages (the SPA nav is JS-only)
 footer = ('<div id="seo:footer" style="padding:16px 24px;text-align:center;'
           "font-family:'JetBrains Mono',monospace;font-size:12px\">"
+          '<a href="/pricing/" style="color:#a9583e;text-decoration:none">'
+          'Packages &amp; pricing &rarr;</a>'
+          '&nbsp;&nbsp;·&nbsp;&nbsp;'
           '<a href="/services/" style="color:#8e8b82;text-decoration:none">'
           'Browse all services &rarr;</a>'
           '&nbsp;&nbsp;·&nbsp;&nbsp;'
@@ -130,6 +136,29 @@ PYEOF
     else
       warn "service page generation failed — deploy continues with static sitemap"
     fi
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# brand accent layer — the export hard-codes coral #cc785c; apply_brand.py
+# rewrites functional uses (buttons, links) into theme-aware accessible
+# accents and mutes small decorative accents. Runs on every deploy,
+# including --no-content. Idempotent (see brand/apply_brand.py).
+# ---------------------------------------------------------------------------
+apply_brand() {
+  [ -f "$BRAND_DIR/apply_brand.py" ] || { warn "brand/ not found — skipping brand layer"; return 0; }
+  command -v python3 >/dev/null || { warn "python3 not found — skipped brand layer"; return 0; }
+  local targets=()
+  local f
+  for f in "$SITE_DIR/index.html" "$SITE_DIR/GeorgeAI.dc.html" \
+           "$SITE_DIR/Portfolio.dc.html" "$SITE_DIR/Studio Site.dc.html"; do
+    [ -f "$f" ] && targets+=("$f")
+  done
+  [ ${#targets[@]} -eq 0 ] && return 0
+  if python3 "$BRAND_DIR/apply_brand.py" "${targets[@]}"; then
+    ok "brand accent layer applied (${#targets[@]} files)"
+  else
+    warn "brand layer failed — deploy continues with export colors"
   fi
 }
 
@@ -253,6 +282,7 @@ PY
   # the same asset- and SEO-complete content.
   apply_assets
   apply_seo
+  apply_brand
   apply_pages
 
   # mirror the unpacked content (incl. the derived index.html) into the frontend
@@ -268,6 +298,7 @@ else
   # keep assets + SEO layer current even on content-less redeploys
   apply_assets
   apply_seo
+  apply_brand
   apply_pages
 fi
 

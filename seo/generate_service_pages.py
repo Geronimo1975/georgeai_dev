@@ -31,7 +31,7 @@ PHONE_HREF = "tel:+491604155546"
 CSS = """
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#faf9f5;color:#3d3d3a;font-family:Inter,system-ui,sans-serif;line-height:1.6}
-a{color:#cc785c}
+a{color:#a9583e}
 .wrap{max-width:840px;margin:0 auto;padding:0 24px}
 header.site{border-bottom:1px solid #e6dfd8;padding:18px 0}
 header.site .wrap{display:flex;align-items:center;justify-content:space-between}
@@ -39,8 +39,8 @@ header.site .wrap{display:flex;align-items:center;justify-content:space-between}
 .wordmark b{color:#cc785c;font-weight:500}
 nav.crumbs{font-family:'JetBrains Mono',monospace;font-size:12px;margin:28px 0 8px;color:#8e8b82}
 nav.crumbs a{color:#6c6a64;text-decoration:none}
-nav.crumbs a:hover{color:#cc785c}
-.cat{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:12px;color:#cc785c;border:1px solid #e6dfd8;border-radius:9999px;padding:4px 12px;margin:14px 0 10px}
+nav.crumbs a:hover{color:#a9583e}
+.cat{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:12px;color:#a9583e;border:1px solid #e6dfd8;border-radius:9999px;padding:4px 12px;margin:14px 0 10px}
 h1{font-family:Newsreader,Georgia,serif;font-weight:500;font-size:44px;color:#141413;line-height:1.15;margin:6px 0 10px}
 .tagline{font-family:Newsreader,Georgia,serif;font-size:22px;color:#6c6a64;font-style:italic;margin-bottom:18px}
 .intro{font-size:17px;color:#252523;margin-bottom:34px;max-width:64ch}
@@ -50,14 +50,14 @@ ul.list li{padding:9px 0 9px 26px;position:relative;border-bottom:1px solid #ebe
 ul.list li::before{content:"";position:absolute;left:2px;top:17px;width:8px;height:8px;background:#cc785c;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)}
 ol.steps{counter-reset:s;list-style:none}
 ol.steps li{counter-increment:s;padding:9px 0 9px 38px;position:relative;border-bottom:1px solid #ebe6df}
-ol.steps li::before{content:counter(s,decimal-leading-zero);position:absolute;left:0;top:11px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#cc785c}
+ol.steps li::before{content:counter(s,decimal-leading-zero);position:absolute;left:0;top:11px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#a9583e}
 .outcome{background:#181715;color:#faf9f5;border-radius:14px;padding:24px 26px;margin:36px 0;font-family:Newsreader,Georgia,serif;font-size:20px}
 .outcome small{display:block;font-family:'JetBrains Mono',monospace;font-size:11px;color:#a09d96;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px}
 .stack{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 30px}
 .stack span{font-family:'JetBrains Mono',monospace;font-size:12px;background:#f5f0e8;border:1px solid #e6dfd8;border-radius:8px;padding:5px 11px;color:#3d3d3a}
 .cta{background:#efe9de;border-radius:14px;padding:26px;margin:36px 0}
 .cta h2{margin-top:0}
-.cta .btn{display:inline-block;background:#cc785c;color:#fff;text-decoration:none;border-radius:9999px;padding:11px 22px;font-weight:600;margin:6px 12px 0 0}
+.cta .btn{display:inline-block;background:#a9583e;color:#fff;text-decoration:none;border-radius:9999px;padding:11px 22px;font-weight:600;margin:6px 12px 0 0}
 .cta .btn.alt{background:transparent;color:#141413;border:1px solid #cc785c}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin:18px 0 40px}
 .card{background:#fff;border:1px solid #e6dfd8;border-radius:14px;padding:20px;text-decoration:none;display:block}
@@ -135,7 +135,7 @@ def page_shell(title, description, canonical, body, jsonld) -> str:
 {body}
 </main>
 <footer class="site"><div class="wrap">
-GeorgeAI — AI automation &amp; software · <a href="{PHONE_HREF}">{PHONE}</a> · <a href="mailto:{EMAIL}">{EMAIL}</a> · <a href="/services/">All services</a> · <a href="/blog/">Blog</a>
+GeorgeAI — AI automation &amp; software · <a href="{PHONE_HREF}">{PHONE}</a> · <a href="mailto:{EMAIL}">{EMAIL}</a> · <a href="/pricing/">Pricing</a> · <a href="/services/">All services</a> · <a href="/blog/">Blog</a>
 </div></footer>
 </body>
 </html>
@@ -412,7 +412,7 @@ def main():
     slugs = {s["name"]: slugify(s["name"]) for s in data["services"]}
     today = date.today().isoformat()
 
-    urls = [(f"{BASE}/", "1.0"), (f"{BASE}/services/", "0.9")]
+    urls = [(f"{BASE}/", "1.0"), (f"{BASE}/pricing/", "0.9"), (f"{BASE}/services/", "0.9")]
     for svc in data["services"]:
         slug = slugs[svc["name"]]
         canonical = f"{BASE}/services/{slug}/"
