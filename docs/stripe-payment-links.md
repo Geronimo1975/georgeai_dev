@@ -43,9 +43,9 @@ setup fee lands on the first invoice).
 
 - workflow `stripe-orders` (`Nx1WqOlQ1k3IWdgB`) on https://app.n8n-studio.com — ACTIVE, E2E-tested 2026-07-02 (real test purchase → all 4 nodes success); export in `docs/n8n-stripe-orders.json`. Old copy on n8n.rotocon.world (`hGndKGfKRk9tKIoG`) DEACTIVATED — wrong instance, see .claude/skills/georgeai-n8n.
 - webhook (production): `https://app.n8n-studio.com/webhook/stripe-orders` (POST) — Stripe endpoint `we_1TopbREffkWmXH1rTlxClClL` (sandbox, name georgeai-stripe-orders)
-- flow: checkout.session.completed → **fetch-back session from Stripe API** (anti-forgery: forged webhook posts die on the fetch; all order data incl. the client email comes from Stripe, never from the raw POST) → (Gmail notify George) + (monday Orders item, Status=New) + (Gmail onboarding email to client; lead packs get the ICP questionnaire)
+- flow: checkout.session.completed → **fetch-back session from Stripe API** (anti-forgery: forged webhook posts die on the fetch; all order data incl. the client email comes from Stripe, never from the raw POST) → (Brevo email to George) + (row in `orders` data table, status=New) + (Brevo onboarding email to client; lead packs get the ICP questionnaire)
 - credentials on app.n8n-studio.com: `Stripe account` (`OnWk28SXJXBAkCl0`, restricted test key) for the fetch-back; `Brevo SMTP` (`aK6Bete8OTRMNACY`, sender george.cucuiet@gmx.de) for both emails.
 - go-live checklist: recreate products/prices/payment links in live mode; swap the 7 hrefs in pages/pricing/index.html; redeploy; add a LIVE-mode webhook endpoint with the same URL; swap the n8n Stripe credential to a live restricted key. Optional: verify contact@georgeai.dev as Brevo sender for nicer branding.
-- known limitation (accepted for Phase 1): no dedup on session id — a Stripe webhook retry could create a duplicate monday item/email. Add a lookup-before-create if it ever happens in practice.
+- known limitation (accepted for Phase 1): no dedup on session id — a Stripe webhook retry could create a duplicate order row/email. Add a rowNotExists check before insert if it ever happens in practice.
 
 
