@@ -314,6 +314,18 @@ ssh -o BatchMode=yes -o ConnectTimeout=10 "$SSH_HOST" "mkdir -p \"$REMOTE_DIR/si
 
 rsync -az --delete -e ssh "$SITE_DIR"/ "$SSH_HOST:$REMOTE_DIR/site/"
 ok "site/ synced"
+# nginx.conf is bind-mounted into the container as a single file. rsync replaces
+# it with a new inode, but the running container stays bound to the old one — so
+# neither `nginx -s reload` nor plain `up -d` can ever pick up the change.
+# Compare the local file against what the RUNNING CONTAINER actually serves (not
+# the remote disk copy, which rsync may already have updated under a stale mount)
+# and force-recreate in step 4 so the mount rebinds when they differ.
+# `|| true`: container missing/stopped (e.g. first deploy) → treat as changed.
+NGINX_CHANGED=0
+CONTAINER_NGINX_SUM=$(ssh "$SSH_HOST" "docker exec georgeai-web cksum /etc/nginx/conf.d/default.conf 2>/dev/null" | awk '{print $1, $2}' || true)
+LOCAL_NGINX_SUM=$(cksum "$PROJECT_DIR/deploy/nginx.conf" | awk '{print $1, $2}')
+[ "$CONTAINER_NGINX_SUM" = "$LOCAL_NGINX_SUM" ] || NGINX_CHANGED=1
+
 # compose runs from $REMOTE_DIR and references ./deploy/nginx.conf — sync only what
 # it needs (avoids shipping a second, unused copy of docker-compose.yml under deploy/).
 rsync -az -e ssh "$PROJECT_DIR/deploy/nginx.conf"         "$SSH_HOST:$REMOTE_DIR/deploy/nginx.conf"
@@ -324,9 +336,16 @@ ok "deploy config synced"
 # 4. bring up the container behind Traefik
 # ---------------------------------------------------------------------------
 step "Bringing up container"
-# `up -d` recreates on any config/label change and is a no-op otherwise; the
-# bind-mounted ./site is live the instant rsync finishes, so no restart needed.
-ssh "$SSH_HOST" "cd \"$REMOTE_DIR\" && docker compose up -d --remove-orphans" \
+# `up -d` recreates on any compose/label change and is a no-op otherwise; the
+# bind-mounted ./site directory is live the instant rsync finishes. The one
+# blind spot is the single-file nginx.conf mount (see step 3): when that file
+# changed we must force-recreate so the container rebinds to the new inode.
+COMPOSE_FLAGS="--remove-orphans"
+if [ "$NGINX_CHANGED" = 1 ]; then
+  warn "nginx.conf changed — force-recreating container so the file mount rebinds"
+  COMPOSE_FLAGS="$COMPOSE_FLAGS --force-recreate"
+fi
+ssh "$SSH_HOST" "cd \"$REMOTE_DIR\" && docker compose up -d $COMPOSE_FLAGS" \
   || die "docker compose failed on VPS"
 ok "georgeai-web is up"
 
