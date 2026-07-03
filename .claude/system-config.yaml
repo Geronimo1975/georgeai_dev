@@ -1,0 +1,71 @@
+# =============================================================================
+# georgeai.dev — system configuration
+# Machine-readable description of the project structure and the infrastructure
+# it deploys to. Companion to CLAUDE.md (prose) — keep the two in sync.
+# =============================================================================
+
+project:
+  name: georgeai.dev
+  description: >
+    Deployment pipeline + Django backend for George's portfolio site.
+    HTML is exported from a design tool as a .zip; this repo unpacks it,
+    applies the SEO layer, ships it to a VPS and serves it.
+  production_url: https://georgeai.dev
+
+structure:
+  CLAUDE.md: Repo guidance for Claude Code (read first)
+  DESIGN-claude.md: Design system (cream/coral palette, '#cc785c' primary)
+  deploy.sh: Deploy pipeline — unpack export, inject auth.js + SEO, rsync to VPS
+  exports/: Design-tool .zip exports (input of the pipeline)
+  site/: Generated live web root — WIPED on every deploy, never hand-edit
+  frontend/template/: Mirror of site/ served by Django — WIPED on every deploy
+  seo/: SEO layer (head.html, robots.txt, sitemap.xml, llms.txt, favicon.svg) — edit SEO HERE
+  deploy/: Production nginx (docker-compose.yml + nginx.conf, Traefik labels)
+  backend/: Django backend (session-auth API /api/auth/*, serves the export)
+  backend/assets/: Files that survive re-exports (auth.js)
+  Media/: Content assets for the site
+  georgeai_services.json: Source data for the services section
+  .claude/skills/: Project-specific Claude Code skills
+
+# -----------------------------------------------------------------------------
+# VPS — the server everything deploys to. Pay attention: it is SHARED
+# infrastructure (Traefik + Postgres serve other projects too).
+# -----------------------------------------------------------------------------
+vps:
+  ip: 85.215.69.83
+  ssh_alias: macbook-air          # → root@85.215.69.83 (use `ssh macbook-air`)
+  remote_dir: /opt/georgeai       # rsync target for site/
+  docker_network: gethub_gethub-network   # external, shared
+  containers:
+    georgeai-web:
+      image: nginx:1.27-alpine
+      role: Serves site/ — the currently live production path
+    gethub-traefik:
+      role: Shared reverse proxy, Traefik v2.11, Let's Encrypt TLS (do not restart casually)
+    gethub-postgres:
+      role: Shared PostgreSQL — database `georgeai` lives here (no local DB)
+  local_tunnels:
+    "5433": reserved — n8n postgres tunnel (do NOT reuse)
+    "5434": georgeai postgres tunnel (see .claude/skills/georgeai-backend)
+
+# -----------------------------------------------------------------------------
+# N8N — automation account used by this project.
+# -----------------------------------------------------------------------------
+n8n:
+  instance: https://app.n8n-studio.com  # George's OWN n8n (his VPS 85.215.69.83) — ALL georgeai work here
+  api_key_env: N8N_STUDIO_API_KEY       # in project .env; REST API at /api/v1/
+  wrong_instance: https://n8n.rotocon.world  # DIFFERENT server (31.70.79.209); claude.ai n8n connector
+                                             # authenticates THERE — never build georgeai workflows via it
+  local_db_tunnel_port: 5433            # rotocon n8n tunnel, reserved — never bind 5433
+  mcp_servers:
+    - n8n-mcp            # check its base URL before use (key failed auth 2026-07-02)
+    - claude.ai n8n      # points at n8n.rotocon.world — legacy assets only
+    - postgres-n8n       # direct SQL to the rotocon n8n DB (legacy)
+
+backend:
+  framework: Django + DRF (SessionAuthentication only, JSON renderer only)
+  python_venv: backend/.venv
+  env_file: backend/.env            # django-environ; secrets never in source
+  database: postgres://…@127.0.0.1:5434/georgeai (via SSH tunnel)
+  auth_endpoints: /api/auth/{signup,login,logout,me}
+  tests: backend/.venv/bin/python manage.py test accounts
