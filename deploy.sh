@@ -87,7 +87,7 @@ apply_seo() {
   [ -d "$SEO_DIR" ] || { warn "seo/ not found — skipping SEO layer"; return 0; }
 
   local f copied=""
-  for f in robots.txt sitemap.xml llms.txt favicon.svg; do
+  for f in robots.txt sitemap.xml llms.txt favicon.svg responsive.css; do
     [ -f "$SEO_DIR/$f" ] && { cp "$SEO_DIR/$f" "$SITE_DIR/$f"; copied="$copied $f"; }
   done
   [ -n "$copied" ] && ok "seo files:$copied"

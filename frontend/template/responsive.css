@@ -1,0 +1,84 @@
+/* ============================================================================
+   responsive.css — mobile responsive overrides for georgeai.dev
+
+   The design-tool export ships with ZERO media queries (verified: 0 @media in
+   index.html / GeorgeAI.dc.html), so the desktop layout is served at every
+   width. This file adds the missing mobile behaviour.
+
+   Delivery: kept OUT of the export and injected at deploy time
+     - copied into ./site by deploy.sh (SEO/GEO asset loop)
+     - linked from <head> via seo/head.html
+   so it survives every re-export (same pattern as auth.js and the SEO block).
+
+   Selectors target stable data-dc-tpl template IDs. The sc-XXXX styled-
+   components classes are re-hashed on every export and must NOT be relied on;
+   the data-dc-tpl numbers are the design tool's node IDs and are stable.
+
+   !important is required: the design tool applies layout through runtime
+   styled-components <style> tags and inline element styles (e.g. inline
+   width:0 on the hero cards) that would otherwise win by source order.
+   ============================================================================ */
+
+/* ---------------------------------------------------------------------------
+   1. HEADER — top utility bar horizontal overflow  (the sideways page scroll)
+
+   [data-dc-tpl="9"] is a 3-column grid:  contact(10) | socials(15) | actions(16)
+   At phone widths the three columns can't fit, so the actions cluster
+   (language / Sign up / theme toggle) is pushed to x≈496 and spills ~71px past
+   the viewport — scrolling the whole page sideways. Collapse the grid into a
+   centred, wrapping flex row so every group stays inside the viewport.
+--------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  [data-dc-tpl="9"] {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 6px 16px !important;
+    text-align: center !important;
+  }
+  [data-dc-tpl="9"] > [data-dc-tpl="10"],
+  [data-dc-tpl="9"] > [data-dc-tpl="15"],
+  [data-dc-tpl="9"] > [data-dc-tpl="16"] {
+    flex: 0 1 auto !important;
+    justify-content: center !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   2. HERO SHOWCASE — flex accordion → swipeable scroll-snap carousel
+
+   Track [data-dc-tpl="70"] lays out 5 project cards [data-dc-tpl="72"] as a
+   flex-grow accordion: the active card expands (flex-grow:6) and the other four
+   collapse to ~41px vertical-label strips (flex-grow:1, inline width:0). On a
+   phone all five are crushed into ~460px and become unreadable.
+
+   On mobile, turn the track into a horizontal scroll-snap carousel with
+   uniform, comfortably sized cards you swipe through (peek of the next card as
+   a swipe affordance).
+--------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  [data-dc-tpl="70"] {
+    display: flex !important;
+    flex-direction: row !important;                 /* export switches to column on mobile */
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch !important;
+    scroll-padding-left: 20px !important;
+    gap: 14px !important;
+    scrollbar-width: none !important;               /* Firefox */
+  }
+  [data-dc-tpl="70"]::-webkit-scrollbar {           /* WebKit/Blink */
+    display: none !important;
+  }
+
+  /* Uniform cards; neutralise the JS accordion's inline width / flex-grow. */
+  [data-dc-tpl="70"] > [data-dc-tpl="72"] {
+    flex: 0 0 82% !important;
+    width: 82% !important;
+    min-width: 82% !important;
+    max-width: 82% !important;
+    scroll-snap-align: start !important;
+  }
+}
