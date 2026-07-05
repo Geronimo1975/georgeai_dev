@@ -230,8 +230,9 @@ __marimo__/
 # .superpowers/
 
 # georgeai deploy — export zips are build inputs, not source
-# exports/*.zip
-# update/*.zip
+exports/*.zip
+update/*.zip
+/GeorgeAI.dev.zip
 
 # macOS
 .DS_Store

@@ -150,3 +150,129 @@ window.GA_SERVICES = {
     },
   },
 };
+
+window.GA_EXTRA = {
+  how: {
+    titles: {
+      en: { eyebrow: "How it works", title: "From bottleneck to running system — in weeks, not months.", sub: "A simple, proven path from your first call to a system that quietly does the work every day." },
+      de: { eyebrow: "So funktioniert es", title: "Vom Engpass zum laufenden System — in Wochen, nicht Monaten.", sub: "Ein einfacher, bewährter Weg vom ersten Gespräch bis zum System, das täglich leise die Arbeit erledigt." },
+      fr: { eyebrow: "Comment ça marche", title: "Du goulot d'étranglement au système opérationnel — en semaines, pas en mois.", sub: "Un chemin simple et éprouvé, de votre premier appel à un système qui fait le travail chaque jour." },
+      ro: { eyebrow: "Cum funcționează", title: "De la blocaj la sistem funcțional — în săptămâni, nu luni.", sub: "Un drum simplu și dovedit, de la primul apel până la un sistem care face treaba zilnic, în liniște." },
+      ar: { eyebrow: "كيف يعمل", title: "من الاختناق إلى نظام يعمل — في أسابيع لا أشهر.", sub: "مسار بسيط ومُجرّب، من أول مكالمة إلى نظام يؤدّي العمل كل يوم بهدوء." },
+    },
+    cards: {
+      en: [
+        { tag: "01 · Discover", title: "We map the bottleneck", desc: "A short call to find the repetitive, costly work — and the fastest place to automate it.", mock: "flow" },
+        { tag: "02 · Build", title: "I build and harden it", desc: "Custom n8n + Python with error handling, tested against your real data until it's reliable.", mock: "code" },
+        { tag: "03 · Connect", title: "It plugs into your stack", desc: "CRM, email, sheets, WhatsApp, phone — your tools, talking to each other automatically.", mock: "integrations" },
+        { tag: "04 · Run", title: "It runs — you watch it work", desc: "Deployed, monitored and handed over, with dashboards so you always see what it's doing.", mock: "dashboard" },
+      ],
+      de: [
+        { tag: "01 · Analyse", title: "Wir kartieren den Engpass", desc: "Ein kurzes Gespräch, um die repetitive, teure Arbeit zu finden — und den schnellsten Ansatzpunkt.", mock: "flow" },
+        { tag: "02 · Aufbau", title: "Ich baue und härte es ab", desc: "Individuelles n8n + Python mit Fehlerbehandlung, an Ihren echten Daten getestet, bis es zuverlässig läuft.", mock: "code" },
+        { tag: "03 · Verbinden", title: "Es klinkt sich in Ihren Stack ein", desc: "CRM, E-Mail, Tabellen, WhatsApp, Telefon — Ihre Tools, die automatisch miteinander reden.", mock: "integrations" },
+        { tag: "04 · Betrieb", title: "Es läuft — Sie sehen ihm zu", desc: "Deployt, überwacht und übergeben, mit Dashboards, damit Sie immer sehen, was es tut.", mock: "dashboard" },
+      ],
+      fr: [
+        { tag: "01 · Analyse", title: "On cartographie le goulot", desc: "Un court appel pour trouver le travail répétitif et coûteux — et où automatiser le plus vite.", mock: "flow" },
+        { tag: "02 · Construction", title: "Je construis et fiabilise", desc: "n8n + Python sur mesure avec gestion d'erreurs, testé sur vos vraies données jusqu'à la fiabilité.", mock: "code" },
+        { tag: "03 · Connexion", title: "Ça s'intègre à votre stack", desc: "CRM, e-mail, tableurs, WhatsApp, téléphone — vos outils qui se parlent automatiquement.", mock: "integrations" },
+        { tag: "04 · Exploitation", title: "Ça tourne — vous regardez", desc: "Déployé, supervisé et transmis, avec des dashboards pour toujours voir ce qu'il fait.", mock: "dashboard" },
+      ],
+      ro: [
+        { tag: "01 · Descoperire", title: "Cartografiem blocajul", desc: "Un apel scurt ca să găsim munca repetitivă și costisitoare — și cel mai rapid loc de automatizat.", mock: "flow" },
+        { tag: "02 · Construire", title: "Construiesc și consolidez", desc: "n8n + Python personalizat cu tratarea erorilor, testat pe datele tale reale până devine fiabil.", mock: "code" },
+        { tag: "03 · Conectare", title: "Se conectează la stack-ul tău", desc: "CRM, email, foi de calcul, WhatsApp, telefon — instrumentele tale, vorbind automat între ele.", mock: "integrations" },
+        { tag: "04 · Rulare", title: "Rulează — iar tu îl privești muncind", desc: "Lansat, monitorizat și predat, cu dashboard-uri ca să vezi mereu ce face.", mock: "dashboard" },
+      ],
+      ar: [
+        { tag: "٠١ · الاكتشاف", title: "نرسم الاختناق", desc: "مكالمة قصيرة لإيجاد العمل المتكرّر والمكلف — وأسرع نقطة للأتمتة.", mock: "flow" },
+        { tag: "٠٢ · البناء", title: "أبنيه وأقوّيه", desc: "n8n + Python مخصّص مع معالجة الأخطاء، مُختبَر على بياناتك الحقيقية حتى يصبح موثوقًا.", mock: "code" },
+        { tag: "٠٣ · الربط", title: "يتكامل مع أدواتك", desc: "CRM والبريد والجداول وWhatsApp والهاتف — أدواتك تتحدّث تلقائيًا.", mock: "integrations" },
+        { tag: "٠٤ · التشغيل", title: "يعمل — وأنت تراقبه", desc: "منشور ومُراقَب ومُسلَّم، مع لوحات لترى دائمًا ما يفعله.", mock: "dashboard" },
+      ],
+    },
+  },
+  faq: {
+    titles: { en: "Questions & answers", de: "Fragen & Antworten", fr: "Questions & réponses", ro: "Întrebări & răspunsuri", ar: "أسئلة وأجوبة" },
+    eyebrow: { en: "FAQ", de: "FAQ", fr: "FAQ", ro: "Întrebări frecvente", ar: "الأسئلة الشائعة" },
+    items: {
+      en: [
+        { q: "How long does a typical project take?", a: "Most automations and AI agents ship in 2–6 weeks, depending on scope. A focused pilot can be live in days; larger, multi-system builds take longer. You'll get a clear timeline after the first call." },
+        { q: "Do you work with my existing website and tools?", a: "Yes. I connect to what you already use — WordPress, your CRM, email platform, sheets, WhatsApp and more. If you don't have a site yet, I can build that too." },
+        { q: "What does it cost?", a: "Pricing depends on scope, so it's quoted per project — use the Configurator to outline what you need and I'll send a tailored quote within 48 hours. No surprise fees." },
+        { q: "Will the automations keep running without you?", a: "Yes — everything is deployed, monitored and documented, and handed over to you. Optional ongoing support and maintenance are available if you'd like me to keep an eye on it." },
+        { q: "Is my data safe?", a: "Your data stays in your own tools and infrastructure wherever possible. I follow GDPR practices and can work within your security requirements." },
+        { q: "Which languages and regions do you serve?", a: "I work remotely across Europe and the Middle East, in English, German, French, Romanian and Arabic." },
+      ],
+      de: [
+        { q: "Wie lange dauert ein typisches Projekt?", a: "Die meisten Automationen und KI-Agenten sind in 2–6 Wochen einsatzbereit, je nach Umfang. Ein fokussierter Pilot kann in Tagen live sein; größere Builds dauern länger. Nach dem ersten Gespräch erhalten Sie einen klaren Zeitplan." },
+        { q: "Arbeiten Sie mit meiner bestehenden Website und meinen Tools?", a: "Ja. Ich verbinde mich mit dem, was Sie bereits nutzen — WordPress, Ihr CRM, E-Mail-Plattform, Tabellen, WhatsApp und mehr. Falls Sie noch keine Website haben, baue ich auch die." },
+        { q: "Was kostet es?", a: "Der Preis hängt vom Umfang ab und wird pro Projekt kalkuliert — nutzen Sie den Konfigurator, und ich sende innerhalb von 48 Stunden ein individuelles Angebot. Keine versteckten Kosten." },
+        { q: "Laufen die Automationen ohne Sie weiter?", a: "Ja — alles wird deployt, überwacht, dokumentiert und übergeben. Optionaler laufender Support und Wartung sind verfügbar, wenn ich ein Auge darauf behalten soll." },
+        { q: "Sind meine Daten sicher?", a: "Ihre Daten bleiben nach Möglichkeit in Ihren eigenen Tools und Ihrer Infrastruktur. Ich arbeite DSGVO-konform und innerhalb Ihrer Sicherheitsanforderungen." },
+        { q: "Welche Sprachen und Regionen bedienen Sie?", a: "Ich arbeite remote in Europa und im Nahen Osten, auf Englisch, Deutsch, Französisch, Rumänisch und Arabisch." },
+      ],
+      fr: [
+        { q: "Combien de temps dure un projet type ?", a: "La plupart des automatisations et agents IA sont livrés en 2 à 6 semaines selon l'envergure. Un pilote ciblé peut être en ligne en quelques jours ; les projets multi-systèmes prennent plus de temps. Vous aurez un calendrier clair après le premier appel." },
+        { q: "Travaillez-vous avec mon site et mes outils existants ?", a: "Oui. Je me connecte à ce que vous utilisez déjà — WordPress, votre CRM, plateforme e-mail, tableurs, WhatsApp et plus. Si vous n'avez pas encore de site, je peux le construire aussi." },
+        { q: "Combien ça coûte ?", a: "Le prix dépend de l'envergure, donc il est établi par projet — utilisez le Configurateur pour décrire vos besoins et je vous envoie un devis sur mesure sous 48 heures. Pas de frais surprises." },
+        { q: "Les automatisations continuent-elles sans vous ?", a: "Oui — tout est déployé, supervisé, documenté et transmis. Un support et une maintenance continus sont disponibles en option si vous souhaitez que j'y veille." },
+        { q: "Mes données sont-elles en sécurité ?", a: "Vos données restent dans vos propres outils et infrastructure autant que possible. Je respecte le RGPD et peux travailler selon vos exigences de sécurité." },
+        { q: "Quelles langues et régions couvrez-vous ?", a: "Je travaille à distance en Europe et au Moyen-Orient, en anglais, allemand, français, roumain et arabe." },
+      ],
+      ro: [
+        { q: "Cât durează un proiect tipic?", a: "Majoritatea automatizărilor și agenților AI sunt gata în 2–6 săptămâni, în funcție de amploare. Un pilot focalizat poate fi live în câteva zile; build-urile mari, multi-sistem, durează mai mult. Primești un calendar clar după primul apel." },
+        { q: "Lucrezi cu site-ul și instrumentele mele existente?", a: "Da. Mă conectez la ce folosești deja — WordPress, CRM-ul tău, platforma de email, foi de calcul, WhatsApp și altele. Dacă încă nu ai site, îl pot construi și pe el." },
+        { q: "Cât costă?", a: "Prețul depinde de amploare, așa că se ofertează pe proiect — folosește Configuratorul ca să descrii ce ai nevoie și îți trimit o ofertă personalizată în 48 de ore. Fără costuri-surpriză." },
+        { q: "Automatizările rulează în continuare fără tine?", a: "Da — totul este lansat, monitorizat, documentat și predat. Suport și mentenanță continue sunt disponibile opțional, dacă vrei să rămân cu un ochi pe ele." },
+        { q: "Datele mele sunt în siguranță?", a: "Datele tale rămân în propriile tale instrumente și infrastructură pe cât posibil. Respect practicile GDPR și pot lucra în cadrul cerințelor tale de securitate." },
+        { q: "Ce limbi și regiuni acoperi?", a: "Lucrez remote în Europa și Orientul Mijlociu, în engleză, germană, franceză, română și arabă." },
+      ],
+      ar: [
+        { q: "كم يستغرق المشروع النموذجي؟", a: "معظم الأتمتة ووكلاء الذكاء الاصطناعي جاهزون خلال 2–6 أسابيع حسب النطاق. يمكن إطلاق نموذج أولي مركّز خلال أيام؛ أما البناءات الأكبر متعدّدة الأنظمة فتستغرق وقتًا أطول. ستحصل على جدول زمني واضح بعد أول مكالمة." },
+        { q: "هل تعمل مع موقعي وأدواتي الحالية؟", a: "نعم. أتصل بما تستخدمه بالفعل — WordPress ونظام CRM ومنصّة البريد والجداول وWhatsApp وغيرها. وإن لم يكن لديك موقع بعد، أستطيع بناءه أيضًا." },
+        { q: "كم التكلفة؟", a: "يعتمد السعر على النطاق، لذا يُسعَّر لكل مشروع — استخدم المُهيّئ لتحديد ما تحتاجه وسأرسل عرضًا مخصّصًا خلال 48 ساعة. دون رسوم مفاجئة." },
+        { q: "هل تستمر الأتمتة بالعمل بدونك؟", a: "نعم — كل شيء منشور ومُراقَب وموثّق ومُسلَّم إليك. ويتوفّر دعم وصيانة مستمرّان اختياريًا إن أردت أن أبقى مراقبًا له." },
+        { q: "هل بياناتي آمنة؟", a: "تبقى بياناتك في أدواتك وبنيتك التحتية قدر الإمكان. ألتزم بممارسات GDPR وأستطيع العمل ضمن متطلّبات الأمان لديك." },
+        { q: "ما اللغات والمناطق التي تخدمها؟", a: "أعمل عن بُعد في أوروبا والشرق الأوسط، بالإنجليزية والألمانية والفرنسية والرومانية والعربية." },
+      ],
+    },
+  },
+  testi: {
+    titles: { en: "What clients say", de: "Was Kunden sagen", fr: "Ce que disent les clients", ro: "Ce spun clienții", ar: "ماذا يقول العملاء" },
+    eyebrow: { en: "Testimonials", de: "Referenzen", fr: "Témoignages", ro: "Testimoniale", ar: "آراء العملاء" },
+    items: {
+      en: [
+        { quote: "George automated our entire SEO and reporting pipeline. What used to take two people a week now runs overnight — and the output is better.", name: "Anna Krause", role: "Head of Marketing, MedTech GmbH" },
+        { quote: "The AI phone agent answers every call now, even after hours. We stopped losing leads to voicemail within the first week.", name: "Sara Müller", role: "Owner, Aeon Residence" },
+        { quote: "He bridged the gap between our messy spreadsheets and a clean Django dashboard the whole team actually uses. Rare to find someone this technical who also gets the business.", name: "Marco Rossi", role: "Founder, Rossi Studio" },
+        { quote: "Fast, reliable and genuinely thoughtful about where automation makes sense — and where it doesn't. Exactly the partner you want.", name: "Tom Becker", role: "Operations, Becker & Co" },
+      ],
+      de: [
+        { quote: "George hat unsere komplette SEO- und Reporting-Pipeline automatisiert. Was früher zwei Leute eine Woche kostete, läuft jetzt über Nacht — und das Ergebnis ist besser.", name: "Anna Krause", role: "Head of Marketing, MedTech GmbH" },
+        { quote: "Der KI-Telefonagent nimmt jetzt jeden Anruf an, auch nach Feierabend. Schon in der ersten Woche haben wir keine Leads mehr an die Mailbox verloren.", name: "Sara Müller", role: "Inhaberin, Aeon Residence" },
+        { quote: "Er hat die Lücke zwischen unseren chaotischen Tabellen und einem sauberen Django-Dashboard geschlossen, das das ganze Team nutzt. Selten jemand so Technisches, der auch das Geschäft versteht.", name: "Marco Rossi", role: "Gründer, Rossi Studio" },
+        { quote: "Schnell, zuverlässig und wirklich durchdacht, wo Automatisierung Sinn ergibt — und wo nicht. Genau der Partner, den man will.", name: "Tom Becker", role: "Operations, Becker & Co" },
+      ],
+      fr: [
+        { quote: "George a automatisé tout notre pipeline SEO et reporting. Ce qui prenait une semaine à deux personnes tourne maintenant la nuit — et le résultat est meilleur.", name: "Anna Krause", role: "Directrice marketing, MedTech GmbH" },
+        { quote: "L'agent téléphonique IA répond à chaque appel, même en dehors des heures. Dès la première semaine, nous avons cessé de perdre des leads.", name: "Sara Müller", role: "Propriétaire, Aeon Residence" },
+        { quote: "Il a comblé le fossé entre nos tableurs en désordre et un dashboard Django propre que toute l'équipe utilise vraiment. Rare de trouver quelqu'un d'aussi technique qui comprend aussi le business.", name: "Marco Rossi", role: "Fondateur, Rossi Studio" },
+        { quote: "Rapide, fiable et réellement réfléchi sur où l'automatisation a du sens — et où non. Exactement le partenaire qu'on veut.", name: "Tom Becker", role: "Opérations, Becker & Co" },
+      ],
+      ro: [
+        { quote: "George ne-a automatizat tot pipeline-ul de SEO și raportare. Ce le lua două persoane o săptămână acum rulează peste noapte — și rezultatul e mai bun.", name: "Anna Krause", role: "Head of Marketing, MedTech GmbH" },
+        { quote: "Agentul telefonic AI răspunde acum la fiecare apel, chiar și după program. Am încetat să pierdem lead-uri încă din prima săptămână.", name: "Sara Müller", role: "Proprietar, Aeon Residence" },
+        { quote: "A făcut legătura între foile noastre de calcul haotice și un dashboard Django curat pe care toată echipa chiar îl folosește. Rar găsești pe cineva atât de tehnic care înțelege și business-ul.", name: "Marco Rossi", role: "Fondator, Rossi Studio" },
+        { quote: "Rapid, de încredere și chibzuit cu adevărat asupra locului unde automatizarea are sens — și unde nu. Exact partenerul pe care ți-l dorești.", name: "Tom Becker", role: "Operațiuni, Becker & Co" },
+      ],
+      ar: [
+        { quote: "أتمت جورج خط SEO والتقارير بالكامل لدينا. ما كان يستغرق شخصين أسبوعًا صار يعمل ليلًا — والنتيجة أفضل.", name: "آنا كراوزه", role: "مديرة التسويق، MedTech GmbH" },
+        { quote: "يردّ الوكيل الهاتفي بالذكاء الاصطناعي على كل مكالمة الآن، حتى بعد ساعات العمل. توقّفنا عن فقدان العملاء منذ الأسبوع الأول.", name: "سارة مولر", role: "المالكة، Aeon Residence" },
+        { quote: "ردم الفجوة بين جداولنا الفوضوية ولوحة Django نظيفة يستخدمها الفريق كله فعلًا. نادر أن تجد بهذا المستوى التقني ويفهم الأعمال أيضًا.", name: "ماركو روسي", role: "المؤسس، Rossi Studio" },
+        { quote: "سريع وموثوق ومدروس فعلًا حول أين تنفع الأتمتة — وأين لا. الشريك الذي تريده تمامًا.", name: "توم بيكر", role: "العمليات، Becker & Co" },
+      ],
+    },
+  },
+};
