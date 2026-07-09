@@ -1,0 +1,25 @@
+name: Payments Pipeline Health Check
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      STRIPE_TOKEN: ${{ secrets.STRIPE_TOKEN }}
+      N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run payments pipeline health check
+        run: python3 tests/test_payments_pipeline.py
