@@ -163,6 +163,53 @@ apply_brand() {
 }
 
 # ---------------------------------------------------------------------------
+# media layer — the design tool exports mp4s with the moov atom AFTER mdat,
+# so browsers must download the whole file before playback starts (the hero
+# video stutters on first load). Remux those files with +faststart (stream
+# copy, lossless). Runs on every deploy, including --no-content. Idempotent:
+# already-faststarted files are detected and skipped.
+# ---------------------------------------------------------------------------
+apply_media() {
+  command -v ffmpeg  >/dev/null || { warn "ffmpeg not found — skipped video faststart"; return 0; }
+  command -v python3 >/dev/null || { warn "python3 not found — skipped video faststart"; return 0; }
+  local f fixed=""
+  while IFS= read -r -d '' f; do
+    # exit 0 = mdat precedes moov → needs the remux
+    if python3 - "$f" <<'PY'
+import struct, sys
+order = []
+with open(sys.argv[1], "rb") as fh:
+    while True:
+        hdr = fh.read(8)
+        if len(hdr) < 8:
+            break
+        size, name = struct.unpack(">I", hdr[:4])[0], hdr[4:8]
+        if name in (b"moov", b"mdat"):
+            order.append(name)
+        if size == 1:  # 64-bit extended size
+            size = struct.unpack(">Q", fh.read(8))[0]
+            fh.seek(size - 16, 1)
+        elif size == 0:  # atom runs to EOF
+            break
+        else:
+            fh.seek(size - 8, 1)
+sys.exit(0 if order[:1] == [b"mdat"] else 1)
+PY
+    then
+      if ffmpeg -v error -y -i "$f" -c copy -movflags +faststart "$f.tmp.mp4" 2>/dev/null; then
+        mv "$f.tmp.mp4" "$f"
+        fixed="$fixed ${f#$SITE_DIR/}"
+      else
+        rm -f "$f.tmp.mp4"
+        warn "faststart remux failed: ${f#$SITE_DIR/}"
+      fi
+    fi
+  done < <(find "$SITE_DIR" -name '*.mp4' -print0)
+  [ -n "$fixed" ] && ok "video faststart:$fixed"
+  return 0
+}
+
+# ---------------------------------------------------------------------------
 # repo-owned pages (e.g. pages/pricing/) — kept out of the export so they
 # survive re-exports. Copied verbatim into site/. Runs on every deploy,
 # including --no-content. Idempotent.
@@ -284,6 +331,7 @@ PY
   apply_seo
   apply_brand
   apply_pages
+  apply_media
 
   # mirror the unpacked content (incl. the derived index.html) into the frontend
   # template dir so the Django backend in backend/ can build against the same export.
@@ -300,6 +348,7 @@ else
   apply_seo
   apply_brand
   apply_pages
+  apply_media
 fi
 
 [ -f "$SITE_DIR/index.html" ] || die "./site has no index.html — nothing to deploy"

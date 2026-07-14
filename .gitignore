@@ -239,5 +239,8 @@ update/*.zip
 **/.DS_Store
 
 # playwright test artifacts
-# .playwright-mcp/
+.playwright-mcp/
 cron/logs/
+
+# jez artifacts
+.jez/
