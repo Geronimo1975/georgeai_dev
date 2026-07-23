@@ -45,6 +45,10 @@ PAGES_DIR="$PROJECT_DIR/pages"
 # brand accent layer — rewrites the export's hard-coded coral into theme-aware,
 # WCAG-passing accents (see brand/apply_brand.py). Survives re-exports.
 BRAND_DIR="$PROJECT_DIR/brand"
+# image layer — the export leaves empty placeholder slots (About portrait, News
+# cards, every service-detail view). images/apply_images.py swaps them for the
+# committed on-brand SVG mockups. Survives re-exports.
+IMAGES_DIR="$PROJECT_DIR/images"
 
 # ---------------------------------------------------------------------------
 # frontend assets — JS kept out of the export (backend/assets/) so it survives
@@ -240,6 +244,35 @@ PY
 }
 
 # ---------------------------------------------------------------------------
+# image layer — the export ships empty placeholder slots (diagonal-hatch divs
+# with a `[ label ]`) on the About page, the News cards and every service-detail
+# view. Copy the committed on-brand SVG mockups into site/assets/mock/ and let
+# images/apply_images.py rewrite those placeholders to <img> elements. Kept out
+# of the export so it survives re-exports. Runs on every deploy, incl.
+# --no-content. Idempotent (see images/apply_images.py). Failure must not block
+# the deploy — the placeholders simply stay.
+# ---------------------------------------------------------------------------
+apply_images() {
+  [ -f "$IMAGES_DIR/apply_images.py" ] || { warn "images/ not found — skipping image layer"; return 0; }
+  command -v python3 >/dev/null || { warn "python3 not found — skipped image layer"; return 0; }
+  # ship the mockups next to the other site assets
+  if [ -d "$IMAGES_DIR/mock" ]; then
+    mkdir -p "$SITE_DIR/assets/mock"
+    cp "$IMAGES_DIR"/mock/*.svg "$SITE_DIR/assets/mock/" 2>/dev/null || true
+  fi
+  local targets=() f
+  for f in "$SITE_DIR/index.html" "$SITE_DIR/GeorgeAI.dc.html"; do
+    [ -f "$f" ] && targets+=("$f")
+  done
+  [ ${#targets[@]} -eq 0 ] && return 0
+  if python3 "$IMAGES_DIR/apply_images.py" "${targets[@]}"; then
+    ok "image layer applied (${#targets[@]} files)"
+  else
+    warn "image layer failed — deploy continues with placeholder slots"
+  fi
+}
+
+# ---------------------------------------------------------------------------
 # repo-owned pages (e.g. pages/pricing/) — kept out of the export so they
 # survive re-exports. Copied verbatim into site/. Runs on every deploy,
 # including --no-content. Idempotent.
@@ -360,6 +393,7 @@ PY
   apply_assets
   apply_seo
   apply_brand
+  apply_images
   apply_pages
   apply_media
 
@@ -377,6 +411,7 @@ else
   apply_assets
   apply_seo
   apply_brand
+  apply_images
   apply_pages
   apply_media
 fi
