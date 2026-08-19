@@ -11,7 +11,31 @@
  * export ever stops shipping the accordion.
  *
  * Everything visual lives in hero-motion.css; this file only tags nodes, drives
- * the autoplay timer, and writes parallax offsets as CSS variables.
+ * the autoplay timer, writes parallax offsets as CSS variables, and relocates
+ * the two static blocks deploy.sh injects for crawlers.
+ *
+ * WHY ONE FILE, despite covering more than motion: every section below needs
+ * findHero(), and findHero() is the most fragile thing here — it recognises an
+ * export that has no ids, no classes, and rewrites its own inline styles on
+ * every render. Splitting the non-motion parts into their own layer would mean
+ * a second copy of that discovery plus a second MutationObserver, and two
+ * copies of a brittle heuristic that must agree. One file, clearly sectioned,
+ * is the lesser evil. Sections:
+ *
+ *   1. Hero discovery + active-panel tracking      findHero, activeIndex
+ *   2. Lede (the crawlable <h1>) + i18n            activeLang, translateLede,
+ *                                                  placeLede
+ *   3. seo:footer strip relocation                 placeSeoFooter
+ *   4. Cookie-consent vs audit FAB                 consentOpen, syncConsent
+ *   5. Services grid rebalance                     tagServicesGrid
+ *   6. Mobile chrome + touch targets               socialRows, tagChrome,
+ *                                                  measureTopbar
+ *   7. Mobile carousel scroll sync                 scrollActiveIntoView
+ *   8. sync() — the single pass all of the above hang off
+ *   9. Autoplay, progress bar, video backdrop, parallax
+ *
+ * Each section degrades to a no-op on its own if the export changes shape; none
+ * of them can take the page down.
  * ------------------------------------------------------------------------- */
 (function () {
   'use strict';
