@@ -303,41 +303,48 @@
   .ga-lede { transition: opacity 1ms linear; transform: none; }
 }
 
-.ga-lede__eyebrow {
-  font-family: "JetBrains Mono", ui-monospace, monospace;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 2.4px;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin: 0 0 14px;
-}
-
+/* Display type is JetBrains Mono, not the export's Newsreader serif.
+ * The serif + warm-cream + coral combination is Anthropic's brand language,
+ * which is why the page read as machine-built at a glance. Mono is the voice
+ * the site already uses for technical labels, it suits someone who ships
+ * automations, and it is decisively not the AI-marketing look.
+ *
+ * Deliberately NOT here any more: the eyebrow (removed from the markup, which
+ * takes the middot strip with it) and the italic coral accent word. */
 .ga-lede__title {
-  font-family: Newsreader, Georgia, "Times New Roman", serif;
-  font-weight: 400;
-  /* Matches the export's display scale (h1 elsewhere is 44–64px) without a
-   * media query: 1440px → 60px, 390px → 34px. */
-  font-size: clamp(2.125rem, 1.35rem + 3.1vw, 3.75rem);
-  line-height: 1.05;
-  letter-spacing: -1.5px;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 500;
+  /* Smaller than the serif version on purpose. Mono sets wide, and the point
+   * is a sentence a person would say, not a poster. 1440px -> 42px. */
+  font-size: clamp(1.3125rem, 0.92rem + 1.55vw, 2.375rem);
+  line-height: 1.3;
+  letter-spacing: -0.02em;
   color: var(--ink);
   margin: 0;
+  /* 24ch holds the sentence to two lines at every width. Mono sets much wider
+   * than the serif this replaced, so the measure and the size both had to come
+   * down; a three-line hero headline is a font-size error, not a copy error. */
+  max-width: 24ch;
   text-wrap: balance;
 }
 
-.ga-lede__title em {
-  font-style: italic;
-  color: var(--accent);
+/* The one piece of coral left in the block: a short rule, not a coloured word
+ * inside the sentence. */
+.ga-lede__title::before {
+  content: "";
+  display: block;
+  width: 44px;
+  height: 2px;
+  background: var(--accent);
+  margin-bottom: 22px;
 }
 
 .ga-lede__sub {
   font-size: clamp(0.9375rem, 0.87rem + 0.3vw, 1.0625rem);
   line-height: 1.6;
   color: var(--body);
-  /* ~65ch keeps the sub inside the comfortable measure even at 1440. */
-  max-width: 62ch;
-  margin: 18px 0 0;
+  max-width: 54ch;
+  margin: 20px 0 0;
 }
 
 /* --------------------------------------------------------------------------

@@ -3,37 +3,34 @@
      client-side and ships NO <h1> on the home view); hero-motion.js relocates it
      into the hero above the panel row at runtime. NEVER edit the copy in site/.
 
-     The EN copy is the one that matters for search: the export keeps the active
-     language in React state only, so every page load — and every crawl — starts
-     in English. data-i18n covers an in-session language switch; hero-motion.js
-     detects the active language from GA_SERVICES and swaps the text.
-     Arabic deliberately falls back to English rather than shipping marketing
-     copy that has not been reviewed for RTL typography and register.
+     Copy rules this block is held to, because the previous version broke all of
+     them and read as machine-written:
+       no em-dash, no "not just X" contrast, no abstract noun pairs,
+       no eyebrow, no middot separators, no decorative italic accent.
+     First person, concrete verbs, names the actual tools. The site already
+     speaks in first person ("What I build for you"), so this matches it.
 
-     TRANSLATIONS ARE UNREVIEWED — worth a read-through before they matter. -->
+     data-i18n covers an in-session language switch; hero-motion.js detects the
+     active language from GA_SERVICES. Arabic falls back to English rather than
+     shipping RTL copy nobody has reviewed.
+     TRANSLATIONS ARE UNREVIEWED. -->
 <div class="ga-lede" data-ga-lede data-i18n='{
   "de": {
-    "eyebrow": "Automatisierung · KI · GEO/SEO",
-    "title": "KI-Automatisierung und Sichtbarkeit, <em>gebaut und übergeben</em> — nicht nur beraten.",
-    "sub": "n8n-Workflows, KI-Agenten, RAG-Assistenten und Django-Plattformen, eingebunden in die Tools, die Sie ohnehin nutzen — und überwacht, damit Sie der Arbeit zusehen, statt sie zu machen."
+    "title": "Ich automatisiere die Arbeit, die Ihr Team ständig wiederholt.",
+    "sub": "n8n-Workflows, KI-Agenten, RAG-Assistenten und Django-Plattformen. Alles, was ich baue, gehört Ihnen."
   },
   "fr": {
-    "eyebrow": "Automatisation · IA · GEO/SEO",
-    "title": "Automatisation IA et visibilité, <em>construites et livrées</em> — pas seulement conseillées.",
-    "sub": "Workflows n8n, agents IA, assistants RAG et plateformes Django reliés aux outils que vous utilisez déjà — puis supervisés, pour que vous regardiez le travail se faire au lieu de le faire."
+    "title": "J&apos;automatise le travail que votre équipe refait sans cesse.",
+    "sub": "Workflows n8n, agents IA, assistants RAG et plateformes Django. Tout ce que je construis vous appartient."
   },
   "ro": {
-    "eyebrow": "Automatizare · AI · GEO/SEO",
-    "title": "Automatizare AI și vizibilitate, <em>construite și predate</em> — nu doar consultanță.",
-    "sub": "Fluxuri n8n, agenți AI, asistenți RAG și platforme Django legate la uneltele pe care deja le folosești — apoi monitorizate, ca să vezi treaba făcându-se în loc să o faci."
+    "title": "Automatizez munca pe care echipa ta o reface la nesfârșit.",
+    "sub": "Fluxuri n8n, agenți AI, asistenți RAG și platforme Django. Tot ce construiesc îți aparține."
   }
 }'>
-  <p class="ga-lede__eyebrow">Automation &middot; AI &middot; GEO/SEO</p>
-  <h1 class="ga-lede__title">
-    AI automation and search visibility, <em>built and handed over</em> — not just advised.
-  </h1>
+  <h1 class="ga-lede__title">I automate the work your team keeps redoing.</h1>
   <p class="ga-lede__sub">
-    n8n workflows, AI agents, RAG assistants and Django platforms wired into the tools you
-    already run — then monitored, so you watch the work happen instead of doing it.
+    n8n workflows, AI agents, RAG assistants and Django platforms.
+    You own everything I build.
   </p>
 </div>
