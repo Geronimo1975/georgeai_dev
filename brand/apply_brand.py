@@ -10,10 +10,10 @@ export so functional coral becomes theme-aware while decorative coral
 
   - adds `accent` / `accentBtn` keys to the page's theme palettes
     (they are emitted as CSS variables by the export's own renderer):
-      dark  accent #ff6b1a (6.29:1 on dark canvas)
+      dark  accent #ff8300 (7.25:1 on dark canvas)
       light accent #c2410c (4.92:1 on cream)
-      accentBtn    #ff6b1a in both themes, with an INK label (6.47:1).
-      A white label on this orange is 2.85:1 and fails; dark-on-bright is
+      accentBtn    #ff8300 in both themes, with an INK label (7.46:1).
+      A white label on this orange is 2.47:1 and fails; dark-on-bright is
       also what makes it read as neon rather than as a muted coral.
   - buttons  background:#cc785c;color:#fff  ->  var(--accentBtn) + ink label
   - text/links/borders  #cc785c             ->  var(--accent)
@@ -50,7 +50,7 @@ VAR_REPLACEMENTS = [
     # The closing CTA band sets color:#fff on its wrapper and both its heading
     # and its body inherit it. Turning the fill neon left white-on-orange at
     # 2.85:1, failing both the 4.5 body and the 3.0 large-text threshold. Ink
-    # on the same fill is 6.47:1.
+    # on the same fill is 7.46:1.
     ('color:#fff;display:flex;flex-direction:{{ ctaDir }}',
      'color:#141413;display:flex;flex-direction:{{ ctaDir }}'),
     # JS ternaries build their own strings, so the hex arrives quoted and the
@@ -58,10 +58,10 @@ VAR_REPLACEMENTS = [
     ('"#cc785c"', '"var(--accent)"'),
     ('tagColor: "var(--accent)"', 'tagColor: "var(--accent)"'),
     # bar-chart gradient: coral into a pale coral tip
-    ('#cc785c 55%,#f0a98a', 'var(--accentBtn) 55%,#ffa366'),
+    ('#cc785c 55%,#f0a98a', 'var(--accentBtn) 55%,#ffb066'),
     # the seo:footer link was pinned to the old light-theme accent by an
     # earlier run of this layer; it now sits in the dark footer
-    ('<a href="/pricing/" style="color:#a9583e', '<a href="/pricing/" style="color:#ff6b1a'),
+    ('<a href="/pricing/" style="color:#a9583e', '<a href="/pricing/" style="color:#ff8300'),
     ('solid #cc785c', 'solid var(--accent)'),
 ]
 
@@ -69,8 +69,8 @@ SAFE_REPLACEMENTS = [
     # the seo:footer block sits OUTSIDE the app root, so var(--accent) does not
     # resolve there — pin its pricing link to the fixed accessible accent.
     # (first form: fresh injection; second: repairs an over-eager var rewrite)
-    ('<a href="/pricing/" style="color:#cc785c', '<a href="/pricing/" style="color:#ff6b1a'),
-    ('<a href="/pricing/" style="color:var(--accent)', '<a href="/pricing/" style="color:#ff6b1a'),
+    ('<a href="/pricing/" style="color:#cc785c', '<a href="/pricing/" style="color:#ff8300'),
+    ('<a href="/pricing/" style="color:var(--accent)', '<a href="/pricing/" style="color:#ff8300'),
     ('+ s + "/cc785c"', '+ s + "/8e8b82"'),          # simpleicons CDN color
     ("fill='%23cc785c", "fill='%238e8b82"),           # inline LinkedIn data-URI
     # hero glow: target alphas deliberately outside the source set so no
@@ -102,10 +102,10 @@ def apply(path: str) -> None:
                 PALETTE_ANCHOR_DARK + ' accent: "", accentBtn: "",', 1)
         html = re.sub(
             re.escape(PALETTE_ANCHOR_LIGHT) + r' accent: "[^"]*", accentBtn: "[^"]*",',
-            PALETTE_ANCHOR_LIGHT + ' accent: "#c2410c", accentBtn: "#ff6b1a",', html, count=1)
+            PALETTE_ANCHOR_LIGHT + ' accent: "#c2410c", accentBtn: "#ff8300",', html, count=1)
         html = re.sub(
             re.escape(PALETTE_ANCHOR_DARK) + r' accent: "[^"]*", accentBtn: "[^"]*",',
-            PALETTE_ANCHOR_DARK + ' accent: "#ff6b1a", accentBtn: "#ff6b1a",', html, count=1)
+            PALETTE_ANCHOR_DARK + ' accent: "#ff8300", accentBtn: "#ff8300",', html, count=1)
     if has_palette:
         for old, new in VAR_REPLACEMENTS:
             html = html.replace(old, new)
@@ -117,6 +117,14 @@ def apply(path: str) -> None:
     # out in full, which left one GitHub mark in the old coral.
     html = re.sub(r'(cdn\.simpleicons\.org/[a-z0-9.+-]+/)(?:cc785c|a9583e)',
                   r'\g<1>8e8b82', html)
+
+    # The seo:footer strip sits outside the app root when it is first painted,
+    # so var(--accent) cannot resolve there and the colour has to be a literal.
+    # Matching any hex rather than the specific previous one keeps it from
+    # going stale in a site/ that survived an earlier deploy, which is how it
+    # ended up trailing a palette change once already.
+    html = re.sub(r'(<a href="/pricing/" style="color:)#[0-9a-fA-F]{6}',
+                  r'\g<1>#ff8300', html)
 
     if html != orig:
         with open(path, "w", encoding="utf-8") as f:

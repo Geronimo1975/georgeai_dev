@@ -47,7 +47,7 @@ h1{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font
 h2{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:500;font-size:22px;letter-spacing:-.02em;color:#141413;margin:34px 0 12px}
 ul.list{list-style:none;margin-bottom:8px}
 ul.list li{padding:9px 0 9px 26px;position:relative;border-bottom:1px solid #ebe6df}
-ul.list li::before{content:"";position:absolute;left:2px;top:17px;width:8px;height:8px;background:#ff6b1a;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)}
+ul.list li::before{content:"";position:absolute;left:2px;top:17px;width:8px;height:8px;background:#ff8300;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)}
 ol.steps{counter-reset:s;list-style:none}
 ol.steps li{counter-increment:s;padding:9px 0 9px 38px;position:relative;border-bottom:1px solid #ebe6df}
 ol.steps li::before{content:counter(s,decimal-leading-zero);position:absolute;left:0;top:11px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#c2410c}
@@ -57,11 +57,11 @@ ol.steps li::before{content:counter(s,decimal-leading-zero);position:absolute;le
 .stack span{font-family:'JetBrains Mono',monospace;font-size:12px;background:#f5f0e8;border:1px solid #e6dfd8;border-radius:8px;padding:5px 11px;color:#3d3d3a}
 .cta{background:#efe9de;border-radius:14px;padding:26px;margin:36px 0}
 .cta h2{margin-top:0}
-.cta .btn{display:inline-block;background:#ff6b1a;color:#141413;text-decoration:none;border-radius:9999px;padding:11px 22px;font-weight:600;margin:6px 12px 0 0}
-.cta .btn.alt{background:transparent;color:#141413;border:1px solid #ff6b1a}
+.cta .btn{display:inline-block;background:#ff8300;color:#141413;text-decoration:none;border-radius:9999px;padding:11px 22px;font-weight:600;margin:6px 12px 0 0}
+.cta .btn.alt{background:transparent;color:#141413;border:1px solid #ff8300}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin:18px 0 40px}
 .card{background:#fff;border:1px solid #e6dfd8;border-radius:14px;padding:20px;text-decoration:none;display:block}
-.card:hover{border-color:#ff6b1a}
+.card:hover{border-color:#ff8300}
 .card h3{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:500;font-size:17px;letter-spacing:-.02em;color:#141413;margin-bottom:6px}
 .card p{font-size:14px;color:#6c6a64}
 .cathead{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#8e8b82;margin:34px 0 4px}
@@ -73,7 +73,7 @@ article .lead{font-size:19px;color:#252523}
 .takeaways{background:#f5f0e8;border:1px solid #e6dfd8;border-radius:14px;padding:20px 24px;margin:26px 0}
 .takeaways ul{margin:10px 0 0 18px}
 .takeaways li{margin-bottom:6px}
-.from-practice{border-left:3px solid #ff6b1a;padding:2px 0 2px 16px;color:#252523}
+.from-practice{border-left:3px solid #ff8300;padding:2px 0 2px 16px;color:#252523}
 .faq h3{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:500;font-size:17px;letter-spacing:-.02em;color:#141413;margin:20px 0 6px}
 article code{font-family:'JetBrains Mono',monospace;font-size:.88em;background:#f5f0e8;border:1px solid #ebe6df;border-radius:5px;padding:1px 5px}
 @media(max-width:600px){h1{font-size:32px}.tagline{font-size:19px}}
