@@ -15,7 +15,7 @@
   "use strict";
 
   var API = "/api/auth";
-  var ORANGE = "rgb(204, 120, 92)"; // #cc785c — the primary CTA colour
+  var ORANGE = "rgb(255, 107, 26)"; // #ff6b1a, the primary CTA colour
 
   // ---- helpers ----------------------------------------------------------
   function getCookie(name) {
@@ -152,7 +152,7 @@
     var out = document.createElement("button");
     out.textContent = "Log out";
     out.style.cssText =
-      "cursor:pointer;border:none;border-radius:8px;background:#cc785c;color:#fff;" +
+      "cursor:pointer;border:none;border-radius:8px;background:#ff6b1a;color:#141413;" +
       "padding:6px 10px;font:600 12px system-ui,sans-serif";
     out.addEventListener("click", function () {
       api("/logout", {}).then(refreshState);

@@ -11,7 +11,7 @@
 (function () {
   "use strict";
 
-  var WEBHOOK = "https://n8n.rotocon.world/webhook/georgeai-free-audit";
+  var WEBHOOK = "https://app.n8n-studio.com/webhook/georgeai-free-audit";
   var CONTACT = "contact@georgeai.dev";
 
   var SERIF = '"Copernicus","Tiempos Headline",Georgia,"Times New Roman",serif';
@@ -20,16 +20,16 @@
   // ---- styles ------------------------------------------------------------
   var css =
     "#ga-audit-fab{position:fixed;right:20px;bottom:20px;z-index:99990;display:flex;" +
-    "align-items:center;gap:8px;background:#cc785c;color:#fff;border:none;cursor:pointer;" +
+    "align-items:center;gap:8px;background:#ff6b1a;color:#141413;border:none;cursor:pointer;" +
     "border-radius:9999px;padding:12px 20px;font:500 14px/1 " + SANS + ";" +
     "box-shadow:0 6px 24px rgba(20,20,19,.25)}" +
-    "#ga-audit-fab:active{background:#a9583e}" +
+    "#ga-audit-fab:active{background:#e35a0c}" +
     "#ga-audit-overlay{position:fixed;inset:0;z-index:99995;background:rgba(20,20,19,.55);" +
     "display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}" +
     "#ga-audit-modal{background:#faf9f5;border-radius:16px;padding:32px;max-width:440px;" +
     "width:100%;max-height:92vh;overflow-y:auto;position:relative;" +
     "font-family:" + SANS + ";color:#141413}" +
-    ".ga-audit-badge{display:inline-block;background:#cc785c;color:#fff;border-radius:9999px;" +
+    ".ga-audit-badge{display:inline-block;background:#ff6b1a;color:#141413;border-radius:9999px;" +
     "padding:4px 12px;font:500 12px/1.4 " + SANS + ";letter-spacing:1.5px;text-transform:uppercase}" +
     ".ga-audit-title{font:400 28px/1.2 " + SERIF + ";letter-spacing:-.3px;margin:14px 0 8px}" +
     ".ga-audit-sub{font:400 14px/1.55 " + SANS + ";color:#3d3d3a;margin:0 0 20px}" +
@@ -39,18 +39,28 @@
     ".ga-audit-label{display:block;font:500 13px/1.4 " + SANS + ";color:#3d3d3a;" +
     "margin:0 0 4px}" +
     ".ga-audit-field{margin-bottom:14px}" +
+    ".ga-audit-opt{color:#8e8b82;font-weight:400}" +
+    // Toggle chips: the whole label is the hit area (>=44px tall incl. the 8px
+    // gap), the checkbox itself stays in the a11y tree but is visually hidden.
+    ".ga-audit-chips{display:flex;flex-wrap:wrap;gap:8px}" +
+    ".ga-audit-chip{display:inline-flex;align-items:center;min-height:44px;" +
+    "padding:0 14px;border:1px solid #e6dfd8;border-radius:9999px;background:#fff;" +
+    "color:#3d3d3a;font:400 14px/1.2 " + SANS + ";cursor:pointer;user-select:none}" +
+    ".ga-audit-chip-cb{position:absolute;opacity:0;width:1px;height:1px}" +
+    ".ga-audit-chip.is-on{background:#ff6b1a;color:#141413;border-color:#ff6b1a}" +
+    ".ga-audit-chip.is-focus{outline:2px solid #ff6b1a;outline-offset:2px}" +
     ".ga-audit-row{display:flex;gap:12px}.ga-audit-row .ga-audit-field{flex:1;min-width:0}" +
     ".ga-audit-input{width:100%;box-sizing:border-box;height:40px;background:#fff;" +
     "color:#141413;border:1px solid #e6dfd8;border-radius:8px;padding:10px 14px;" +
     "font:400 15px/1.4 " + SANS + ";outline:none}" +
-    ".ga-audit-input:focus{border-color:#cc785c;box-shadow:0 0 0 3px rgba(204,120,92,.15)}" +
-    ".ga-audit-submit{width:100%;height:44px;border:none;border-radius:8px;background:#cc785c;" +
-    "color:#fff;font:500 15px/1 " + SANS + ";cursor:pointer;margin-top:6px}" +
-    ".ga-audit-submit:active{background:#a9583e}" +
+    ".ga-audit-input:focus{border-color:#ff6b1a;box-shadow:0 0 0 3px rgba(255,107,26,.18)}" +
+    ".ga-audit-submit{width:100%;height:44px;border:none;border-radius:8px;background:#ff6b1a;" +
+    "color:#141413;font:500 15px/1 " + SANS + ";cursor:pointer;margin-top:6px}" +
+    ".ga-audit-submit:active{background:#e35a0c}" +
     ".ga-audit-submit[disabled]{background:#e6dfd8;color:#6c6a64;cursor:default}" +
     ".ga-audit-msg{margin-top:12px;font:400 13px/1.5 " + SANS + ";border-radius:8px;" +
     "padding:10px 12px;display:none}" +
-    ".ga-audit-msg a{color:#cc785c}" +
+    ".ga-audit-msg a{color:#c2410c}" +
     ".ga-audit-fine{margin:14px 0 0;font:400 12px/1.5 " + SANS + ";color:#8e8b82;text-align:center}" +
     ".ga-audit-hp{position:absolute;left:-9999px;top:-9999px;height:1px;width:1px;overflow:hidden}" +
     ".ga-audit-done{text-align:center;padding:24px 0}" +
@@ -73,20 +83,71 @@
     return n;
   }
 
-  function field(label, name, type, placeholder, autocomplete) {
+  function field(label, name, type, placeholder, autocomplete, optional) {
+    var id = "ga-audit-" + name;
     var input = el("input", {
       class: "ga-audit-input",
+      id: id,
       name: name,
       type: type,
       placeholder: placeholder,
       autocomplete: autocomplete || "on",
     });
+    var lab = el("label", { class: "ga-audit-label", for: id, text: label });
+    if (optional) {
+      lab.appendChild(el("span", { class: "ga-audit-opt", text: " (optional)" }));
+    }
     return {
-      wrap: el("div", { class: "ga-audit-field" }, [
-        el("label", { class: "ga-audit-label", text: label }),
-        input,
-      ]),
+      wrap: el("div", { class: "ga-audit-field" }, [lab, input]),
       input: input,
+    };
+  }
+
+  // Service interests — names mirror georgeai_services.json so the lead data
+  // lines up with the service pages. Rendered as toggle chips: six stacked
+  // checkbox rows would double the height of an already long modal.
+  var SERVICES = [
+    "SEO / AIO / GEO",
+    "AI Chatbot",
+    "Automation",
+    "AI Phone Calls",
+    "Web Design",
+    "Lead Generation",
+  ];
+
+  function interestChips() {
+    var inputs = [];
+    var chips = SERVICES.map(function (name, i) {
+      var id = "ga-audit-svc-" + i;
+      var cb = el("input", { type: "checkbox", id: id, value: name, class: "ga-audit-chip-cb" });
+      inputs.push(cb);
+      var chip = el("label", { class: "ga-audit-chip", for: id }, [cb]);
+      chip.appendChild(document.createTextNode(name));
+      // Class toggle rather than :has() so the selected state survives on
+      // browsers without :has() support.
+      cb.addEventListener("change", function () {
+        chip.classList.toggle("is-on", cb.checked);
+      });
+      // The checkbox is visually hidden, so the focus ring has to be drawn on
+      // the chip itself — done in JS rather than :has() for older browsers.
+      cb.addEventListener("focus", function () { chip.classList.add("is-focus"); });
+      cb.addEventListener("blur", function () { chip.classList.remove("is-focus"); });
+      return chip;
+    });
+    var wrap = el("div", { class: "ga-audit-field" }, [
+      el("span", { class: "ga-audit-label", id: "ga-audit-svc-label" }, [
+        el("span", { text: "Also interested in" }),
+        el("span", { class: "ga-audit-opt", text: " (optional)" }),
+      ]),
+      el("div", { class: "ga-audit-chips", role: "group",
+        "aria-labelledby": "ga-audit-svc-label" }, chips),
+    ]);
+    return {
+      wrap: wrap,
+      value: function () {
+        return inputs.filter(function (c) { return c.checked; })
+          .map(function (c) { return c.value; }).join(", ");
+      },
     };
   }
 
@@ -132,12 +193,15 @@
       el("button", { class: "ga-audit-close", "aria-label": "Close", text: "×" }),
       el("div", { class: "ga-audit-done" }, [
         el("div", { class: "ga-audit-done-mark", text: "✓" }),
-        el("div", { class: "ga-audit-title", text: "Your audit is on its way" }),
+        el("div", { class: "ga-audit-title", text: "Request received" }),
         el("p", {
           class: "ga-audit-sub",
+          // Deliberately does not promise the report itself: a repeat request
+          // gets the "free audit already used" mail instead, and the webhook
+          // answers before the workflow knows which branch it took.
           text:
-            "We're analyzing your website right now. The full SEO, AEO, AIO & GEO " +
-            "report will land in " + email + " within a few minutes.",
+            "We're working on it. Check " + email + " in the next few minutes — " +
+            "everything comes by e-mail.",
         }),
       ])
     );
@@ -149,8 +213,10 @@
     var fFirst = field("First name", "first_name", "text", "Jane", "given-name");
     var fLast = field("Surname", "surname", "text", "Doe", "family-name");
     var fEmail = field("E-mail address", "email", "email", "jane@company.com", "email");
-    var fPhone = field("Contact number", "phone", "tel", "+27 82 000 0000", "tel");
+    var fPhone = field("Contact number", "phone", "tel", "+27 82 000 0000", "tel", true);
     var fUrl = field("Website URL to audit", "website", "text", "yourcompany.com", "url");
+    var fCompany = field("Company", "company_name", "text", "Acme Ltd", "organization", true);
+    var interests = interestChips();
 
     // honeypot — humans never see it; bots that fill it are dropped in n8n
     var hp = el("input", { class: "ga-audit-input", name: "company", type: "text",
@@ -165,6 +231,8 @@
       fEmail.wrap,
       fPhone.wrap,
       fUrl.wrap,
+      fCompany.wrap,
+      interests.wrap,
       el("div", { class: "ga-audit-hp" }, [hp]),
       submit,
       msg,
@@ -203,7 +271,9 @@
         email: fEmail.input.value.trim(),
         phone: fPhone.input.value.trim(),
         website: normalizeUrl(fUrl.input.value),
-        company: hp.value, // honeypot
+        company_name: fCompany.input.value.trim(),
+        interests: interests.value(),
+        company: hp.value, // honeypot — must stay named "company"
         page: location.href,
       };
 
@@ -212,9 +282,6 @@
       }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(payload.email)) {
         setMsg(msg, "Please enter a valid e-mail address.", true); return;
-      }
-      if (!payload.phone) {
-        setMsg(msg, "Please fill in your contact number.", true); return;
       }
       if (!payload.website) {
         setMsg(msg, "Please enter a valid website URL.", true); return;
