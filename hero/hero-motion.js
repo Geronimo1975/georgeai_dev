@@ -41,6 +41,16 @@
   'use strict';
 
   var DWELL = 5200; // must match --ga-dwell in hero-motion.css
+
+  /* The accordion animates `flex`, so every advance shifts layout — a burst of
+   * roughly 0.086 CLS. Spaced DWELL apart each burst lands in its own Core Web
+   * Vitals session window, so the reported CLS stays about 0.086 rather than
+   * accumulating; the metric is the worst window, not the sum. Still, an
+   * indefinite loop means indefinite exposure to that burst and a standing
+   * chance that a slow frame lands two advances in one window. Three passes
+   * show every panel three times, which is plenty to read as "this rotates",
+   * and then it holds still. */
+  var MAX_CYCLES = 3;
   var VIDEO_SRC = '/assets/hero.mp4';
 
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -55,6 +65,7 @@
     activeIdx: -1,
     timer: null,
     autoplay: true, // false once the visitor picks a panel themselves
+    cycles: 0, // completed passes through the panel set; MAX_CYCLES then stops
     paused: false,
     entered: false,
     selfAdvancing: false,
@@ -520,14 +531,19 @@
     var hero = findHero();
     if (!hero || !state.autoplay || state.paused) return;
     var next = (activeIndex(hero.panels) + 1) % hero.panels.length;
+    // Wrapping back to the first panel completes a pass.
+    var lastPass = next === 0 && ++state.cycles >= MAX_CYCLES;
     state.selfAdvancing = true;
     hero.panels[next].click();
     // Cleared on a microtask so the synthetic click's own pointer/click
     // handlers don't read as visitor intent.
     setTimeout(function () { state.selfAdvancing = false; }, 0);
-    restartTimer();
+    // Take the last step first, so the hero comes to rest on the opening panel
+    // rather than stranding the visitor on whichever one happened to be last.
+    if (lastPass) stopAutoplay(); else restartTimer();
   }
 
+  /* Called both by MAX_CYCLES above and by the first real visitor interaction. */
   function stopAutoplay() {
     state.autoplay = false;
     clearTimeout(state.timer);
