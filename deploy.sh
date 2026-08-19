@@ -301,6 +301,15 @@ apply_hero() {
   done
   [ -n "$copied" ] && ok "hero motion:$copied"
 
+  # The export ships the hero backdrop at 1920p/3.8Mbps — 7.2MB for a video
+  # that plays dimmed behind the hero. hero/assets/ holds a 1280p re-encode at
+  # a quarter the weight and no visible difference in context. Copied after
+  # apply_media so it wins, and it is already +faststart.
+  if [ -f "$HERO_DIR/assets/hero.mp4" ] && [ -d "$SITE_DIR/assets" ]; then
+    cp "$HERO_DIR/assets/hero.mp4" "$SITE_DIR/assets/hero.mp4"
+    ok "hero video: $(du -h "$HERO_DIR/assets/hero.mp4" | cut -f1) (repo-owned re-encode)"
+  fi
+
   if [ -f "$SITE_DIR/index.html" ] && ! grep -q 'hero:motion' "$SITE_DIR/index.html"; then
     if command -v python3 >/dev/null; then
       python3 - "$SITE_DIR/index.html" <<'PY'
@@ -326,21 +335,30 @@ PY
 
   # hero lede — the export's home view renders no <h1> and no value proposition
   # (its 7 <h1>s all belong to sub-page views). The block goes into the raw HTML
-  # before </body> so crawlers get the heading without executing JS;
+  # between hero:lede markers so crawlers get the heading without executing JS;
   # hero-motion.js relocates it into the hero above the panel row at runtime.
-  # Idempotent via the hero:lede marker.
-  if [ -f "$HERO_DIR/hero-lede.html" ] && [ -f "$SITE_DIR/index.html" ] \
-     && ! grep -q 'hero:lede' "$SITE_DIR/index.html"; then
+  # Re-injected (not skipped) when already present, so edits to hero-lede.html
+  # actually reach a site/ that survived from an earlier deploy.
+  if [ -f "$HERO_DIR/hero-lede.html" ] && [ -f "$SITE_DIR/index.html" ]; then
     if command -v python3 >/dev/null; then
       python3 - "$SITE_DIR/index.html" "$HERO_DIR/hero-lede.html" <<'LEDE'
 import re, sys
 page, block = sys.argv[1], sys.argv[2]
 html = open(page, encoding="utf-8").read()
-lede = open(block, encoding="utf-8").read().strip()
-if re.search(r"</body>", html, re.I):
-    html = re.sub(r"</body>", lambda m: lede + "\n" + m.group(0), html, count=1, flags=re.I)
+lede = ("<!-- hero:lede:start -->\n"
+        + open(block, encoding="utf-8").read().strip()
+        + "\n<!-- hero:lede:end -->")
+existing = re.search(r"<!-- hero:lede:start -->.*?<!-- hero:lede:end -->", html, re.S)
+if existing:
+    html = html[:existing.start()] + lede + html[existing.end():]
 else:
-    html = html + "\n" + lede + "\n"
+    # first run on this file, or an older marker-less block from a previous
+    # deploy — drop that too so the two never coexist
+    html = re.sub(r"<!-- hero:lede\b.*?</div>\s*(?=</body>)", "", html, count=1, flags=re.S | re.I)
+    if re.search(r"</body>", html, re.I):
+        html = re.sub(r"</body>", lambda m: lede + "\n" + m.group(0), html, count=1, flags=re.I)
+    else:
+        html = html + "\n" + lede + "\n"
 open(page, "w", encoding="utf-8").write(html)
 LEDE
       ok "injected hero lede (h1) into index.html"

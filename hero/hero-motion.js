@@ -111,12 +111,67 @@
   /* A. Hero lede. deploy.sh injects the block before </body> so the <h1> is in
    * the raw HTML for crawlers; here it is moved to the top of the hero, above
    * the panel row. Idempotent — sync() runs on every mutation. */
+  /* The export keeps the active language in React state — nothing in
+   * localStorage, and <html lang> stays "en" — so the only honest way to read
+   * it is to ask the rendered page which language it is showing. GA_SERVICES
+   * carries the same string in all five, so whichever one is in the DOM wins.
+   * Unknown or unmatched → English, which is also what every crawler sees. */
+  function activeLang() {
+    var svc = window.GA_SERVICES;
+    var map = svc && svc.testimonials && svc.testimonials.titles;
+    if (!map) return 'en';
+    var body = document.body.textContent || '';
+    for (var lang in map) {
+      if (lang !== 'en' && map[lang] && body.indexOf(map[lang]) !== -1) return lang;
+    }
+    return 'en';
+  }
+
+  var ledeBase = null;
+
+  function translateLede(lede) {
+    var raw = lede.getAttribute('data-i18n');
+    if (!raw) return;
+    if (!ledeBase) {
+      ledeBase = {
+        eyebrow: lede.querySelector('.ga-lede__eyebrow').innerHTML,
+        title: lede.querySelector('.ga-lede__title').innerHTML,
+        sub: lede.querySelector('.ga-lede__sub').innerHTML
+      };
+    }
+    var all;
+    try { all = JSON.parse(raw); } catch (e) { return; }
+    var lang = activeLang();
+    var copy = all[lang] || ledeBase;
+    if (lede.getAttribute('data-lang') === lang) return;
+    lede.setAttribute('data-lang', lang);
+    lede.querySelector('.ga-lede__eyebrow').innerHTML = copy.eyebrow;
+    lede.querySelector('.ga-lede__title').innerHTML = copy.title;
+    lede.querySelector('.ga-lede__sub').innerHTML = copy.sub;
+    lede.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  }
+
+  /* The crawlable seo:footer link strip (deploy.sh:apply_seo) is a body-level
+   * block sitting after #dc-root, which contributes no flow height — so it
+   * landed over the hero instead of at the foot of the page. Same treatment as
+   * the lede: static in the HTML for crawlers, moved where it belongs at
+   * runtime. Once it is in the footer its links can also be grown to 44px. */
+  function placeSeoFooter() {
+    var strip = document.getElementById('seo:footer');
+    var footer = document.querySelector('.ga-footer');
+    if (!strip || !footer) return;
+    if (strip.parentElement === footer) return;
+    footer.appendChild(strip);
+    strip.classList.add('ga-seo-strip');
+  }
+
   function placeLede(hero) {
     var lede = document.querySelector('[data-ga-lede]');
     if (!lede) return;
     if (lede.parentElement !== hero.root || lede.nextElementSibling !== hero.row) {
       hero.root.insertBefore(lede, hero.row);
     }
+    translateLede(lede);
     if (!lede.classList.contains('ga-lede--in')) {
       requestAnimationFrame(function () { lede.classList.add('ga-lede--in'); });
     }
@@ -317,6 +372,7 @@
     placeLede(hero);
     tagServicesGrid();
     tagChrome();
+    placeSeoFooter();
 
     ensureProgress(hero);
     ensureVideo(hero);

@@ -433,12 +433,13 @@
     min-height: 44px;
   }
 
-  /* The seo:footer strip is deliberately left alone. It is a body-level block
-   * that already renders over the hero region rather than at the foot of the
-   * page (pre-existing — it sits after #dc-root, which contributes no flow
-   * height), and growing its links to 44px pushed it into a taller, visibly
-   * colliding stack. Fixing where that block lands is the prerequisite; until
-   * then, enlarging it makes the page worse, not better. */
+  /* Now that hero-motion.js moves the seo:footer strip into the footer band
+   * instead of leaving it stranded over the hero, its links can be grown. */
+  .ga-seo-strip a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
 
   #ga-audit-fab {
     min-height: 44px;
@@ -451,4 +452,12 @@
   .ga-header {
     top: calc(-1 * var(--ga-topbar-h, 0px)) !important;
   }
+}
+
+/* The relocated seo:footer strip: a quiet row of crawlable links at the foot of
+ * the footer, separated from the columns above it. */
+.ga-seo-strip {
+  border-top: 1px solid var(--hairline);
+  margin-top: 8px;
+  opacity: 0.85;
 }

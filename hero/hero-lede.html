@@ -3,10 +3,31 @@
      client-side and ships NO <h1> on the home view); hero-motion.js relocates it
      into the hero above the panel row at runtime. NEVER edit the copy in site/.
 
-     Copy is EN only — the export's 5-language switcher does not reach this block.
-     Keep the H1 distinct from the "From bottleneck to running system" H2 further
-     down the page; two identical headings is worse than none. -->
-<div class="ga-lede" data-ga-lede>
+     The EN copy is the one that matters for search: the export keeps the active
+     language in React state only, so every page load — and every crawl — starts
+     in English. data-i18n covers an in-session language switch; hero-motion.js
+     detects the active language from GA_SERVICES and swaps the text.
+     Arabic deliberately falls back to English rather than shipping marketing
+     copy that has not been reviewed for RTL typography and register.
+
+     TRANSLATIONS ARE UNREVIEWED — worth a read-through before they matter. -->
+<div class="ga-lede" data-ga-lede data-i18n='{
+  "de": {
+    "eyebrow": "Automatisierung · KI · GEO/SEO",
+    "title": "KI-Automatisierung und Sichtbarkeit, <em>gebaut und übergeben</em> — nicht nur beraten.",
+    "sub": "n8n-Workflows, KI-Agenten, RAG-Assistenten und Django-Plattformen, eingebunden in die Tools, die Sie ohnehin nutzen — und überwacht, damit Sie der Arbeit zusehen, statt sie zu machen."
+  },
+  "fr": {
+    "eyebrow": "Automatisation · IA · GEO/SEO",
+    "title": "Automatisation IA et visibilité, <em>construites et livrées</em> — pas seulement conseillées.",
+    "sub": "Workflows n8n, agents IA, assistants RAG et plateformes Django reliés aux outils que vous utilisez déjà — puis supervisés, pour que vous regardiez le travail se faire au lieu de le faire."
+  },
+  "ro": {
+    "eyebrow": "Automatizare · AI · GEO/SEO",
+    "title": "Automatizare AI și vizibilitate, <em>construite și predate</em> — nu doar consultanță.",
+    "sub": "Fluxuri n8n, agenți AI, asistenți RAG și platforme Django legate la uneltele pe care deja le folosești — apoi monitorizate, ca să vezi treaba făcându-se în loc să o faci."
+  }
+}'>
   <p class="ga-lede__eyebrow">Automation &middot; AI &middot; GEO/SEO</p>
   <h1 class="ga-lede__title">
     AI automation and search visibility, <em>built and handed over</em> — not just advised.
