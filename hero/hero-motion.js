@@ -184,6 +184,84 @@
     }
   }
 
+  /* E. Mobile chrome + touch targets.
+   *
+   * The top bar stacked three rows into 163px before any content — 20% of an
+   * 844px screen — and its 7 social icons render at 17px, well under the 44px
+   * minimum. The same seven links sit in the footer verbatim, so on phones the
+   * header row is dropped rather than enlarged, which fixes the height and the
+   * tap size in one move. The footer copies stay and get grown to 44px there.
+   *
+   * Both rows are found the same way: a flex row of five or more sibling
+   * anchors pointing at social hosts. Nothing else on the site has that shape.
+   */
+  var SOCIAL_HOST = /(whatsapp|wa\.me|facebook|instagram|tiktok|youtube|linkedin|github|x\.com|twitter)/i;
+
+  function socialRows() {
+    var rows = [], divs = document.querySelectorAll('#dc-root div');
+    for (var i = 0; i < divs.length; i++) {
+      var kids = divs[i].children, hits = 0;
+      if (kids.length < 5) continue;
+      for (var k = 0; k < kids.length; k++) {
+        if (kids[k].tagName === 'A' && SOCIAL_HOST.test(kids[k].getAttribute('href') || '')) hits++;
+      }
+      if (hits >= 5) rows.push(divs[i]);
+    }
+    return rows;
+  }
+
+  /* The footer is the full-bleed band the second social row lives in. Walking
+   * up to viewport width beats guessing at the export's nesting depth; bail if
+   * the walk overshoots into something that also holds the hero. */
+  function footerFor(row) {
+    var n = row;
+    while (n && n !== document.body) {
+      if (Math.round(n.getBoundingClientRect().width) >= document.documentElement.clientWidth - 1) {
+        return n.querySelector('.ga-hero') ? null : n;
+      }
+      n = n.parentElement;
+    }
+    return null;
+  }
+
+  /* The utility row (contact + language + sign-up + theme) and the logo/nav bar
+   * share one sticky wrapper, so 167px of chrome stayed pinned on a 844px
+   * screen. Pulling the wrapper up by exactly the utility row's height lets
+   * that row scroll away while the nav bar still pins at the top — the phone
+   * number and the controls stay on the page, they just stop occupying a fifth
+   * of every screen. The height is measured rather than assumed because the
+   * row rewraps with the language (Arabic runs taller). */
+  function measureTopbar() {
+    var bar = document.querySelector('.ga-topbar');
+    var header = document.querySelector('.ga-header');
+    if (!bar || !header) return;
+    header.style.setProperty('--ga-topbar-h', bar.offsetHeight + 'px');
+  }
+
+  function tagChrome() {
+    if (document.querySelector('.ga-soc-row--foot')) return;
+    var rows = socialRows();
+    if (rows.length < 2) return; // export changed shape — leave everything alone
+    rows[0].classList.add('ga-soc-row', 'ga-soc-row--head');
+    var topbar = rows[0].parentElement;
+    if (topbar) {
+      topbar.classList.add('ga-topbar');
+      var sticky = topbar;
+      while (sticky && sticky !== document.body &&
+             getComputedStyle(sticky).position !== 'sticky') {
+        sticky = sticky.parentElement;
+      }
+      if (sticky && sticky !== document.body) {
+        sticky.classList.add('ga-header');
+        measureTopbar();
+      }
+    }
+    var foot = rows[rows.length - 1];
+    foot.classList.add('ga-soc-row', 'ga-soc-row--foot');
+    var f = footerFor(foot);
+    if (f) f.classList.add('ga-footer');
+  }
+
   /* C. Under 900px the panel row is a horizontal scroller. Autoplay only moved
    * the active index, leaving the visitor parked on an uncaptioned slide while
    * the caption rendered off-screen. Keep the scroller and the active panel in
@@ -238,6 +316,7 @@
 
     placeLede(hero);
     tagServicesGrid();
+    tagChrome();
 
     ensureProgress(hero);
     ensureVideo(hero);
@@ -466,6 +545,8 @@
     queued = true;
     requestAnimationFrame(function () { queued = false; sync(); });
   }
+
+  window.addEventListener('resize', measureTopbar);
 
   function boot() {
     syncConsent();

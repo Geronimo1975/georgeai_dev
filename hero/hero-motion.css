@@ -382,3 +382,73 @@
     margin-bottom: 24px;
   }
 }
+
+/* --------------------------------------------------------------------------
+ * E. Mobile chrome + touch targets.
+ *
+ *    The top bar spent 163px — 20% of an 844px screen — stacking a contact
+ *    row, a 7-icon social row and a controls row above the logo bar. Those
+ *    seven links are repeated verbatim in the footer and render at 17px, half
+ *    the 44px minimum, so on phones the header copy goes and the footer copy
+ *    grows. hero-motion.js tags both rows and the footer band by structure.
+ * ------------------------------------------------------------------------ */
+@media (max-width: 767px) {
+  /* Duplicated in the footer — dropping the row reclaims ~30px of chrome and
+   * removes seven sub-44px targets at once. */
+  .ga-soc-row--head {
+    display: none !important;
+  }
+
+  /* 7 × 44px = 308px, inside the 350px content width at 390. The negative
+   * margin keeps the first icon optically aligned with the column above it,
+   * since each anchor now carries 13px of invisible padding on each side. */
+  .ga-soc-row--foot {
+    gap: 0 !important;
+    margin-left: -13px;
+  }
+
+  .ga-soc-row--foot > a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Footer link lists sat at 17px tall on a 28px pitch. */
+  .ga-footer a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}
+
+/* Remaining sub-44px targets on phones: the top bar's phone/email links, the
+ * crawlable seo:footer link strip (deploy.sh:apply_seo), and the audit FAB,
+ * which sat 4px short. */
+@media (max-width: 767px) {
+  .ga-topbar a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  /* The seo:footer strip is deliberately left alone. It is a body-level block
+   * that already renders over the hero region rather than at the foot of the
+   * page (pre-existing — it sits after #dc-root, which contributes no flow
+   * height), and growing its links to 44px pushed it into a taller, visibly
+   * colliding stack. Fixing where that block lands is the prerequisite; until
+   * then, enlarging it makes the page worse, not better. */
+
+  #ga-audit-fab {
+    min-height: 44px;
+  }
+}
+
+/* Only the logo/nav bar stays pinned on phones — the utility row above it
+ * scrolls away. --ga-topbar-h is measured by hero-motion.js. */
+@media (max-width: 767px) {
+  .ga-header {
+    top: calc(-1 * var(--ga-topbar-h, 0px)) !important;
+  }
+}

@@ -33,9 +33,18 @@
       credentials: "same-origin",
       body: body === undefined ? undefined : JSON.stringify(body),
     }).then(function (r) {
-      return r.json().then(function (data) {
-        return { ok: r.ok, status: r.status, data: data };
-      });
+      // The nginx-only production has no /api/auth/* — it answers 404 with an
+      // HTML error page, and r.json() on that threw an uncaught SyntaxError on
+      // every page load. Only parse what actually claims to be JSON; callers
+      // already treat a null body as "no session".
+      var ct = r.headers.get("content-type") || "";
+      if (ct.indexOf("json") === -1) {
+        return { ok: false, status: r.status, data: null };
+      }
+      return r.json().then(
+        function (data) { return { ok: r.ok, status: r.status, data: data }; },
+        function () { return { ok: false, status: r.status, data: null }; }
+      );
     });
   }
 
