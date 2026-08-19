@@ -23,9 +23,37 @@
  *    accordion IS a flex-basis animation), so nothing else in the hero does.
  * ------------------------------------------------------------------------ */
 .ga-hero-panel {
-  transition: flex 420ms var(--ga-ease-out), filter 200ms ease,
-    box-shadow 200ms ease !important;
-  will-change: flex-grow;
+  /* Was `transition: flex 420ms`. Animating flex relayouts the row on every
+   * frame, and that is where 100% of the page's CLS came from — measured at
+   * 0.1897 against production, with the panels, their rail labels and their
+   * image layers as the sources. Panels now hold equal widths and the active
+   * one is revealed with transform and filter instead, neither of which the
+   * layout-instability spec counts. `!important` on flex is what keeps the
+   * export's inline `flex:5 1 0` from winning it back on every re-render. */
+  flex: 1 1 0 !important;
+  transform-origin: center;
+  transition: transform 420ms var(--ga-ease-out), filter 300ms ease,
+    box-shadow 300ms ease !important;
+  will-change: transform;
+}
+
+/* The active panel lifts out of the strip rather than pushing its neighbours
+ * aside. 1.035 is deliberately small: the panels are 254px wide at 1440, so
+ * anything more reads as a hover state rather than a selection. */
+.ga-hero-panel--active {
+  transform: scale(1.035);
+  z-index: 2;
+  box-shadow: 0 18px 44px rgba(20, 20, 19, 0.42);
+}
+
+/* Everything not selected recedes. Doing the separation with brightness keeps
+ * it purely compositor-side. */
+.ga-hero-panel:not(.ga-hero-panel--active) {
+  filter: brightness(0.68) saturate(0.9);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ga-hero-panel--active { transform: none; }
 }
 
 /* Collapsed panels lift slightly on hover so they read as reachable before the
