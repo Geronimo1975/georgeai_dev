@@ -42,6 +42,26 @@ VAR_REPLACEMENTS = [
     # was a darker orange. Catch that form too, or the label never updates.
     ('background:var(--accentBtn);color:#fff', 'background:var(--accentBtn);color:#141413'),
     ('color:#cc785c', 'color:var(--accent)'),
+    # Everything below is coral the export paints as a SURFACE rather than as
+    # text: the CTA band before the footer, the spark bullets, the chart bars,
+    # the active FAQ / testimonial borders. Left alone, these kept the old
+    # muted coral next to the new orange and read as two brands on one page.
+    ('background:#cc785c', 'background:var(--accentBtn)'),
+    # The closing CTA band sets color:#fff on its wrapper and both its heading
+    # and its body inherit it. Turning the fill neon left white-on-orange at
+    # 2.85:1, failing both the 4.5 body and the 3.0 large-text threshold. Ink
+    # on the same fill is 6.47:1.
+    ('color:#fff;display:flex;flex-direction:{{ ctaDir }}',
+     'color:#141413;display:flex;flex-direction:{{ ctaDir }}'),
+    # JS ternaries build their own strings, so the hex arrives quoted and the
+    # plain `solid #cc785c` pattern never sees it.
+    ('"#cc785c"', '"var(--accent)"'),
+    ('tagColor: "var(--accent)"', 'tagColor: "var(--accent)"'),
+    # bar-chart gradient: coral into a pale coral tip
+    ('#cc785c 55%,#f0a98a', 'var(--accentBtn) 55%,#ffa366'),
+    # the seo:footer link was pinned to the old light-theme accent by an
+    # earlier run of this layer; it now sits in the dark footer
+    ('<a href="/pricing/" style="color:#a9583e', '<a href="/pricing/" style="color:#ff6b1a'),
     ('solid #cc785c', 'solid var(--accent)'),
 ]
 
@@ -91,6 +111,12 @@ def apply(path: str) -> None:
             html = html.replace(old, new)
     for old, new in SAFE_REPLACEMENTS:
         html = html.replace(old, new)
+
+    # Social icons are muted to grey so the accent stays scarce. The existing
+    # pair only catches the URL built by string concatenation; some are written
+    # out in full, which left one GitHub mark in the old coral.
+    html = re.sub(r'(cdn\.simpleicons\.org/[a-z0-9.+-]+/)(?:cc785c|a9583e)',
+                  r'\g<1>8e8b82', html)
 
     if html != orig:
         with open(path, "w", encoding="utf-8") as f:
