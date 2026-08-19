@@ -1,4 +1,29 @@
 services:
+  # Django API. Not routed by Traefik on purpose — it is reachable only from
+  # georgeai-web on the shared network, which proxies /api/ to it. Keeping
+  # nginx at the edge means a broken deploy here cannot take the site down.
+  georgeai-app:
+    # Paths are relative to the REMOTE layout: this file is deployed to
+    # /opt/georgeai/docker-compose.yml, next to ./site, ./backend and ./deploy
+    # — not to the deploy/ directory it lives in inside the repo.
+    build:
+      context: ./backend
+    image: georgeai-app:latest
+    container_name: georgeai-app
+    restart: unless-stopped
+    env_file:
+      - ./deploy/backend.env
+    expose:
+      - "8000"
+    networks:
+      - gethub-network
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/auth/me', timeout=4).status==200 else 1)\""]
+      interval: 30s
+      timeout: 8s
+      retries: 3
+      start_period: 20s
+
   georgeai-web:
     image: nginx:1.27-alpine
     container_name: georgeai-web
@@ -6,6 +31,8 @@ services:
     volumes:
       - ./site:/usr/share/nginx/html:ro
       - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - georgeai-app
     networks:
       - gethub-network
     labels:

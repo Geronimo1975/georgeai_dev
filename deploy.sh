@@ -513,6 +513,15 @@ rsync -az -e ssh "$PROJECT_DIR/deploy/nginx.conf"         "$SSH_HOST:$REMOTE_DIR
 rsync -az -e ssh "$PROJECT_DIR/deploy/docker-compose.yml" "$SSH_HOST:$REMOTE_DIR/docker-compose.yml"
 ok "deploy config synced"
 
+# The Django API is built on the VPS from this source. Excludes keep the local
+# venv, caches and — critically — the dev backend/.env off the server; the
+# production env lives at deploy/backend.env and is never in this repo.
+rsync -az --delete -e ssh \
+  --exclude '.venv/' --exclude '__pycache__/' --exclude '*.pyc' \
+  --exclude '.env' --exclude 'logs/' --exclude 'staticfiles/' \
+  "$PROJECT_DIR/backend/" "$SSH_HOST:$REMOTE_DIR/backend/"
+ok "backend source synced"
+
 # ---------------------------------------------------------------------------
 # 4. bring up the container behind Traefik
 # ---------------------------------------------------------------------------
@@ -526,9 +535,18 @@ if [ "$NGINX_CHANGED" = 1 ]; then
   warn "nginx.conf changed — force-recreating container so the file mount rebinds"
   COMPOSE_FLAGS="$COMPOSE_FLAGS --force-recreate"
 fi
-ssh "$SSH_HOST" "cd \"$REMOTE_DIR\" && docker compose up -d $COMPOSE_FLAGS" \
+ssh "$SSH_HOST" "cd \"$REMOTE_DIR\" && docker compose up -d --build $COMPOSE_FLAGS" \
   || die "docker compose failed on VPS"
 ok "georgeai-web is up"
+
+# Migrations run after the container is up but before the health checks gate
+# the deploy, so a bad migration fails the run rather than surfacing later as
+# 500s on /api/auth/*.
+if ssh "$SSH_HOST" "cd \"$REMOTE_DIR\" && docker compose exec -T georgeai-app python manage.py migrate --noinput" >/dev/null 2>&1; then
+  ok "migrations applied"
+else
+  die "migrate failed — inspect: ssh $SSH_HOST 'docker logs georgeai-app'"
+fi
 
 # ---------------------------------------------------------------------------
 # 5. health checks
@@ -541,6 +559,15 @@ if ssh "$SSH_HOST" "docker exec georgeai-web wget -qO- http://localhost/healthz 
   ok "container healthy (internal /healthz)"
 else
   die "internal health check failed — inspect: ssh $SSH_HOST 'docker logs georgeai-web'"
+fi
+
+# The API is the whole point of shipping Django — a 404 here means nginx is
+# still answering /api/ with an HTML error page, which is the bug this
+# replaced. Check the JSON shape, not just the status code.
+if ssh "$SSH_HOST" "docker exec georgeai-web wget -qO- http://localhost/api/auth/me 2>/dev/null" | grep -q 'authenticated'; then
+  ok "API healthy (/api/auth/me returns JSON)"
+else
+  die "API check failed — inspect: ssh $SSH_HOST 'docker logs georgeai-app'"
 fi
 
 DEPLOY_FAIL=0

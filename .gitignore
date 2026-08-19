@@ -244,3 +244,6 @@ cron/logs/
 
 # jez artifacts
 .jez/
+
+# production env for the Django API — server-side only
+deploy/backend.env
