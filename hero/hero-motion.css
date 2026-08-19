@@ -1,0 +1,384 @@
+/* ---------------------------------------------------------------------------
+ * hero-motion.css — motion layer for the homepage hero.
+ *
+ * Repo-owned, copied into site/ by deploy.sh:apply_hero() and injected into
+ * index.html. NEVER edit the copy in site/ — it is wiped on every deploy.
+ *
+ * The export ships the hero as inline styles with no classes, so hero-motion.js
+ * tags the nodes at runtime (.ga-hero, .ga-hero-bg, .ga-hero-row, .ga-hero-panel,
+ * .ga-hero-cta) and everything below hangs off those hooks.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  /* Strong curves — the built-in CSS easings are too weak to read as intentional. */
+  --ga-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ga-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ga-dwell: 5200ms; /* autoplay dwell per panel, mirrored in hero-motion.js */
+}
+
+/* --------------------------------------------------------------------------
+ * 1. Panel expand — the export ships 600ms with a weak curve. Shorter + a
+ *    stronger ease-out reads as more responsive at the same perceived travel.
+ *    `flex` is the one layout property we cannot avoid animating here (the
+ *    accordion IS a flex-basis animation), so nothing else in the hero does.
+ * ------------------------------------------------------------------------ */
+.ga-hero-panel {
+  transition: flex 420ms var(--ga-ease-out), filter 200ms ease,
+    box-shadow 200ms ease !important;
+  will-change: flex-grow;
+}
+
+/* Collapsed panels lift slightly on hover so they read as reachable before the
+ * click. Gated: touch devices fire hover on tap and would latch the state. */
+@media (hover: hover) and (pointer: fine) {
+  .ga-hero-panel:not(.ga-hero-panel--active):hover {
+    filter: brightness(1.14) saturate(1.05);
+    box-shadow: 0 10px 30px rgba(20, 20, 19, 0.32);
+  }
+  .ga-hero-panel:not(.ga-hero-panel--active):hover > span {
+    transform: translateY(-3px);
+    transition: transform 200ms var(--ga-ease-out);
+  }
+}
+
+.ga-hero-panel:active {
+  filter: brightness(0.96);
+  transition-duration: 120ms !important;
+}
+
+/* --------------------------------------------------------------------------
+ * 2. Active-panel content stagger — the export pops eyebrow/title/desc/CTA in
+ *    instantly the moment flex starts animating. Staggering them behind the
+ *    expand is the single biggest reason the accordion felt static.
+ * ------------------------------------------------------------------------ */
+.ga-hero-panel--active .ga-hero-detail > * {
+  animation: ga-hero-detail-in 300ms var(--ga-ease-out) backwards;
+}
+.ga-hero-panel--active .ga-hero-detail > *:nth-child(1) { animation-delay: 140ms; }
+.ga-hero-panel--active .ga-hero-detail > *:nth-child(2) { animation-delay: 190ms; }
+.ga-hero-panel--active .ga-hero-detail > *:nth-child(3) { animation-delay: 240ms; }
+.ga-hero-panel--active .ga-hero-detail > *:nth-child(4) { animation-delay: 290ms; }
+
+@keyframes ga-hero-detail-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* --------------------------------------------------------------------------
+ * 3. Entrance choreography — runs once per visit, driven by .ga-hero--ready.
+ * ------------------------------------------------------------------------ */
+.ga-hero--enter .ga-hero-panel {
+  opacity: 0;
+  transform: translateY(14px);
+}
+.ga-hero--enter.ga-hero--ready .ga-hero-panel {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 420ms var(--ga-ease-out), transform 420ms var(--ga-ease-out),
+    flex 420ms var(--ga-ease-out) !important;
+}
+.ga-hero--enter.ga-hero--ready .ga-hero-panel:nth-child(1) { transition-delay: 0ms; }
+.ga-hero--enter.ga-hero--ready .ga-hero-panel:nth-child(2) { transition-delay: 60ms; }
+.ga-hero--enter.ga-hero--ready .ga-hero-panel:nth-child(3) { transition-delay: 120ms; }
+.ga-hero--enter.ga-hero--ready .ga-hero-panel:nth-child(4) { transition-delay: 180ms; }
+.ga-hero--enter.ga-hero--ready .ga-hero-panel:nth-child(5) { transition-delay: 240ms; }
+
+.ga-hero--enter .ga-hero-cta {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.ga-hero--enter.ga-hero--ready .ga-hero-cta {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 380ms var(--ga-ease-out) 300ms,
+    transform 380ms var(--ga-ease-out) 300ms;
+}
+
+/* --------------------------------------------------------------------------
+ * 4. CTA press feedback — the export's CTAs are <span>s with no :active state.
+ * ------------------------------------------------------------------------ */
+.ga-hero-cta > span {
+  transition: transform 140ms var(--ga-ease-out), filter 140ms ease;
+}
+.ga-hero-cta > span:active {
+  transform: scale(0.97);
+  filter: brightness(0.95);
+}
+
+/* --------------------------------------------------------------------------
+ * 5. Living background — beam drift + pointer parallax.
+ *    Parallax offsets are written as CSS vars by hero-motion.js (rAF + lerp),
+ *    so there is deliberately NO transition here: the lerp IS the smoothing.
+ * ------------------------------------------------------------------------ */
+.ga-hero-bg,
+.ga-hero-video {
+  transform: translate3d(var(--ga-px, 0px), var(--ga-py, 0px), 0);
+}
+.ga-hero-bg { --ga-depth: 1; }
+.ga-hero-video { --ga-depth: 0.45; }
+
+/* The 46 beams are already animated by the export (beamRise + beamGlow, applied
+ * as INLINE `animation:` declarations). We deliberately add no drift of our own
+ * — it would be redundant, and an inline declaration outranks this stylesheet
+ * anyway. The .ga-hero-beam class exists purely as a hook for the
+ * reduced-motion suppression below, which is why that rule needs !important. */
+
+/* --------------------------------------------------------------------------
+ * 6. Video background layer (showcase mode).
+ * ------------------------------------------------------------------------ */
+.ga-hero-video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(130% 95% at 50% 100%, #000 30%, transparent 84%);
+  mask-image: radial-gradient(130% 95% at 50% 100%, #000 30%, transparent 84%);
+  opacity: 0;
+  transition: opacity 700ms ease;
+}
+.ga-hero-video--in { opacity: 1; }
+
+.ga-hero-video > video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.3;
+  filter: sepia(1) saturate(1.35) hue-rotate(-16deg) brightness(1.02) contrast(0.98)
+    blur(1px);
+}
+
+/* One dominant motion layer at a time: with video running, the grid + beams
+ * step back instead of competing with it. */
+.ga-hero--video-bg .ga-hero-bg { opacity: 0.5; }
+
+/* --------------------------------------------------------------------------
+ * 7. Autoplay progress — one segment per panel, under the accordion.
+ * ------------------------------------------------------------------------ */
+.ga-hero-progress {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 6px;
+  margin-top: 16px;
+}
+.ga-hero-progress[hidden] { display: none; }
+
+.ga-hero-progress-seg {
+  flex: 1 1 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--cardBorder, rgba(255, 255, 255, 0.16));
+  overflow: hidden;
+}
+.ga-hero-progress-seg > i {
+  display: block;
+  height: 100%;
+  background: var(--accent, #cc785c);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+/* Filling: linear, because it maps 1:1 to elapsed time — the one place where
+ * linear is correct. */
+.ga-hero-progress-seg--active > i {
+  animation: ga-progress var(--ga-dwell) linear forwards;
+}
+.ga-hero-progress-seg--done > i { transform: scaleX(1); }
+
+/* Paused (hover / focus / hidden tab) freezes the bar where it stands, so the
+ * indicator never lies about whether the timer is running. */
+.ga-hero--paused .ga-hero-progress-seg--active > i {
+  animation-play-state: paused;
+}
+
+@keyframes ga-progress {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* --------------------------------------------------------------------------
+ * 8. Reduced motion — fewer and gentler, not zero. Opacity survives (it aids
+ *    comprehension); every transform, drift and autoplay advance is dropped.
+ *    hero-motion.js reads the same query and disables autoplay + parallax.
+ * ------------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  .ga-hero-panel {
+    transition: flex 200ms ease !important;
+    will-change: auto;
+  }
+  .ga-hero-panel--active .ga-hero-detail > * {
+    animation: ga-hero-detail-fade 200ms ease backwards;
+    animation-delay: 0ms !important;
+  }
+  @keyframes ga-hero-detail-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  .ga-hero--enter .ga-hero-panel,
+  .ga-hero--enter .ga-hero-cta {
+    transform: none;
+  }
+  .ga-hero--enter.ga-hero--ready .ga-hero-panel,
+  .ga-hero--enter.ga-hero--ready .ga-hero-cta {
+    transform: none;
+    transition: opacity 250ms ease !important;
+    transition-delay: 0ms !important;
+  }
+  .ga-hero-bg,
+  .ga-hero-video { transform: none; }
+  /* !important is required, not sloppy: the export sets `animation:` inline on
+   * every beam, so it ships a hero that keeps moving under reduced-motion. This
+   * is the only way to stop it without editing the regenerated export. */
+  .ga-hero-beam { animation: none !important; opacity: 0.5 !important; }
+  .ga-hero-cta > span:active { transform: none; }
+  .ga-hero-progress { display: none; }
+}
+
+/* ==========================================================================
+ * DESIGN-REVIEW FIXES (2026-08-19) — see .jez/artifacts/design-review.md
+ * ========================================================================== */
+
+/* --------------------------------------------------------------------------
+ * A. Hero lede — the export's home view ships no <h1> and no value
+ *    proposition; the first screen was five images and two buttons.
+ *
+ *    hero-lede.html is injected before </body> (crawlable in the raw HTML) and
+ *    hero-motion.js moves it into the hero above the panel row. Until it is
+ *    moved it stays transparent so it never flashes at the foot of the page —
+ *    with `scripting: none` it is painted anyway, so the text is never hidden
+ *    from a reader that simply cannot run the relocation.
+ * ------------------------------------------------------------------------ */
+.ga-lede {
+  opacity: 0;
+  max-width: 820px;
+  padding: 0 20px;
+  transition: opacity 300ms var(--ga-ease-out), transform 480ms var(--ga-ease-out);
+  transform: translateY(10px);
+}
+
+.ga-lede--in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Relocated into the hero: the hero wrapper already pays 32px/56px padding. */
+.ga-hero .ga-lede {
+  padding: 0;
+  margin: 0 0 32px;
+}
+
+@media (scripting: none) {
+  .ga-lede { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ga-lede { transition: opacity 1ms linear; transform: none; }
+}
+
+.ga-lede__eyebrow {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 2.4px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 14px;
+}
+
+.ga-lede__title {
+  font-family: Newsreader, Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  /* Matches the export's display scale (h1 elsewhere is 44–64px) without a
+   * media query: 1440px → 60px, 390px → 34px. */
+  font-size: clamp(2.125rem, 1.35rem + 3.1vw, 3.75rem);
+  line-height: 1.05;
+  letter-spacing: -1.5px;
+  color: var(--ink);
+  margin: 0;
+  text-wrap: balance;
+}
+
+.ga-lede__title em {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.ga-lede__sub {
+  font-size: clamp(0.9375rem, 0.87rem + 0.3vw, 1.0625rem);
+  line-height: 1.6;
+  color: var(--body);
+  /* ~65ch keeps the sub inside the comfortable measure even at 1440. */
+  max-width: 62ch;
+  margin: 18px 0 0;
+}
+
+/* --------------------------------------------------------------------------
+ * B. Overlay stack — the floating "Free Visibility Audit" pill (z 99990,
+ *    bottom 20px) sat on top of the consent banner's "Accept all" button on
+ *    mobile: elementFromPoint at the button's bottom-right corner returned the
+ *    pill, so the consent decision was partially unclickable.
+ *
+ *    A consent prompt is a blocking decision — the FAB yields to it at every
+ *    width rather than fighting for the same corner, and comes back the moment
+ *    the banner is dismissed. hero-motion.js sets .ga-consent-open on <html>.
+ * ------------------------------------------------------------------------ */
+.ga-consent-open #ga-audit-fab {
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+}
+
+#ga-audit-fab {
+  transition: opacity 200ms ease, transform 200ms var(--ga-ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #ga-audit-fab { transition: opacity 1ms linear; }
+}
+
+/* --------------------------------------------------------------------------
+ * C. Mobile hero carousel — under 900px the row is a horizontal scroller
+ *    (flex:0 0 82% + overflow-x:auto), but it carried `flex-wrap: wrap` from
+ *    the export, had no snap, and — the actual defect — autoplay advanced the
+ *    active panel without moving the scroll position, so the visitor sat on an
+ *    uncaptioned slide 0 while the caption rendered into off-screen slide 3.
+ *    JS now scrolls the active panel into view; this adds the snap and kills
+ *    the contradictory wrap.
+ * ------------------------------------------------------------------------ */
+@media (max-width: 899px) {
+  .ga-hero-row {
+    flex-wrap: nowrap !important;
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 20px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .ga-hero-row::-webkit-scrollbar { display: none; }
+
+  .ga-hero-panel { scroll-snap-align: start; }
+}
+
+/* --------------------------------------------------------------------------
+ * D. Services grid — four groups in a 2×2 grid left `Web` (1 item) beside
+ *    `Software & Data` (7 items), trapping ~200px of dead space at the bottom
+ *    right of the section. CSS columns let the four cards flow and balance
+ *    themselves, so the trapped space disappears without touching the
+ *    export's data or hard-coding a group order.
+ *    hero-motion.js tags the grid (.ga-svc-grid) by structure.
+ * ------------------------------------------------------------------------ */
+@media (min-width: 900px) {
+  .ga-svc-grid {
+    display: block !important;
+    column-count: 2;
+    column-gap: 24px;
+    orphans: 3;
+    widows: 3;
+  }
+
+  .ga-svc-grid > * {
+    break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+    margin-bottom: 24px;
+  }
+}

@@ -49,6 +49,7 @@ BRAND_DIR="$PROJECT_DIR/brand"
 # cards, every service-detail view). images/apply_images.py swaps them for the
 # committed on-brand SVG mockups. Survives re-exports.
 IMAGES_DIR="$PROJECT_DIR/images"
+HERO_DIR="$PROJECT_DIR/hero"
 
 # ---------------------------------------------------------------------------
 # frontend assets — JS kept out of the export (backend/assets/) so it survives
@@ -285,6 +286,71 @@ apply_pages() {
 
 
 # ---------------------------------------------------------------------------
+# hero motion layer — hero/hero-motion.{css,js} add autoplay, entrance
+# choreography, pointer parallax and the video backdrop to the homepage hero.
+# Kept out of the export (the export has no classes and re-renders the hero
+# subtree, so the JS hooks it by structure) and re-applied on every deploy,
+# including --no-content. Idempotent via the hero:motion marker.
+# ---------------------------------------------------------------------------
+apply_hero() {
+  [ -d "$HERO_DIR" ] || { warn "hero/ not found — skipping hero motion layer"; return 0; }
+
+  local f copied=""
+  for f in hero-motion.css hero-motion.js; do
+    [ -f "$HERO_DIR/$f" ] && { cp "$HERO_DIR/$f" "$SITE_DIR/$f"; copied="$copied $f"; }
+  done
+  [ -n "$copied" ] && ok "hero motion:$copied"
+
+  if [ -f "$SITE_DIR/index.html" ] && ! grep -q 'hero:motion' "$SITE_DIR/index.html"; then
+    if command -v python3 >/dev/null; then
+      python3 - "$SITE_DIR/index.html" <<'PY'
+import re, sys
+p = sys.argv[1]
+html = open(p, encoding="utf-8").read()
+head = ('<!-- hero:motion — see hero/hero-motion.css, never edit site/ -->'
+        '<link rel="stylesheet" href="/hero-motion.css">')
+tag = '<script src="/hero-motion.js" defer></script>'
+if re.search(r"</head>", html, re.I):
+    html = re.sub(r"</head>", lambda m: head + m.group(0), html, count=1, flags=re.I)
+else:
+    html = head + html
+html = re.sub(r"</body>", tag + "</body>", html, count=1, flags=re.I) \
+    if re.search(r"</body>", html, re.I) else html + "\n" + tag + "\n"
+open(p, "w", encoding="utf-8").write(html)
+PY
+      ok "injected hero motion layer into index.html"
+    else
+      warn "python3 not found — skipped hero motion injection"
+    fi
+  fi
+
+  # hero lede — the export's home view renders no <h1> and no value proposition
+  # (its 7 <h1>s all belong to sub-page views). The block goes into the raw HTML
+  # before </body> so crawlers get the heading without executing JS;
+  # hero-motion.js relocates it into the hero above the panel row at runtime.
+  # Idempotent via the hero:lede marker.
+  if [ -f "$HERO_DIR/hero-lede.html" ] && [ -f "$SITE_DIR/index.html" ] \
+     && ! grep -q 'hero:lede' "$SITE_DIR/index.html"; then
+    if command -v python3 >/dev/null; then
+      python3 - "$SITE_DIR/index.html" "$HERO_DIR/hero-lede.html" <<'LEDE'
+import re, sys
+page, block = sys.argv[1], sys.argv[2]
+html = open(page, encoding="utf-8").read()
+lede = open(block, encoding="utf-8").read().strip()
+if re.search(r"</body>", html, re.I):
+    html = re.sub(r"</body>", lambda m: lede + "\n" + m.group(0), html, count=1, flags=re.I)
+else:
+    html = html + "\n" + lede + "\n"
+open(page, "w", encoding="utf-8").write(html)
+LEDE
+      ok "injected hero lede (h1) into index.html"
+    else
+      warn "python3 not found — skipped hero lede injection"
+    fi
+  fi
+}
+
+# ---------------------------------------------------------------------------
 # pretty output
 # ---------------------------------------------------------------------------
 if [ -t 1 ]; then
@@ -396,7 +462,7 @@ PY
   apply_images
   apply_pages
   apply_media
-
+  apply_hero
   # mirror the unpacked content (incl. the derived index.html) into the frontend
   # template dir so the Django backend in backend/ can build against the same export.
   if [ -n "$TEMPLATE_DIR" ]; then
@@ -414,6 +480,7 @@ else
   apply_images
   apply_pages
   apply_media
+  apply_hero
 fi
 
 [ -f "$SITE_DIR/index.html" ] || die "./site has no index.html — nothing to deploy"
