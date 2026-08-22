@@ -127,6 +127,32 @@ PYEOF
     fi
   fi
 
+  # static <noscript> fallback for crawlers that do not execute JavaScript
+  # (GPTBot, ClaudeBot, PerplexityBot). The SPA renders its hero client-side, so
+  # without this the homepage arrives as unrendered {{ }} placeholders. Guarded by
+  # its own seo:noscript marker so it is idempotent and independent of seo:head.
+  if [ -f "$SITE_DIR/index.html" ] && [ -f "$SEO_DIR/noscript.html" ] \
+     && ! grep -q 'seo:noscript' "$SITE_DIR/index.html"; then
+    if command -v python3 >/dev/null; then
+      python3 - "$SITE_DIR/index.html" "$SEO_DIR/noscript.html" <<'PYEOF'
+import re, sys
+p, ns_p = sys.argv[1], sys.argv[2]
+html = open(p, encoding="utf-8").read()
+ns = open(ns_p, encoding="utf-8").read().rstrip() + "\n"
+m = re.search(r"<body[^>]*>", html, re.I)
+if m:
+    html = html[:m.end()] + "\n" + ns + html[m.end():]
+    open(p, "w", encoding="utf-8").write(html)
+else:
+    sys.stderr.write("no <body> found — noscript fallback not injected\n")
+    sys.exit(1)
+PYEOF
+      ok "injected seo/noscript.html into index.html"
+    else
+      warn "python3 not found — skipped noscript injection"
+    fi
+  fi
+
   # real, crawlable per-service pages + blog + sitemap (overwrites the static
   # seo/sitemap.xml copy with the full URL list). Failure must not block deploy.
   if [ -f "$SEO_DIR/generate_service_pages.py" ] && [ -f "$PROJECT_DIR/georgeai_services.json" ] \
