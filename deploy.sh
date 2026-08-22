@@ -92,14 +92,18 @@ apply_seo() {
   done
   [ -n "$copied" ] && ok "seo files:$copied"
 
-  if [ -f "$SITE_DIR/index.html" ] && [ -f "$SEO_DIR/head.html" ] \
-     && ! grep -q 'seo:head' "$SITE_DIR/index.html"; then
+  if [ -f "$SITE_DIR/index.html" ] && [ -f "$SEO_DIR/head.html" ]; then
     if command -v python3 >/dev/null; then
       python3 - "$SITE_DIR/index.html" "$SEO_DIR/head.html" <<'PYEOF'
 import re, sys
 p, head_p = sys.argv[1], sys.argv[2]
 html = open(p, encoding="utf-8").read()
 head = open(head_p, encoding="utf-8").read().rstrip() + "\n"
+# A previously injected block runs from the seo:head marker to </head> (it is
+# always inserted immediately before it). Strip it so an edited seo/head.html
+# actually reaches an already-deployed index.html — the marker comment promises
+# "on every deploy", and skipping when the marker exists made that untrue.
+html = re.sub(r"<!--\s*seo:head\b.*?(?=</head>)", "", html, count=1, flags=re.I | re.S)
 if re.search(r"</head>", html, re.I):
     html = re.sub(r"</head>", lambda m: head + m.group(0), html, count=1, flags=re.I)
 else:  # no <head> in the export — prepend the block
