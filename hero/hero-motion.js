@@ -201,12 +201,17 @@
   function placeLede(hero) {
     var lede = document.querySelector('[data-ga-lede]');
     if (!lede) return;
-    if (lede.parentElement !== hero.root || lede.nextElementSibling !== hero.row) {
-      hero.root.insertBefore(lede, hero.row);
-    }
     translateLede(lede);
     if (!lede.classList.contains('ga-lede--in')) {
       requestAnimationFrame(function () { lede.classList.add('ga-lede--in'); });
+    }
+    /* The cinema hero (hero/hero-cinema.js) puts the <h1> block in its first
+     * caption band. Both layers run off the same MutationObserver, so without
+     * this yield the two would fight over the block on every render. Translation
+     * above still runs either way — it is this layer's job in both worlds. */
+    if (lede.closest('.gc')) return;
+    if (lede.parentElement !== hero.root || lede.nextElementSibling !== hero.row) {
+      hero.root.insertBefore(lede, hero.row);
     }
   }
 
@@ -637,13 +642,30 @@
     syncConsent();
     if (queued) return;
     queued = true;
-    requestAnimationFrame(function () { queued = false; sync(); });
+    requestAnimationFrame(function () { queued = false; syncPageBg(); sync(); });
   }
 
   window.addEventListener('resize', measureTopbar);
 
+  /* The export's theme variables live on its own root <div>, never on <html>,
+   * so anything outside that div — the overscroll area, any stray line box —
+   * falls back to the UA's white. seo/responsive.css hard-codes the dark
+   * canvas as the default; mirroring the div's resolved background keeps the
+   * light theme (and the 300ms theme transition) in sync too. */
+  var pageBg = '';
+  function syncPageBg() {
+    var root = document.querySelector('x-dc > div[style]');
+    if (!root) return;
+    var bg = getComputedStyle(root).backgroundColor;
+    if (!bg || bg === pageBg || bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent') return;
+    pageBg = bg;
+    document.documentElement.style.background = bg;
+    document.body.style.background = bg;
+  }
+
   function boot() {
     syncConsent();
+    syncPageBg();
     sync();
     new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
   }

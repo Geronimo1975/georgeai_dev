@@ -66,9 +66,11 @@ ROOT_URLCONF = "backend.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        # Django's own templates (admin overrides, future server-rendered pages)
-        # live here. The design export is served raw, never through this engine.
-        "DIRS": [FRONTEND_DIR],
+        # Only Django's own templates (admin overrides, future server-rendered
+        # pages) belong here. FRONTEND_DIR is deliberately NOT in DIRS: the
+        # export's {{ }} placeholders are rendered client-side by support.js and
+        # would be eaten by this engine. It is served verbatim by serve_frontend.
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -110,8 +112,8 @@ USE_TZ = True
 # static files
 # ---------------------------------------------------------------------------
 STATIC_URL = "static/"
-# serve the design export's assets (js/css/images/screenshots) through staticfiles too
-STATICFILES_DIRS = [FRONTEND_DIR]
+# The design export is NOT collected here — serve_frontend already serves it at
+# the paths its HTML references. staticfiles only carries admin/DRF assets.
 STATIC_ROOT = ROOT_DIR / "staticfiles"
 
 MEDIA_URL = "/media/"
@@ -126,13 +128,27 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.SessionAuthentication",
     ],
+    # closed by default — the public auth views opt out with AllowAny explicitly
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.AllowAny",
+        "rest_framework.permissions.IsAuthenticated",
     ],
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
     ],
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.ScopedRateThrottle",
+    ],
+    # brute-force / signup-spam guard, keyed by IP for anonymous callers
+    "DEFAULT_THROTTLE_RATES": {
+        "auth_login": env("THROTTLE_AUTH_LOGIN", default="10/min"),
+        "auth_signup": env("THROTTLE_AUTH_SIGNUP", default="5/hour"),
+    },
 }
+
+# ScopedRateThrottle counts in the cache; LocMemCache is per-process, so with
+# several gunicorn workers the effective rate is <rate> × <workers>. Point
+# CACHE_URL at Redis in production to make the limit global.
+CACHES = {"default": env.cache("CACHE_URL", default="locmemcache://")}
 
 # ---------------------------------------------------------------------------
 # sessions / CSRF (auth uses the session cookie; auth.js reads csrftoken)
@@ -151,6 +167,24 @@ CSRF_TRUSTED_ORIGINS = env.list(
 )
 
 LOGIN_URL = "/admin/login/"
+
+# ---------------------------------------------------------------------------
+# transport security
+#
+# nginx currently terminates TLS and sets HSTS itself; these settings make the
+# same guarantees hold once gunicorn serves the site directly. All are no-ops
+# under DEBUG so local http:// dev keeps working.
+# ---------------------------------------------------------------------------
+SECURE_HSTS_SECONDS = env.int("SECURE_HSTS_SECONDS", default=0 if DEBUG else 31536000)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+SECURE_HSTS_PRELOAD = not DEBUG
+SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=not DEBUG)
+# Traefik terminates TLS and sets X-Forwarded-Proto; only trustworthy because
+# nothing but Traefik can reach the container on the gethub network.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "same-origin"
+X_FRAME_OPTIONS = "DENY"
 
 # ---------------------------------------------------------------------------
 # logging (console + rotating file, YaSaaS-style)

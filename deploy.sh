@@ -290,13 +290,13 @@ apply_pages() {
 # choreography, pointer parallax and the video backdrop to the homepage hero.
 # Kept out of the export (the export has no classes and re-renders the hero
 # subtree, so the JS hooks it by structure) and re-applied on every deploy,
-# including --no-content. Idempotent via the hero:motion marker.
+# including --no-content. Idempotent per asset (hero:motion / hero-cinema markers).
 # ---------------------------------------------------------------------------
 apply_hero() {
   [ -d "$HERO_DIR" ] || { warn "hero/ not found — skipping hero motion layer"; return 0; }
 
   local f copied=""
-  for f in hero-motion.css hero-motion.js; do
+  for f in hero-motion.css hero-motion.js hero-cinema.css hero-cinema.js; do
     [ -f "$HERO_DIR/$f" ] && { cp "$HERO_DIR/$f" "$SITE_DIR/$f"; copied="$copied $f"; }
   done
   [ -n "$copied" ] && ok "hero motion:$copied"
@@ -310,24 +310,50 @@ apply_hero() {
     ok "hero video: $(du -h "$HERO_DIR/assets/hero.mp4" | cut -f1) (repo-owned re-encode)"
   fi
 
-  if [ -f "$SITE_DIR/index.html" ] && ! grep -q 'hero:motion' "$SITE_DIR/index.html"; then
+  if [ -f "$SITE_DIR/index.html" ] && ! grep -q 'hero-cinema.js' "$SITE_DIR/index.html"; then
     if command -v python3 >/dev/null; then
       python3 - "$SITE_DIR/index.html" <<'PY'
 import re, sys
 p = sys.argv[1]
 html = open(p, encoding="utf-8").read()
-head = ('<!-- hero:motion — see hero/hero-motion.css, never edit site/ -->'
-        '<link rel="stylesheet" href="/hero-motion.css">')
-tag = '<script src="/hero-motion.js" defer></script>'
-if re.search(r"</head>", html, re.I):
-    html = re.sub(r"</head>", lambda m: head + m.group(0), html, count=1, flags=re.I)
-else:
-    html = head + html
-html = re.sub(r"</body>", tag + "</body>", html, count=1, flags=re.I) \
-    if re.search(r"</body>", html, re.I) else html + "\n" + tag + "\n"
+
+# Idempotent per asset, not per layer: a site/ that survived an earlier deploy
+# already carries the motion layer, and a single hero:motion guard would then
+# skip the cinema layer forever.
+def in_head(markup):
+    global html
+    if re.search(r"</head>", html, re.I):
+        html = re.sub(r"</head>", lambda m: markup + m.group(0), html, count=1, flags=re.I)
+    else:
+        html = markup + html
+
+def at_body_end(markup):
+    # the LAST closing body tag: an injected block may mention one inside its own
+    # comment, and matching that buries the tag inside a comment.
+    global html
+    hits = list(re.finditer(r"</body>", html, re.I))
+    if hits:
+        at = hits[-1].start()
+        html = html[:at] + markup + html[at:]
+    else:
+        html = html + "\n" + markup + "\n"
+
+if "hero:motion" not in html:
+    in_head("<!-- hero:motion — see hero/hero-motion.css, never edit site/ -->"
+            "<link rel=\"stylesheet\" href=\"/hero-motion.css\">")
+    at_body_end("<script src=\"/hero-motion.js\" defer></script>")
+
+# hero-cinema.js must run AFTER hero-motion.js: both defer, so load order is
+# execution order, and the cinema's mount pass expects the motion layer's hooks
+# to already exist.
+if "hero-cinema.css" not in html:
+    in_head("<link rel=\"stylesheet\" href=\"/hero-cinema.css\">")
+if "hero-cinema.js" not in html:
+    at_body_end("<script src=\"/hero-cinema.js\" defer></script>")
+
 open(p, "w", encoding="utf-8").write(html)
 PY
-      ok "injected hero motion layer into index.html"
+      ok "injected hero motion + cinema layers into index.html"
     else
       warn "python3 not found — skipped hero motion injection"
     fi
@@ -355,8 +381,12 @@ else:
     # first run on this file, or an older marker-less block from a previous
     # deploy — drop that too so the two never coexist
     html = re.sub(r"<!-- hero:lede\b.*?</div>\s*(?=</body>)", "", html, count=1, flags=re.S | re.I)
-    if re.search(r"</body>", html, re.I):
-        html = re.sub(r"</body>", lambda m: lede + "\n" + m.group(0), html, count=1, flags=re.I)
+    # the LAST closing body tag, never the first — see the same note in the
+    # cinema injection below.
+    hits = list(re.finditer(r"</body>", html, re.I))
+    if hits:
+        at = hits[-1].start()
+        html = html[:at] + lede + "\n" + html[at:]
     else:
         html = html + "\n" + lede + "\n"
 open(page, "w", encoding="utf-8").write(html)
@@ -364,6 +394,41 @@ LEDE
       ok "injected hero lede (h1) into index.html"
     else
       warn "python3 not found — skipped hero lede injection"
+    fi
+  fi
+
+  # hero cinema — the scroll-driven stage that opens the home view. Static in
+  # the raw HTML so both headings, both paragraphs and both calls to action are
+  # crawlable without JS; hero-cinema.js moves it to the top of the home view at
+  # runtime and takes the <h1> block into its first caption band.
+  # Re-injected (not skipped) so copy edits reach a surviving site/.
+  if [ -f "$HERO_DIR/hero-cinema.html" ] && [ -f "$SITE_DIR/index.html" ]; then
+    if command -v python3 >/dev/null; then
+      python3 - "$SITE_DIR/index.html" "$HERO_DIR/hero-cinema.html" <<'CINEMA'
+import re, sys
+page, block = sys.argv[1], sys.argv[2]
+html = open(page, encoding="utf-8").read()
+cinema = ("<!-- hero:cinema:start -->\n"
+          + open(block, encoding="utf-8").read().strip()
+          + "\n<!-- hero:cinema:end -->")
+existing = re.search(r"<!-- hero:cinema:start -->.*?<!-- hero:cinema:end -->", html, re.S)
+if existing:
+    html = html[:existing.start()] + cinema + html[existing.end():]
+else:
+    # the LAST closing body tag, never the first: an earlier injected block may
+    # mention one inside its own comment, and matching that buries this block
+    # inside a comment where the parser silently swallows it.
+    hits = list(re.finditer(r"</body>", html, re.I))
+    if hits:
+        at = hits[-1].start()
+        html = html[:at] + cinema + "\n" + html[at:]
+    else:
+        html = html + "\n" + cinema + "\n"
+open(page, "w", encoding="utf-8").write(html)
+CINEMA
+      ok "injected hero cinema stage into index.html"
+    else
+      warn "python3 not found — skipped hero cinema injection"
     fi
   fi
 }

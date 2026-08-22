@@ -94,12 +94,12 @@
   ]
 }
 </script>
-</head>
+<!-- hero:motion — see hero/hero-motion.css, never edit site/ --><link rel="stylesheet" href="/hero-motion.css"><link rel="stylesheet" href="/hero-cinema.css"></head>
 <body>
 <template id="__bundler_thumbnail" data-bg-color="#181715">
   <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
     <rect width="1200" height="800" fill="#181715"/>
-    <path d="M600 300 L636 388 L724 400 L636 412 L600 500 L564 412 L476 400 L564 388 Z" fill="#cc785c"/>
+    <path d="M600 300 L636 388 L724 400 L636 412 L600 500 L564 412 L476 400 L564 388 Z" fill="var(--accent)"/>
     <text x="600" y="600" text-anchor="middle" font-family="Georgia, serif" font-size="86" fill="#faf9f5">GeorgeAI</text>
   </svg>
 </template>
@@ -181,11 +181,11 @@
         </div>
       </div>
       <div onClick="{{ goHome }}" style="display:flex;align-items:center;gap:10px;justify-self:center;cursor:pointer">
-        <div style="width:14px;height:14px;background:#cc785c;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)"></div>
+        <div style="width:14px;height:14px;background:var(--accentBtn);clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)"></div>
         <span style="font-family:Newsreader,serif;font-size:21px;letter-spacing:-.5px;color:var(--ink);white-space:nowrap">GeorgeAI</span>
       </div>
       <div style="display:flex;align-items:center;gap:10px;justify-self:end">
-        <span onClick="{{ goConfig }}" style="display:{{ hdrCtaDisplay }};background:var(--accentBtn);color:#fff;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap">{{ t.nav.configurator }}</span>
+        <span onClick="{{ goConfig }}" style="display:{{ hdrCtaDisplay }};background:var(--accentBtn);color:#141413;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap">{{ t.nav.configurator }}</span>
         <span onClick="{{ goContact }}" style="display:{{ hdrCtaDisplay }};background:var(--card);color:var(--ink);border:1px solid var(--cardBorder);padding:10px 18px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap">{{ t.contact }}</span>
       </div>
     </div>
@@ -200,7 +200,7 @@
           <span onClick="{{ l.onClick }}" style="{{ l.style }}">{{ l.flag }} {{ l.label }}</span>
         </sc-for>
       </div>
-      <span onClick="{{ goConfig }}" style="margin-top:16px;background:var(--accentBtn);color:#fff;text-align:center;padding:14px;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer">{{ t.nav.configurator }}</span>
+      <span onClick="{{ goConfig }}" style="margin-top:16px;background:var(--accentBtn);color:#141413;text-align:center;padding:14px;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer">{{ t.nav.configurator }}</span>
       <span onClick="{{ goContact }}" style="margin-top:10px;background:var(--card);color:var(--ink);border:1px solid var(--cardBorder);text-align:center;padding:14px;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer">{{ t.contact }}</span>
     </div>
   </div>
@@ -236,7 +236,7 @@
       </sc-for>
     </div>
     <div style="position:relative;z-index:1;display:flex;gap:12px;margin-top:34px;flex-wrap:wrap">
-      <span onClick="{{ goServices }}" style="background:var(--accentBtn);color:#fff;padding:15px 26px;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer">{{ t.hero.cta1 }}</span>
+      <span onClick="{{ goServices }}" style="background:var(--accentBtn);color:#141413;padding:15px 26px;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer">{{ t.hero.cta1 }}</span>
       <span onClick="{{ goContact }}" style="background:var(--card);color:var(--ink);border:1px solid var(--cardBorder);padding:15px 26px;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer">{{ t.hero.cta2 }}</span>
     </div>
   </div>
@@ -255,7 +255,7 @@
     </div>
     <div style="position:relative;z-index:1">
       <div style="display:flex;gap:12px;flex-wrap:wrap">
-        <span onClick="{{ goServices }}" style="background:var(--accentBtn);color:#fff;padding:15px 26px;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer">{{ t.hero.cta1 }}</span>
+        <span onClick="{{ goServices }}" style="background:var(--accentBtn);color:#141413;padding:15px 26px;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer">{{ t.hero.cta1 }}</span>
         <span style="background:var(--card);color:var(--ink);border:1px solid var(--cardBorder);padding:15px 26px;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer">{{ t.hero.cta2 }}</span>
       </div>
     </div>
@@ -401,7 +401,7 @@
         <p style="font-family:{{ fontDisplay }};font-weight:400;font-size:24px;line-height:1.4;letter-spacing:-.3px;color:var(--ink);margin-top:8px;text-wrap:pretty">{{ testiCur.quote }}</p>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:28px;flex-wrap:wrap">
           <div style="display:flex;align-items:center;gap:13px">
-            <div style="width:46px;height:46px;border-radius:9999px;background:var(--accentBtn);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;flex:none">{{ testiInitials }}</div>
+            <div style="width:46px;height:46px;border-radius:9999px;background:var(--accentBtn);color:#141413;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;flex:none">{{ testiInitials }}</div>
             <div>
               <div style="font-size:15px;font-weight:600;color:var(--ink)">{{ testiCur.name }}</div>
               <div style="font-size:13px;color:var(--muted);margin-top:2px">{{ testiCur.role }}</div>
@@ -415,7 +415,7 @@
             </div>
             <div style="display:flex;gap:8px">
               <span onClick="{{ testiPrev }}" style="width:38px;height:38px;border-radius:9999px;border:1px solid var(--cardBorder);background:var(--surface);color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px">←</span>
-              <span onClick="{{ testiNext }}" style="width:38px;height:38px;border-radius:9999px;background:var(--accentBtn);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px">→</span>
+              <span onClick="{{ testiNext }}" style="width:38px;height:38px;border-radius:9999px;background:var(--accentBtn);color:#141413;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px">→</span>
             </div>
           </div>
         </div>
@@ -448,7 +448,7 @@
 
   <!-- CTA BAND -->
   <div style="padding:{{ sectionPadY }} {{ padX }}">
-    <div style="background:#cc785c;border-radius:16px;padding:{{ ctaPad }};color:#fff;display:flex;flex-direction:{{ ctaDir }};align-items:{{ ctaAlign }};justify-content:space-between;gap:28px">
+    <div style="background:var(--accentBtn);border-radius:16px;padding:{{ ctaPad }};color:#141413;display:flex;flex-direction:{{ ctaDir }};align-items:{{ ctaAlign }};justify-content:space-between;gap:28px">
       <div>
         <h2 style="font-family:{{ fontDisplay }};font-weight:400;font-size:{{ h2Size }};letter-spacing:-.5px;line-height:1.12">{{ t.cta.title }}</h2>
         <p style="font-size:16px;line-height:1.55;opacity:.92;margin-top:14px;max-width:460px">{{ t.cta.sub }}</p>
@@ -492,7 +492,7 @@
     </sc-for>
     <div style="margin-top:56px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--cardBorder);border-radius:14px;padding:28px 32px">
       <span style="font-family:{{ fontDisplay }};font-size:22px;color:var(--ink)">{{ t.pg.detailHelp }}</span>
-      <span onClick="{{ goContact }}" style="background:var(--accentBtn);color:#fff;padding:14px 24px;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer;white-space:nowrap">{{ t.pg.bookCta }}</span>
+      <span onClick="{{ goContact }}" style="background:var(--accentBtn);color:#141413;padding:14px 24px;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer;white-space:nowrap">{{ t.pg.bookCta }}</span>
     </div>
   </div>
   </sc-if>
@@ -514,12 +514,12 @@
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:20px">
-        <div style="background:repeating-linear-gradient(135deg,var(--phA),var(--phA) 12px,var(--phB) 12px,var(--phB) 24px);border-radius:16px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;border:1px solid var(--cardBorder)"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--phText)">{{ detail.label }}</span></div>
+        <img src="{{ detail.img }}" alt="{{ detail.name }} — interface preview" loading="lazy" decoding="async" style="aspect-ratio:4/3;border-radius:16px;width:100%;display:block;object-fit:cover;border:1px solid var(--cardBorder)"/>
         <div style="background:var(--card);border:1px solid var(--cardBorder);border-radius:14px;padding:24px">
           <div style="font-family:'JetBrains Mono','Noto Sans Arabic',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px">{{ t.pg.outcome }}</div>
           <p style="font-family:{{ fontDisplay }};font-size:22px;line-height:1.3;color:var(--ink)">{{ detail.outcome }}</p>
           <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap">
-            <span onClick="{{ goContact }}" style="background:var(--accentBtn);color:#fff;padding:13px 22px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer">{{ t.pg.bookCta }}</span>
+            <span onClick="{{ goContact }}" style="background:var(--accentBtn);color:#141413;padding:13px 22px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer">{{ t.pg.bookCta }}</span>
             <span onClick="{{ goContact }}" style="background:var(--surface);color:var(--ink);border:1px solid var(--cardBorder);padding:13px 22px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer">{{ t.pg.quoteCta }}</span>
           </div>
         </div>
@@ -531,7 +531,7 @@
         <div style="display:flex;flex-direction:column;gap:14px">
           <sc-for list="{{ detail.includes }}" as="it" hint-placeholder-count="3">
             <div style="display:flex;align-items:flex-start;gap:12px">
-              <span style="width:18px;height:18px;flex:none;margin-top:3px;border-radius:50%;background:rgba(204,120,92,.15);display:flex;align-items:center;justify-content:center"><span style="width:6px;height:6px;border-radius:50%;background:#cc785c"></span></span>
+              <span style="width:18px;height:18px;flex:none;margin-top:3px;border-radius:50%;background:rgba(204,120,92,.15);display:flex;align-items:center;justify-content:center"><span style="width:6px;height:6px;border-radius:50%;background:var(--accentBtn)"></span></span>
               <span style="font-size:16px;line-height:1.5;color:var(--body)">{{ it }}</span>
             </div>
           </sc-for>
@@ -561,7 +561,7 @@
         <h1 style="font-family:{{ fontDisplay }};font-weight:400;font-size:{{ heroTitleSize }};line-height:1.04;letter-spacing:-1.5px;color:var(--ink);text-wrap:balance">{{ about.title }}</h1>
         <p style="font-size:18px;line-height:1.6;color:var(--body);max-width:520px;margin-top:22px">{{ about.lead }}</p>
       </div>
-      <div style="background:repeating-linear-gradient(135deg,var(--phA),var(--phA) 12px,var(--phB) 12px,var(--phB) 24px);border-radius:16px;aspect-ratio:4/5;display:flex;align-items:center;justify-content:center;border:1px solid var(--cardBorder)"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--phText)">[ portrait — drop your photo ]</span></div>
+      <img src="/assets/mock/about.svg" alt="George — building AI systems" loading="lazy" decoding="async" style="aspect-ratio:4/5;border-radius:16px;width:100%;display:block;object-fit:cover;border:1px solid var(--cardBorder)"/>
     </div>
 
     <div style="display:grid;grid-template-columns:{{ shopCols }};gap:24px;margin-top:64px;border-top:1px solid var(--hairline);padding-top:48px">
@@ -601,7 +601,7 @@
           <div style="font-family:'JetBrains Mono','Noto Sans Arabic',monospace;font-size:12px;letter-spacing:.5px;color:var(--muted);text-align:end;padding-top:3px;white-space:nowrap">{{ e.period }}</div>
           <div style="position:relative;display:flex;justify-content:center;align-self:stretch">
             <div style="{{ e.lineStyle }}"></div>
-            <div style="position:relative;width:14px;height:14px;border-radius:50%;background:#cc785c;border:3px solid var(--canvas);margin-top:3px;z-index:1"></div>
+            <div style="position:relative;width:14px;height:14px;border-radius:50%;background:var(--accentBtn);border:3px solid var(--canvas);margin-top:3px;z-index:1"></div>
           </div>
           <div style="padding-bottom:44px">
             <div style="font-family:'JetBrains Mono','Noto Sans Arabic',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent)">{{ e.tag }}</div>
@@ -618,7 +618,7 @@
       </sc-for>
     </div>
 
-    <div style="margin-top:72px;background:#cc785c;border-radius:16px;padding:{{ ctaPad }};color:#fff;display:flex;flex-direction:{{ ctaDir }};align-items:{{ ctaAlign }};justify-content:space-between;gap:28px">
+    <div style="margin-top:72px;background:var(--accentBtn);border-radius:16px;padding:{{ ctaPad }};color:#141413;display:flex;flex-direction:{{ ctaDir }};align-items:{{ ctaAlign }};justify-content:space-between;gap:28px">
       <h2 style="font-family:{{ fontDisplay }};font-weight:400;font-size:{{ h2Size }};letter-spacing:-.5px;line-height:1.12">{{ about.ctaTitle }}</h2>
       <span onClick="{{ goContact }}" style="background:#faf9f5;color:#141413;padding:15px 28px;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer;white-space:nowrap">{{ about.ctaBtn }}</span>
     </div>
@@ -651,7 +651,7 @@
           <div style="font-family:'JetBrains Mono','Noto Sans Arabic',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">{{ ct.hoursL }}</div>
           <div style="font-size:17px;color:var(--ink);margin-top:4px">{{ ct.hours }}</div>
         </div>
-        <a href="https://wa.me/491604155546" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px;color:var(--accent);font-weight:500;font-size:15px;margin-top:4px"><span style="width:7px;height:7px;background:#cc785c;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)"></span>WhatsApp</a>
+        <a href="https://wa.me/491604155546" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px;color:var(--accent);font-weight:500;font-size:15px;margin-top:4px"><span style="width:7px;height:7px;background:var(--accentBtn);clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)"></span>WhatsApp</a>
       </div>
 
       <div style="background:var(--card);border:1px solid var(--cardBorder);border-radius:16px;padding:32px">
@@ -694,7 +694,7 @@
         </sc-if>
         <sc-if value="{{ bookDone }}">
           <div style="text-align:center;padding:36px 12px">
-            <div style="width:54px;height:54px;border-radius:50%;background:rgba(204,120,92,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><span style="width:18px;height:18px;background:#cc785c;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)"></span></div>
+            <div style="width:54px;height:54px;border-radius:50%;background:rgba(204,120,92,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><span style="width:18px;height:18px;background:var(--accentBtn);clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)"></span></div>
             <h3 style="font-family:{{ fontDisplay }};font-weight:400;font-size:26px;letter-spacing:-.4px;color:var(--ink)">{{ ct.doneTitle }}</h3>
             <p style="font-size:16px;line-height:1.55;color:var(--body);margin-top:10px">{{ chosen }} · {{ chosenTime }}</p>
             <p style="font-size:15px;line-height:1.55;color:var(--muted);margin-top:8px;max-width:320px;margin-left:auto;margin-right:auto">{{ ct.doneMsg }}</p>
@@ -714,7 +714,7 @@
     <div style="display:grid;grid-template-columns:{{ workCols }};gap:28px;margin-top:48px">
       <sc-for list="{{ newsItems }}" as="a" hint-placeholder-count="3">
         <div style="background:var(--card);border:1px solid var(--cardBorder);border-radius:14px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column">
-          <div style="aspect-ratio:16/9;background:repeating-linear-gradient(135deg,var(--phA),var(--phA) 11px,var(--phB) 11px,var(--phB) 22px);display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--cardBorder)"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--phText)">[ {{ a.cat }} ]</span></div>
+          <img src="/assets/mock/news-{{ $index }}.svg" alt="{{ a.title }}" loading="lazy" decoding="async" style="aspect-ratio:16/9;width:100%;display:block;object-fit:cover;border:1px solid var(--cardBorder);border:none;border-bottom:1px solid var(--cardBorder)"/>
           <div style="padding:24px">
             <div style="font-family:'JetBrains Mono','Noto Sans Arabic',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">{{ a.date }} · {{ a.cat }}</div>
             <h3 style="font-family:{{ fontDisplay }};font-weight:400;font-size:22px;letter-spacing:-.3px;color:var(--ink);margin-top:10px;line-height:1.2">{{ a.title }}</h3>
@@ -727,7 +727,7 @@
       <span style="font-family:{{ fontDisplay }};font-size:22px;color:var(--ink)">{{ news.subscribe }}</span>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <input placeholder="{{ news.subPh }}" style="padding:13px 16px;border-radius:8px;border:1px solid var(--cardBorder);background:var(--card);color:var(--ink);font-size:15px;font-family:inherit;min-width:220px">
-        <span style="background:var(--accentBtn);color:#fff;padding:13px 22px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer">{{ news.subBtn }}</span>
+        <span style="background:var(--accentBtn);color:#141413;padding:13px 22px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer">{{ news.subBtn }}</span>
       </div>
     </div>
   </div>
@@ -802,7 +802,7 @@
         </sc-if>
         <sc-if value="{{ cfgDone }}">
           <div style="text-align:center;padding:28px 8px">
-            <div style="width:54px;height:54px;border-radius:50%;background:rgba(204,120,92,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><span style="width:18px;height:18px;background:#cc785c;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)"></span></div>
+            <div style="width:54px;height:54px;border-radius:50%;background:rgba(204,120,92,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><span style="width:18px;height:18px;background:var(--accentBtn);clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)"></span></div>
             <h3 style="font-family:{{ fontDisplay }};font-weight:400;font-size:25px;letter-spacing:-.4px;color:var(--ink)">{{ cfg.doneTitle }}</h3>
             <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:18px 0">
               <sc-for list="{{ selectedNames }}" as="n" hint-placeholder-count="2">
@@ -855,7 +855,7 @@
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <span onClick="{{ essentialCookies }}" style="background:var(--surface);color:var(--ink);border:1px solid var(--cardBorder);padding:11px 18px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap">{{ cookieT.essential }}</span>
-        <span onClick="{{ acceptCookies }}" style="background:var(--accentBtn);color:#fff;padding:11px 18px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap">{{ cookieT.accept }}</span>
+        <span onClick="{{ acceptCookies }}" style="background:var(--accentBtn);color:#141413;padding:11px 18px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap">{{ cookieT.accept }}</span>
       </div>
     </div>
   </div>
@@ -867,7 +867,7 @@
       <div style="display:flex;align-items:center;gap:38px;padding-inline-end:38px">
         <sc-for list="{{ marqueeLoop }}" as="m" hint-placeholder-count="24">
           <span style="font-family:Newsreader,serif;font-size:24px;letter-spacing:-.4px;color:var(--ink)">{{ m }}</span>
-          <span style="width:7px;height:7px;background:#cc785c;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)"></span>
+          <span style="width:7px;height:7px;background:var(--accentBtn);clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)"></span>
         </sc-for>
       </div>
     </div>
@@ -882,7 +882,7 @@
 
       <div style="position:relative;display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
         <div style="display:flex;align-items:center;gap:10px">
-          <div style="width:14px;height:14px;background:#cc785c;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)"></div>
+          <div style="width:14px;height:14px;background:var(--accentBtn);clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)"></div>
           <span style="font-family:Newsreader,serif;font-size:20px;letter-spacing:-.5px;color:#faf9f5">GeorgeAI</span>
         </div>
         <span onClick="{{ closeAuth }}" style="width:32px;height:32px;border-radius:9999px;border:1px solid #2f2c28;background:#201f1c;color:#a09d96;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px">✕</span>
@@ -914,7 +914,7 @@
         </div>
       </sc-if>
 
-      <button style="position:relative;width:100%;margin-top:22px;padding:15px;border:none;border-radius:10px;background:var(--accentBtn);color:#fff;font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 0 24px rgba(204,120,92,.31)">{{ authCta }}</button>
+      <button style="position:relative;width:100%;margin-top:22px;padding:15px;border:none;border-radius:10px;background:var(--accentBtn);color:#141413;font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 0 24px rgba(204,120,92,.31)">{{ authCta }}</button>
 
       <div style="position:relative;display:flex;align-items:center;gap:14px;margin:22px 0">
         <span style="flex:1;height:1px;background:#2f2c28"></span>
@@ -933,7 +933,7 @@
     <div style="padding:{{ sectionPadY }} {{ padX }};display:grid;grid-template-columns:{{ footerCols }};gap:56px">
       <div style="max-width:400px">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-          <div style="width:14px;height:14px;background:#cc785c;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)"></div>
+          <div style="width:14px;height:14px;background:var(--accentBtn);clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)"></div>
           <span style="font-family:Newsreader,serif;font-size:21px;color:var(--footerHead);letter-spacing:-.5px">GeorgeAI</span>
         </div>
         <p style="font-size:14px;line-height:1.55;max-width:300px">{{ t.footerTag }}</p>
@@ -943,7 +943,7 @@
           <p style="font-size:14px;line-height:1.55;margin-top:8px;max-width:340px">{{ t.ftNews.sub }}</p>
           <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;max-width:400px">
             <input placeholder="{{ t.ftNews.ph }}" style="flex:1;min-width:180px;padding:13px 15px;border-radius:8px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:var(--footerHead);font-size:14px;font-family:inherit" />
-            <span style="background:var(--accentBtn);color:#fff;padding:13px 22px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap">{{ t.ftNews.btn }}</span>
+            <span style="background:var(--accentBtn);color:#141413;padding:13px 22px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap">{{ t.ftNews.btn }}</span>
           </div>
         </div>
       </div>
@@ -997,7 +997,7 @@ class Component extends DCLogic {
       const node = (label, bg, key) => box({ display: "flex", alignItems: "center", gap: "8px", background: "var(--card)", border: "1px solid var(--cardBorder)", borderRadius: "8px", padding: "8px 12px", fontFamily: mono, fontSize: "11px", color: "var(--ink)", key }, [box({ width: "7px", height: "7px", borderRadius: "50%", background: bg, key: "d" }), label]);
       return wrap(box({ display: "flex", flexDirection: "column", gap: "9px", alignItems: "stretch" }, [
         node("trigger", "#5db872", "n1"), box({ width: "2px", height: "10px", background: "var(--cardBorder)", marginInlineStart: "9px", key: "l1" }),
-        node("openai · decide", "#cc785c", "n2"), box({ width: "2px", height: "10px", background: "var(--cardBorder)", marginInlineStart: "9px", key: "l2" }),
+        node("openai · decide", "var(--accent)", "n2"), box({ width: "2px", height: "10px", background: "var(--cardBorder)", marginInlineStart: "9px", key: "l2" }),
         node("update CRM", "#6ea8e8", "n3"),
       ]));
     }
@@ -1012,7 +1012,7 @@ class Component extends DCLogic {
       const chip = (t) => box({ fontFamily: mono, fontSize: "11px", color: "var(--ink)", background: "var(--card)", border: "1px solid var(--cardBorder)", borderRadius: "9999px", padding: "6px 12px" }, t);
       return wrap(box({ display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "center", maxWidth: "85%" }, ["CRM", "Email", "Sheets", "WhatsApp", "Phone", "Slack"].map((t, i) => h("div", { key: i }, chip(t)))));
     }
-    return wrap(box({ display: "flex", alignItems: "flex-end", gap: "6px", height: "70%", width: "80%" }, [40, 62, 51, 78, 66, 90, 72].map((v, i) => h("div", { key: i, style: { flex: 1, height: v + "%", background: "#cc785c", borderRadius: "3px 3px 0 0", opacity: i === 6 ? 1 : .5 } }))));
+    return wrap(box({ display: "flex", alignItems: "flex-end", gap: "6px", height: "70%", width: "80%" }, [40, 62, 51, 78, 66, 90, 72].map((v, i) => h("div", { key: i, style: { flex: 1, height: v + "%", background: "var(--accent)", borderRadius: "3px 3px 0 0", opacity: i === 6 ? 1 : .5 } }))));
   }
 
   componentDidMount() {
@@ -1162,7 +1162,7 @@ class Component extends DCLogic {
         const delay = (Math.random() * 6).toFixed(2);
         const w = Math.floor(Math.random() * 3) + 1;
         const left = (Math.random() * 100).toFixed(2);
-        return { style: `position:absolute;bottom:0;left:${left}%;width:${w}px;height:230px;border-radius:2px;background:linear-gradient(to top,transparent,#cc785c 55%,#f0a98a);box-shadow:0 0 8px rgba(204,120,92,.42);opacity:0;will-change:transform,opacity;animation:beamRise ${rise}s linear infinite,beamGlow ${fade}s ease-in-out infinite;animation-delay:${delay}s,${delay}s` };
+        return { style: `position:absolute;bottom:0;left:${left}%;width:${w}px;height:230px;border-radius:2px;background:linear-gradient(to top,transparent,var(--accentBtn) 55%,#ffa366);box-shadow:0 0 8px rgba(204,120,92,.42);opacity:0;will-change:transform,opacity;animation:beamRise ${rise}s linear infinite,beamGlow ${fade}s ease-in-out infinite;animation-delay:${delay}s,${delay}s` };
       });
     }
     const _si = (s) => "https://cdn.simpleicons.org/" + s;
@@ -1205,8 +1205,8 @@ class Component extends DCLogic {
     const mailHref = "mailto:" + email;
 
     const themes = {
-      light: { canvas: "#faf9f5", surface: "#f5f0e8", card: "#faf9f5", cardBorder: "#e6dfd8", ink: "#141413", accent: "#a9583e", accentBtn: "#a9583e", body: "#3d3d3a", muted: "#6c6a64", hairline: "#ebe6df", navBg: "rgba(250,249,245,.85)", pillBg: "#f5f0e8", phA: "#efe9de", phB: "#e8e0d2", phText: "#8e8b82", footerBg: "#181715", footerText: "#a09d96", footerHead: "#faf9f5", gridline: "rgba(20,20,19,0.06)" },
-      dark: { canvas: "#181715", surface: "#1f1e1b", card: "#201f1c", cardBorder: "#2f2c28", ink: "#faf9f5", accent: "#cc785c", accentBtn: "#a9583e", body: "#cfccc4", muted: "#a09d96", hairline: "#2a2824", navBg: "rgba(24,23,21,.85)", pillBg: "#252320", phA: "#252320", phB: "#2f2c28", phText: "#8e8b82", footerBg: "#0f0e0d", footerText: "#8e8b82", footerHead: "#faf9f5", gridline: "rgba(250,249,245,0.06)" },
+      light: { canvas: "#faf9f5", surface: "#f5f0e8", card: "#faf9f5", cardBorder: "#e6dfd8", ink: "#141413", accent: "#c2410c", accentBtn: "#ff8300", body: "#3d3d3a", muted: "#6c6a64", hairline: "#ebe6df", navBg: "rgba(250,249,245,.85)", pillBg: "#f5f0e8", phA: "#efe9de", phB: "#e8e0d2", phText: "#8e8b82", footerBg: "#181715", footerText: "#a09d96", footerHead: "#faf9f5", gridline: "rgba(20,20,19,0.06)" },
+      dark: { canvas: "#181715", surface: "#1f1e1b", card: "#201f1c", cardBorder: "#2f2c28", ink: "#faf9f5", accent: "#ff8300", accentBtn: "#ff8300", body: "#cfccc4", muted: "#a09d96", hairline: "#2a2824", navBg: "rgba(24,23,21,.85)", pillBg: "#252320", phA: "#252320", phB: "#2f2c28", phText: "#8e8b82", footerBg: "#0f0e0d", footerText: "#8e8b82", footerHead: "#faf9f5", gridline: "rgba(250,249,245,0.06)" },
     };
     const th = dark ? themes.dark : themes.light;
     const vars = Object.entries(th).map(([k, v]) => `--${k}:${v}`).join(";");
@@ -1219,7 +1219,7 @@ class Component extends DCLogic {
       return { code, label: code.toUpperCase(), flag: _flags[code],
         rowStyle: "display:flex;align-items:center;gap:9px;padding:9px 14px;cursor:pointer;font-size:13px;font-weight:500;white-space:nowrap;" + (active ? "background:rgba(204,120,92,.12);color:var(--accent)" : "color:var(--body)"),
         onClick: () => { this.setLang(code); this.setState({ langOpen: false }); },
-        style: `font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;letter-spacing:.5px;padding:5px 9px;border-radius:9999px;cursor:pointer;${active ? "background:var(--accentBtn);color:#fff" : "background:transparent;color:var(--muted)"}` };
+        style: `font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;letter-spacing:.5px;padding:5px 9px;border-radius:9999px;cursor:pointer;${active ? "background:var(--accentBtn);color:#141413" : "background:transparent;color:var(--muted)"}` };
     });
 
     const works = ["Medical AI Agent", "Smart Facility Automation", "Containerized Infrastructure", "Full-stack Web Platform"].map((name, i) => ({
@@ -1255,12 +1255,12 @@ class Component extends DCLogic {
       };
     });
     const lightCard = "background:var(--card);border:1px solid var(--cardBorder);border-radius:12px;padding:30px;display:flex;flex-direction:column";
-    const coralCard = "background:#cc785c;border:1px solid var(--accent);border-radius:12px;padding:30px;display:flex;flex-direction:column";
-    const coralBtn = "background:var(--accentBtn);color:#fff;padding:11px 18px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap";
+    const coralCard = "background:var(--accentBtn);border:1px solid var(--accent);border-radius:12px;padding:30px;display:flex;flex-direction:column";
+    const coralBtn = "background:var(--accentBtn);color:#141413;padding:11px 18px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap";
     const creamBtn = "background:#faf9f5;color:#141413;padding:11px 18px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap";
     const mk = (tag, name, desc, price, cta, coral) => coral
       ? { tag, name, desc, price, cta, cardStyle: coralCard, tagColor: "rgba(255,255,255,.8)", titleColor: "#fff", descColor: "rgba(255,255,255,.92)", fromColor: "rgba(255,255,255,.7)", priceColor: "#fff", divider: "rgba(255,255,255,.25)", btnStyle: creamBtn }
-      : { tag, name, desc, price, cta, cardStyle: lightCard, tagColor: "#cc785c", titleColor: "var(--ink)", descColor: "var(--muted)", fromColor: "var(--muted)", priceColor: "var(--ink)", divider: "var(--cardBorder)", btnStyle: coralBtn };
+      : { tag, name, desc, price, cta, cardStyle: lightCard, tagColor: "var(--accent)", titleColor: "var(--ink)", descColor: "var(--muted)", fromColor: "var(--muted)", priceColor: "var(--ink)", divider: "var(--cardBorder)", btnStyle: coralBtn };
     const services = [
       mk("Automation", t.svc.aName, t.svc.aDesc, t.svc.onRequest, t.svc.quote, false),
       mk("Optimization", t.svc.bName, t.svc.bDesc, t.svc.onRequest, t.svc.quote, false),
@@ -1272,21 +1272,21 @@ class Component extends DCLogic {
     const page = this.state.page;
     const svcIdx = this.state.svcIdx;
     const svcMeta = [
-      { name: "Automation", cat: 0, stack: ["n8n", "Python", "OpenAI", "Webhooks"], label: "[ workflow canvas ]" },
-      { name: "AI Chatbot", cat: 0, stack: ["OpenAI", "RAG", "WhatsApp", "n8n"], label: "[ chat widget ]" },
-      { name: "AI Phone Calls", cat: 0, stack: ["Phone AI", "OpenAI", "Twilio", "n8n"], label: "[ call agent ]" },
-      { name: "SEO / AIO / GEO", cat: 1, stack: ["DataForSEO", "WordPress", "Python", "OpenAI"], label: "[ rankings dashboard ]" },
-      { name: "Email Marketing", cat: 1, stack: ["Mautic", "Brevo", "Sendy", "Amazon SES"], label: "[ campaign flow ]" },
-      { name: "Lead Generation", cat: 1, stack: ["n8n", "Python", "CRM", "LinkedIn"], label: "[ lead pipeline ]" },
-      { name: "Python Programming", cat: 2, stack: ["Python", "FastAPI", "PostgreSQL", "Docker"], label: "[ code editor ]" },
-      { name: "Django", cat: 2, stack: ["Django", "Python", "PostgreSQL", "REST"], label: "[ web platform ]" },
-      { name: "Micro ERP", cat: 2, stack: ["Django", "PostgreSQL", "Supabase", "REST"], label: "[ erp modules ]" },
-      { name: "CRM", cat: 2, stack: ["Django", "PostgreSQL", "n8n", "REST"], label: "[ crm pipeline ]" },
-      { name: "Web Design", cat: 3, stack: ["Next.js", "WordPress", "HTML/CSS", "Figma"], label: "[ website mockup ]" },
-      { name: "RAG", cat: 0, stack: ["RAG", "Vector DB", "OpenAI", "Embeddings"], label: "[ rag pipeline ]" },
-      { name: "Web Design Optimization", cat: 1, stack: ["CRO", "SEO", "Analytics", "A/B testing"], label: "[ landing optimization ]" },
-      { name: "SaaS Projects", cat: 2, stack: ["Django", "React", "Stripe", "PostgreSQL"], label: "[ saas dashboard ]" },
-      { name: "API Integration & Data Analytics", cat: 2, stack: ["REST", "Python", "n8n", "PostgreSQL"], label: "[ api integration ]" },
+      { name: "Automation", cat: 0, stack: ["n8n", "Python", "OpenAI", "Webhooks"], label: "[ workflow canvas ]", img: "/assets/mock/svc-automation.svg" },
+      { name: "AI Chatbot", cat: 0, stack: ["OpenAI", "RAG", "WhatsApp", "n8n"], label: "[ chat widget ]", img: "/assets/mock/svc-ai-chatbot.svg" },
+      { name: "AI Phone Calls", cat: 0, stack: ["Phone AI", "OpenAI", "Twilio", "n8n"], label: "[ call agent ]", img: "/assets/mock/svc-ai-phone-calls.svg" },
+      { name: "SEO / AIO / GEO", cat: 1, stack: ["DataForSEO", "WordPress", "Python", "OpenAI"], label: "[ rankings dashboard ]", img: "/assets/mock/svc-seo-aio-geo.svg" },
+      { name: "Email Marketing", cat: 1, stack: ["Mautic", "Brevo", "Sendy", "Amazon SES"], label: "[ campaign flow ]", img: "/assets/mock/svc-email-marketing.svg" },
+      { name: "Lead Generation", cat: 1, stack: ["n8n", "Python", "CRM", "LinkedIn"], label: "[ lead pipeline ]", img: "/assets/mock/svc-lead-generation.svg" },
+      { name: "Python Programming", cat: 2, stack: ["Python", "FastAPI", "PostgreSQL", "Docker"], label: "[ code editor ]", img: "/assets/mock/svc-python-programming.svg" },
+      { name: "Django", cat: 2, stack: ["Django", "Python", "PostgreSQL", "REST"], label: "[ web platform ]", img: "/assets/mock/svc-django.svg" },
+      { name: "Micro ERP", cat: 2, stack: ["Django", "PostgreSQL", "Supabase", "REST"], label: "[ erp modules ]", img: "/assets/mock/svc-micro-erp.svg" },
+      { name: "CRM", cat: 2, stack: ["Django", "PostgreSQL", "n8n", "REST"], label: "[ crm pipeline ]", img: "/assets/mock/svc-crm.svg" },
+      { name: "Web Design", cat: 3, stack: ["Next.js", "WordPress", "HTML/CSS", "Figma"], label: "[ website mockup ]", img: "/assets/mock/svc-web-design.svg" },
+      { name: "RAG", cat: 0, stack: ["RAG", "Vector DB", "OpenAI", "Embeddings"], label: "[ rag pipeline ]", img: "/assets/mock/svc-rag.svg" },
+      { name: "Web Design Optimization", cat: 1, stack: ["CRO", "SEO", "Analytics", "A/B testing"], label: "[ landing optimization ]", img: "/assets/mock/svc-web-design-optimization.svg" },
+      { name: "SaaS Projects", cat: 2, stack: ["Django", "React", "Stripe", "PostgreSQL"], label: "[ saas dashboard ]", img: "/assets/mock/svc-saas-projects.svg" },
+      { name: "API Integration & Data Analytics", cat: 2, stack: ["REST", "Python", "n8n", "PostgreSQL"], label: "[ api integration ]", img: "/assets/mock/svc-api-integration-data-analytics.svg" },
     ];
     const GX = (typeof window !== "undefined" && window.GA_EXTRA) || null;
     const howT = (GX && GX.how.titles[lang]) || {};
@@ -1295,7 +1295,7 @@ class Component extends DCLogic {
     const faqItems = ((GX && GX.faq.items[lang]) || []).map((it, i) => {
       const open = this.state.faqOpen === i;
       return { q: it.q, a: it.a, open,
-        rowStyle: `background:var(--card);border:1px solid ${open ? "#cc785c" : "var(--cardBorder)"};border-radius:14px;overflow:hidden;transition:border-color .2s ease`,
+        rowStyle: `background:var(--card);border:1px solid ${open ? "var(--accent)" : "var(--cardBorder)"};border-radius:14px;overflow:hidden;transition:border-color .2s ease`,
         bodyStyle: `overflow:hidden;transition:max-height .3s ease;max-height:${open ? "260px" : "0"}`,
         signStyle: `font-family:'JetBrains Mono',monospace;font-size:20px;color:var(--accent);flex:none;transition:transform .2s ease;transform:rotate(${open ? "45deg" : "0deg"})`,
         onClick: () => this.setState({ faqOpen: open ? -1 : i }) };
@@ -1304,7 +1304,7 @@ class Component extends DCLogic {
     const testiAll = (GX && GX.testi.items[lang]) || [];
     const tIdx = this.state.testiIdx || 0;
     const testiCur = testiAll[tIdx] || { quote: "", name: "", role: "" };
-    const testiDots = testiAll.map((_, i) => ({ style: `width:8px;height:8px;border-radius:50%;cursor:pointer;background:${i === tIdx ? "#cc785c" : "var(--cardBorder)"}`, onClick: () => this.setState({ testiIdx: i }) }));
+    const testiDots = testiAll.map((_, i) => ({ style: `width:8px;height:8px;border-radius:50%;cursor:pointer;background:${i === tIdx ? "var(--accent)" : "var(--cardBorder)"}`, onClick: () => this.setState({ testiIdx: i }) }));
     const testiInitials = (testiCur.name || "?").split(" ").map((w) => w[0]).slice(0, 2).join("");
     const testiPrev = () => this.setState({ testiIdx: (tIdx - 1 + testiAll.length) % testiAll.length });
     const testiNext = () => this.setState({ testiIdx: (tIdx + 1) % testiAll.length });
@@ -1332,7 +1332,7 @@ class Component extends DCLogic {
     const servicesFull = svcMeta.map((m, i) => {
       const d = sItems[i] || {};
       return {
-        idx: i, num: String(i + 1).padStart(2, "0"), name: m.name, cat: m.cat,
+        idx: i, num: String(i + 1).padStart(2, "0"), name: m.name, cat: m.cat, img: m.img,
         tag: catLabels[m.cat], stack: m.stack, label: m.label,
         tagline: d.tagline || "", intro: d.intro || "", includes: d.includes || [], outcome: d.outcome || "",
         steps: (d.steps || []).map((s, n) => ({ n: String(n + 1).padStart(2, "0"), s })),
@@ -1355,7 +1355,7 @@ class Component extends DCLogic {
     const skillGroups = skillItems.map((items, i) => ({ label: t.about ? t.about.skillLabels[i] : "", items }));
     const serviceNames = servicesFull.map((s) => s.name);
     const chipBase = "display:flex;flex-direction:column;align-items:center;gap:2px;min-width:62px;padding:10px;border-radius:10px;cursor:pointer;";
-    const chipOn = "background:var(--accentBtn);color:#fff;border:1px solid var(--accent)";
+    const chipOn = "background:var(--accentBtn);color:#141413;border:1px solid var(--accent)";
     const chipOff = "background:var(--surface);color:var(--body);border:1px solid var(--cardBorder)";
     const slotBase = "padding:11px 16px;border-radius:9999px;cursor:pointer;font-size:14px;font-family:'JetBrains Mono',monospace;";
     const bkLocale = { en: "en-GB", de: "de-DE", fr: "fr-FR", ro: "ro-RO", ar: "ar-EG" }[lang] || "en-GB";
@@ -1384,7 +1384,7 @@ class Component extends DCLogic {
       return { tm, style: slotBase + (act ? chipOn : chipOff), onClick: () => this.setState({ bookTime: tm, bookDone: false }) };
     });
     const bookReady = !!(this.state.bookDate && this.state.bookTime);
-    const submitStyle = "width:100%;text-align:center;padding:15px;border-radius:8px;font-size:15px;font-weight:500;border:none;margin-top:4px;" + (bookReady ? "background:var(--accentBtn);color:#fff;cursor:pointer" : "background:var(--surface);color:var(--muted);cursor:not-allowed");
+    const submitStyle = "width:100%;text-align:center;padding:15px;border-radius:8px;font-size:15px;font-weight:500;border:none;margin-top:4px;" + (bookReady ? "background:var(--accentBtn);color:#141413;cursor:pointer" : "background:var(--surface);color:var(--muted);cursor:not-allowed");
     const submitBooking = () => { if (this.state.bookDate && this.state.bookTime) this.setState({ bookDone: true }); };
     const chosen = this.state.bookDate
       ? new Intl.DateTimeFormat(bkLocale, { weekday: "long", day: "numeric", month: "long" }).format(new Date(this.state.bookDate))
@@ -1414,8 +1414,8 @@ class Component extends DCLogic {
         const on = !!cfgSel[s.idx];
         return {
           idx: s.idx, name: s.name, on,
-          style: cfgItemBase + "border:1px solid " + (on ? "#cc785c" : "var(--cardBorder)") + ";background:" + (on ? "rgba(204,120,92,.12)" : "var(--card)") + ";color:var(--ink)",
-          dot: "width:18px;height:18px;flex:none;border-radius:6px;border:1px solid " + (on ? "#cc785c" : "var(--cardBorder)") + ";background:" + (on ? "#cc785c" : "transparent"),
+          style: cfgItemBase + "border:1px solid " + (on ? "var(--accent)" : "var(--cardBorder)") + ";background:" + (on ? "rgba(204,120,92,.12)" : "var(--card)") + ";color:var(--ink)",
+          dot: "width:18px;height:18px;flex:none;border-radius:6px;border:1px solid " + (on ? "var(--accent)" : "var(--cardBorder)") + ";background:" + (on ? "var(--accent)" : "transparent"),
           onClick: () => { const n = { ...this.state.cfgServices }; if (n[s.idx]) delete n[s.idx]; else n[s.idx] = true; this.setState({ cfgServices: n, cfgDone: false }); },
         };
       }),
@@ -1425,14 +1425,14 @@ class Component extends DCLogic {
     const scaleList = (cfg.scales || []).map((sc, i) => {
       const on = this.state.cfgScale === i;
       return { name: sc.name, desc: sc.desc, on,
-        style: "flex:1;min-width:150px;padding:18px;border-radius:12px;cursor:pointer;border:1px solid " + (on ? "#cc785c" : "var(--cardBorder)") + ";background:" + (on ? "rgba(204,120,92,.12)" : "var(--card)"),
+        style: "flex:1;min-width:150px;padding:18px;border-radius:12px;cursor:pointer;border:1px solid " + (on ? "var(--accent)" : "var(--cardBorder)") + ";background:" + (on ? "rgba(204,120,92,.12)" : "var(--card)"),
         onClick: () => this.setState({ cfgScale: i, cfgDone: false }) };
     });
     const cfgAdd = this.state.cfgAddons || {};
     const addonList = (cfg.addons || []).map((a, i) => {
       const on = !!cfgAdd[i];
       return { label: a, on,
-        style: "display:inline-flex;align-items:center;gap:8px;padding:11px 16px;border-radius:9999px;cursor:pointer;font-size:14px;border:1px solid " + (on ? "#cc785c" : "var(--cardBorder)") + ";background:" + (on ? "rgba(204,120,92,.12)" : "var(--surface)") + ";color:var(--ink)",
+        style: "display:inline-flex;align-items:center;gap:8px;padding:11px 16px;border-radius:9999px;cursor:pointer;font-size:14px;border:1px solid " + (on ? "var(--accent)" : "var(--cardBorder)") + ";background:" + (on ? "rgba(204,120,92,.12)" : "var(--surface)") + ";color:var(--ink)",
         onClick: () => { const n = { ...this.state.cfgAddons }; if (n[i]) delete n[i]; else n[i] = true; this.setState({ cfgAddons: n, cfgDone: false }); } };
     });
     const _scaleBase = [2, 4, 8][this.state.cfgScale] || 2;
@@ -1445,7 +1445,7 @@ class Component extends DCLogic {
     const cfgReady = selectedCount > 0;
     const scaleName = (cfg.scales && cfg.scales[this.state.cfgScale]) ? cfg.scales[this.state.cfgScale].name : "\u2014";
     const submitConfig = () => { if (Object.keys(this.state.cfgServices || {}).length > 0) this.setState({ cfgDone: true }); };
-    const cfgSubmitStyle = "width:100%;text-align:center;padding:15px;border-radius:8px;font-size:15px;font-weight:500;border:none;margin-top:6px;" + (cfgReady ? "background:var(--accentBtn);color:#fff;cursor:pointer" : "background:var(--surface);color:var(--muted);cursor:not-allowed");
+    const cfgSubmitStyle = "width:100%;text-align:center;padding:15px;border-radius:8px;font-size:15px;font-weight:500;border:none;margin-top:6px;" + (cfgReady ? "background:var(--accentBtn);color:#141413;cursor:pointer" : "background:var(--surface);color:var(--muted);cursor:not-allowed");
 
     return {
       t, pg: t.pg, dir: ar ? "rtl" : "ltr", rootStyle, langs, works, services, servicesFull, detail, categories, flagSlides,
@@ -1453,8 +1453,8 @@ class Component extends DCLogic {
       heroIsVideo: this.state.heroMode === "video", heroIsPanels: this.state.heroMode === "panels",
       showFeaturedBelow: this.state.heroMode === "video",
       setHeroVideo: () => this.setState({ heroMode: "video" }), setHeroPanels: () => this.setState({ heroMode: "panels" }),
-      segVideoStyle: "padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .2s ease;" + (this.state.heroMode === "video" ? "background:var(--accentBtn);color:#fff" : "background:transparent;color:var(--muted)"),
-      segPanelsStyle: "padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .2s ease;" + (this.state.heroMode === "panels" ? "background:var(--accentBtn);color:#fff" : "background:transparent;color:var(--muted)"),
+      segVideoStyle: "padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .2s ease;" + (this.state.heroMode === "video" ? "background:var(--accentBtn);color:#141413" : "background:transparent;color:var(--muted)"),
+      segPanelsStyle: "padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .2s ease;" + (this.state.heroMode === "panels" ? "background:var(--accentBtn);color:#141413" : "background:transparent;color:var(--muted)"),
       goHome: () => this.nav("home"), goServices: () => this.nav("services"), goAbout: () => this.nav("about"),
       goContact: () => this.nav("contact"), goNews: () => this.nav("news"), goConfig: () => this.nav("config"),
       isAbout: page === "about", isContact: page === "contact", isNews: page === "news", isConfig: page === "config",
@@ -1525,15 +1525,15 @@ class Component extends DCLogic {
       langChevron: this.state.langOpen ? "rotate(180deg)" : "rotate(0deg)",
       authProviderEls: [
         { name: "Google", url: "https://cdn.simpleicons.org/google" },
-        { name: "GitHub", url: "https://cdn.simpleicons.org/github/cc785c" },
+        { name: "GitHub", url: "https://cdn.simpleicons.org/github/8e8b82" },
         { name: "LinkedIn", url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%230A66C2' d='M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.42v1.56h.05c.47-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.07 2.07 0 1 1 0-4.14 2.07 2.07 0 0 1 0 4.14ZM7.12 20.45H3.56V9h3.56v11.45ZM22.22 0H1.77C.8 0 0 .78 0 1.73v20.54C0 23.22.8 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.73V1.73C24 .78 23.2 0 22.22 0Z'/></svg>" },
       ].map((p, i) => React.createElement("span", { key: i, style: { flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "12px", borderRadius: "10px", border: "1px solid #2f2c28", background: "#201f1c", cursor: "pointer" } }, React.createElement("img", { src: p.url, alt: p.name, style: { width: "18px", height: "18px", objectFit: "contain", display: "block" } }))),
       openAuth: () => this.setState({ authOpen: true, authMode: this.state.hasUser ? "login" : "signup" }),
       closeAuth: () => this.setState({ authOpen: false }),
       setLogin: () => this.setState({ authMode: "login" }),
       setSignup: () => this.setState({ authMode: "signup" }),
-      loginTabStyle: "flex:1;text-align:center;padding:11px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s ease;" + (this.state.authMode === "login" ? "background:var(--accentBtn);color:#fff" : "background:transparent;color:#a09d96"),
-      signupTabStyle: "flex:1;text-align:center;padding:11px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s ease;" + (this.state.authMode === "signup" ? "background:var(--accentBtn);color:#fff" : "background:transparent;color:#a09d96"),
+      loginTabStyle: "flex:1;text-align:center;padding:11px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s ease;" + (this.state.authMode === "login" ? "background:var(--accentBtn);color:#141413" : "background:transparent;color:#a09d96"),
+      signupTabStyle: "flex:1;text-align:center;padding:11px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s ease;" + (this.state.authMode === "signup" ? "background:var(--accentBtn);color:#141413" : "background:transparent;color:#a09d96"),
       imgError: (e) => { try { e.target.style.display = "none"; } catch (_) {} },
       menuBtnDisplay: isMobile ? "flex" : "none",
       hdrLangDisplay: isMobile ? "none" : "flex",
@@ -1547,5 +1547,120 @@ class Component extends DCLogic {
   }
 }
 </script>
-<script src="/auth.js" defer></script><script src="/audit.js" defer></script><div id="seo:footer" style="padding:16px 24px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:12px"><a href="/pricing/" style="color:#a9583e;text-decoration:none">Packages &amp; pricing &rarr;</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="/services/" style="color:#8e8b82;text-decoration:none">Browse all services &rarr;</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="/blog/" style="color:#8e8b82;text-decoration:none">Blog &rarr;</a></div></body>
+<script src="/auth.js" defer></script><script src="/audit.js" defer></script><div id="seo:footer" style="padding:16px 24px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:12px"><a href="/pricing/" style="color:#ff8300;text-decoration:none">Packages &amp; pricing &rarr;</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="/services/" style="color:#8e8b82;text-decoration:none">Browse all services &rarr;</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="/blog/" style="color:#8e8b82;text-decoration:none">Blog &rarr;</a></div><script src="/hero-motion.js" defer></script><script src="/hero-cinema.js" defer></script>
+<!-- hero:lede:start -->
+<!-- hero:lede — repo-owned. Injected at the end of the body by deploy.sh:apply_hero().
+     Static so it is crawlable in the raw HTML (the export renders the homepage
+     client-side and ships NO <h1> on the home view); hero-motion.js relocates it
+     into the hero above the panel row at runtime. NEVER edit the copy in site/.
+
+     Copy rules this block is held to, because the previous version broke all of
+     them and read as machine-written:
+       no em-dash, no "not just X" contrast, no abstract noun pairs,
+       no eyebrow, no middot separators, no decorative italic accent.
+     First person, concrete verbs, names the actual tools. The site already
+     speaks in first person ("What I build for you"), so this matches it.
+
+     data-i18n covers an in-session language switch; hero-motion.js detects the
+     active language from GA_SERVICES. Arabic falls back to English rather than
+     shipping RTL copy nobody has reviewed.
+     TRANSLATIONS ARE UNREVIEWED. -->
+<div class="ga-lede" data-ga-lede data-i18n='{
+  "de": {
+    "title": "Ich automatisiere die Arbeit, die Ihr Team ständig wiederholt.",
+    "sub": "n8n-Workflows, KI-Agenten, RAG-Assistenten und Django-Plattformen. Alles, was ich baue, gehört Ihnen."
+  },
+  "fr": {
+    "title": "J&apos;automatise le travail que votre équipe refait sans cesse.",
+    "sub": "Workflows n8n, agents IA, assistants RAG et plateformes Django. Tout ce que je construis vous appartient."
+  },
+  "ro": {
+    "title": "Automatizez munca pe care echipa ta o reface la nesfârșit.",
+    "sub": "Fluxuri n8n, agenți AI, asistenți RAG și platforme Django. Tot ce construiesc îți aparține."
+  }
+}'>
+  <h1 class="ga-lede__title">I automate the work your team keeps redoing.</h1>
+  <p class="ga-lede__sub">
+    n8n workflows, AI agents, RAG assistants and Django platforms.
+    You own everything I build.
+  </p>
+</div>
+<!-- hero:lede:end -->
+<!-- hero:cinema:start -->
+<!-- hero:cinema — repo-owned. Injected at the end of the body by deploy.sh:apply_hero()
+     between the hero:cinema markers, then relocated to the top of the home view
+     by hero-cinema.js. NEVER edit the copy in site/ — it is wiped every deploy.
+
+     Static in the raw HTML so the whole hero (headings, copy, both calls to
+     action) is crawlable without executing JS, same contract as hero-lede.html.
+
+     The <h1> is NOT here: hero-cinema.js moves the existing [data-ga-lede]
+     block into band 1, so the page keeps exactly one <h1> and one place where
+     that sentence is authored.
+
+     Copy rules, inherited from hero-lede.html: no em dash, no "not just X, it's
+     Y", no stock words (leverage, seamless, unlock, robust, solutions...). First
+     person, concrete verbs, sentences a person would actually say. The triplet
+     in band 2 is a deliberate brand device, not drift.
+
+     TRANSLATIONS ARE UNREVIEWED. Arabic falls back to English rather than
+     shipping RTL copy nobody has read. -->
+<section class="gc" data-ga-cinema aria-label="What I build" data-i18n='{
+  "de": {
+    "b2t": "Auslösen. Entscheiden. Ausliefern.",
+    "b2s": "Ein Formular, eine Mail, ein Anruf. Der Workflow nimmt es auf, entscheidet, was zu tun ist, und tut es.",
+    "b3t": "Danach läuft es einfach.",
+    "b3s": "Niemand muss daran denken. Jeder Schritt wird protokolliert, und alles davon gehört Ihnen.",
+    "cta1": "Leistungen ansehen",
+    "cta2": "Preise ansehen",
+    "cue": "scrollen"
+  },
+  "fr": {
+    "b2t": "Déclencher. Décider. Livrer.",
+    "b2s": "Un formulaire, un mail, un appel. Le workflow le prend, décide quoi faire, et le fait.",
+    "b3t": "Ensuite, ça tourne tout seul.",
+    "b3s": "Personne n&apos;a besoin d&apos;y penser. Chaque étape est journalisée, et tout vous appartient.",
+    "cta1": "Voir les services",
+    "cta2": "Voir les tarifs",
+    "cue": "défiler"
+  },
+  "ro": {
+    "b2t": "Declanșează. Decide. Livrează.",
+    "b2s": "Un formular, un mail, un apel. Fluxul îl preia, decide ce are de făcut, și face.",
+    "b3t": "După aceea merge singur.",
+    "b3s": "Nimeni nu trebuie să își amintească de el. Fiecare pas e înregistrat, și tot îți aparține.",
+    "cta1": "Vezi serviciile",
+    "cta2": "Vezi prețurile",
+    "cue": "derulează"
+  }
+}'>
+  <div class="gc__stage">
+    <canvas class="gc__canvas" aria-hidden="true"></canvas>
+    <div class="gc__scrim" aria-hidden="true"></div>
+
+    <div class="gc__lane">
+      <!-- Band 1 is the <h1> block, moved in at runtime. Empty on purpose. -->
+      <div class="gc__band gc__band--lede" data-band="0,0.36" data-entrance="grid" data-spread="0.5"></div>
+
+      <div class="gc__band" data-band="0.36,0.68" data-entrance="punch" data-ramp="0.034">
+        <h2 class="gc__title" data-split data-key="b2t">Trigger. Decide. Deliver.</h2>
+        <p class="gc__sub" data-key="b2s">A form, an email, a call. The workflow picks it up, decides what to do, and does it.</p>
+      </div>
+
+      <div class="gc__band" data-band="0.68,1" data-entrance="rise">
+        <h2 class="gc__title" data-split data-key="b3t">Then it just runs.</h2>
+        <p class="gc__sub" data-key="b3s">No one has to remember it. Every step is logged, and you own all of it.</p>
+      </div>
+
+      <div class="gc__cta">
+        <a class="gc__btn gc__btn--primary" href="/services/" data-key="cta1">See services</a>
+        <a class="gc__btn" href="/pricing/" data-key="cta2">See pricing</a>
+      </div>
+    </div>
+
+    <div class="gc__cue" aria-hidden="true"><span class="gc__cue-word" data-key="cue">scroll</span><span class="gc__cue-line"></span></div>
+  </div>
+</section>
+<!-- hero:cinema:end -->
+</body>
 </html>

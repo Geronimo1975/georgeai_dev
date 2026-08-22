@@ -1,0 +1,74 @@
+<!-- hero:cinema — repo-owned. Injected at the end of the body by deploy.sh:apply_hero()
+     between the hero:cinema markers, then relocated to the top of the home view
+     by hero-cinema.js. NEVER edit the copy in site/ — it is wiped every deploy.
+
+     Static in the raw HTML so the whole hero (headings, copy, both calls to
+     action) is crawlable without executing JS, same contract as hero-lede.html.
+
+     The <h1> is NOT here: hero-cinema.js moves the existing [data-ga-lede]
+     block into band 1, so the page keeps exactly one <h1> and one place where
+     that sentence is authored.
+
+     Copy rules, inherited from hero-lede.html: no em dash, no "not just X, it's
+     Y", no stock words (leverage, seamless, unlock, robust, solutions...). First
+     person, concrete verbs, sentences a person would actually say. The triplet
+     in band 2 is a deliberate brand device, not drift.
+
+     TRANSLATIONS ARE UNREVIEWED. Arabic falls back to English rather than
+     shipping RTL copy nobody has read. -->
+<section class="gc" data-ga-cinema aria-label="What I build" data-i18n='{
+  "de": {
+    "b2t": "Auslösen. Entscheiden. Ausliefern.",
+    "b2s": "Ein Formular, eine Mail, ein Anruf. Der Workflow nimmt es auf, entscheidet, was zu tun ist, und tut es.",
+    "b3t": "Danach läuft es einfach.",
+    "b3s": "Niemand muss daran denken. Jeder Schritt wird protokolliert, und alles davon gehört Ihnen.",
+    "cta1": "Leistungen ansehen",
+    "cta2": "Preise ansehen",
+    "cue": "scrollen"
+  },
+  "fr": {
+    "b2t": "Déclencher. Décider. Livrer.",
+    "b2s": "Un formulaire, un mail, un appel. Le workflow le prend, décide quoi faire, et le fait.",
+    "b3t": "Ensuite, ça tourne tout seul.",
+    "b3s": "Personne n&apos;a besoin d&apos;y penser. Chaque étape est journalisée, et tout vous appartient.",
+    "cta1": "Voir les services",
+    "cta2": "Voir les tarifs",
+    "cue": "défiler"
+  },
+  "ro": {
+    "b2t": "Declanșează. Decide. Livrează.",
+    "b2s": "Un formular, un mail, un apel. Fluxul îl preia, decide ce are de făcut, și face.",
+    "b3t": "După aceea merge singur.",
+    "b3s": "Nimeni nu trebuie să își amintească de el. Fiecare pas e înregistrat, și tot îți aparține.",
+    "cta1": "Vezi serviciile",
+    "cta2": "Vezi prețurile",
+    "cue": "derulează"
+  }
+}'>
+  <div class="gc__stage">
+    <canvas class="gc__canvas" aria-hidden="true"></canvas>
+    <div class="gc__scrim" aria-hidden="true"></div>
+
+    <div class="gc__lane">
+      <!-- Band 1 is the <h1> block, moved in at runtime. Empty on purpose. -->
+      <div class="gc__band gc__band--lede" data-band="0,0.36" data-entrance="grid" data-spread="0.5"></div>
+
+      <div class="gc__band" data-band="0.36,0.68" data-entrance="punch" data-ramp="0.034">
+        <h2 class="gc__title" data-split data-key="b2t">Trigger. Decide. Deliver.</h2>
+        <p class="gc__sub" data-key="b2s">A form, an email, a call. The workflow picks it up, decides what to do, and does it.</p>
+      </div>
+
+      <div class="gc__band" data-band="0.68,1" data-entrance="rise">
+        <h2 class="gc__title" data-split data-key="b3t">Then it just runs.</h2>
+        <p class="gc__sub" data-key="b3s">No one has to remember it. Every step is logged, and you own all of it.</p>
+      </div>
+
+      <div class="gc__cta">
+        <a class="gc__btn gc__btn--primary" href="/services/" data-key="cta1">See services</a>
+        <a class="gc__btn" href="/pricing/" data-key="cta2">See pricing</a>
+      </div>
+    </div>
+
+    <div class="gc__cue" aria-hidden="true"><span class="gc__cue-word" data-key="cue">scroll</span><span class="gc__cue-line"></span></div>
+  </div>
+</section>
