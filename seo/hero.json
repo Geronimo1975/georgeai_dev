@@ -1,0 +1,38 @@
+{
+  "_comment": "Hero copy — source of truth. deploy.sh:apply_copy rewrites the hero object of every language block in site/index.html and site/GeorgeAI.dc.html from this file on every deploy, so a re-export from the design tool cannot silently revert it. Wedge: missed enquiries (phone + web form) answered, qualified and booked 24/7. Keep it to that one wedge — the other services live on /services/. Proof claims must stay inside what the site can back: 8+ years, 40+ projects, 15+ technologies, five languages, ~2-week pilot. Mirror any message change into seo/noscript.html, which is what crawlers and AI engines read.",
+  "en": {
+    "eyebrow": "For owner-run trades, clinics and service firms in Germany",
+    "title": "The enquiry you miss on a Saturday still ends up in your calendar.",
+    "sub": "An AI voice agent picks up the phone and an assistant answers on your website — day or night, in the caller's own language — every enquiry qualified and booked in. 8+ years, 40+ projects delivered, five languages — your pilot goes live in about two weeks.",
+    "cta1": "See the services",
+    "cta2": "Ask about a pilot"
+  },
+  "de": {
+    "eyebrow": "Für Handwerk, Praxen und Dienstleister im Mittelstand",
+    "title": "Der Anruf, den Sie samstags verpassen, steht montags in Ihrem Kalender.",
+    "sub": "Ein KI-Assistent geht ans Telefon und antwortet auf Ihrer Website — Tag und Nacht, in der Sprache des Kunden: Anliegen notiert, Termin gebucht. 8+ Jahre Erfahrung, 40+ Projekte, fünf Sprachen — nach rund zwei Wochen läuft Ihr Pilotprojekt.",
+    "cta1": "Leistungen ansehen",
+    "cta2": "Pilotprojekt anfragen"
+  },
+  "fr": {
+    "eyebrow": "Pour les artisans, cabinets et PME de services en Allemagne",
+    "title": "L'appel manqué du samedi soir finit quand même dans votre agenda.",
+    "sub": "Un agent vocal IA décroche, un assistant répond sur votre site — jour et nuit, dans la langue du client — chaque demande arrive qualifiée dans votre agenda. 8+ ans d'expérience, 40+ projets, cinq langues. Votre pilote démarre en deux semaines environ.",
+    "cta1": "Voir les services",
+    "cta2": "Demander un pilote"
+  },
+  "ro": {
+    "eyebrow": "Pentru patroni din Germania — ateliere, clinici și firme de servicii",
+    "title": "Clientul care sună sâmbăta, când nu răspunde nimeni, vă apare tot în calendar.",
+    "sub": "Un agent vocal AI vă preia apelurile, iar un asistent răspunde pe site — zi și noapte, în limba clientului — fiecare cerere ajunge calificată în calendar. 8+ ani de experiență, 40+ proiecte, cinci limbi — pilotul intră în funcțiune în circa două săptămâni.",
+    "cta1": "Vedeți serviciile",
+    "cta2": "Întrebați despre pilot"
+  },
+  "ar": {
+    "eyebrow": "لأصحاب الورش والعيادات وشركات الخدمات في ألمانيا",
+    "title": "الاستفسار الذي يفوتك يوم السبت يصبح موعدًا في جدولك.",
+    "sub": "وكيل صوتي بالذكاء الاصطناعي يردّ على هاتفك، ومساعد يردّ على موقعك — ليلًا ونهارًا وبلغة العميل — فيؤهّل كل استفسار ويحجز له موعدًا في جدولك. أكثر من 8 سنوات خبرة، وما يزيد على 40 مشروعًا، وخمس لغات — ونظامك التجريبي يدخل الخدمة خلال أسبوعين تقريبًا.",
+    "cta1": "تصفّح الخدمات",
+    "cta2": "اسأل عن مشروع تجريبي"
+  }
+}

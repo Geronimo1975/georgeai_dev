@@ -1,0 +1,8 @@
+{
+  "_comment": "Real client testimonials only. deploy.sh injects these into site/services-data.js on every deploy, and the whole testimonials section is hidden while every language is empty — an empty list renders a blank card with a '?' avatar, so do not leave placeholders here. Add an entry only when you have the client's written permission to publish their name and words. Fabricated or embellished reviews are a real legal exposure in Germany, not just a credibility one. Shape: {\"quote\": \"...\", \"name\": \"...\", \"role\": \"...\"}.",
+  "en": [],
+  "de": [],
+  "fr": [],
+  "ro": [],
+  "ar": []
+}
