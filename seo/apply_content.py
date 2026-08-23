@@ -496,6 +496,47 @@ def localize_react(js: str, vendor: Path) -> str:
     return js
 
 
+# ---------------------------------------------------------------------------
+# Babel from unpkg — the last third-party script host on the page. It loads
+# lazily, only to transpile "jsx" external modules for the generated-page
+# feature, which the user confirmed is unused (its one consumer,
+# uploads/generated-page.html, is pruned from the web root at deploy time).
+#
+# ensureBabel() is neutered rather than surgically excised: the surrounding
+# module loader still serves non-jsx kinds, so leaving its shape intact keeps
+# the diff small and the blast radius near zero. With this gone, script-src can
+# drop unpkg.com entirely and the page has no third-party hosts left at all.
+# ---------------------------------------------------------------------------
+_BABEL_DECL = re.compile(r'\n\s*var BABEL_URL = "https://unpkg\.com/@babel/[^"]*";')
+_ENSURE_BABEL = re.compile(
+    r"    function ensureBabel\(\) \{.*?\n    \}\n", re.S
+)
+_ENSURE_BABEL_STUB = """    function ensureBabel() {
+      // The generated-page (jsx) feature is disabled; Babel was the last
+      // third-party script host on the page. Fail loudly rather than silently
+      // producing an untranspiled module.
+      return Promise.reject(new Error("jsx external modules are not enabled"));
+    }
+"""
+
+
+def strip_babel_loader(js: str) -> str:
+    if "unpkg.com/@babel" not in js:
+        return js  # already stripped
+
+    js, n = _ENSURE_BABEL.subn(_ENSURE_BABEL_STUB, js, count=1)
+    if n != 1:
+        raise PatchError("could not locate ensureBabel() to neutralise")
+    js, n = _BABEL_DECL.subn("", js, count=1)
+    if n != 1:
+        raise PatchError("could not locate the BABEL_URL declaration")
+
+    if "unpkg.com" in js:
+        leftover = sorted(set(re.findall(r"https://unpkg\.com[^\"']*", js)))
+        raise PatchError("unpkg URLs remain after stripping Babel: " + ", ".join(leftover))
+    return js
+
+
 def main(argv: list[str]) -> int:
     if len(argv) < 4:
         sys.stderr.write(__doc__)
@@ -530,8 +571,9 @@ def main(argv: list[str]) -> int:
 
         support = site / "support.js"
         if support.exists():
-            writes.append((support, localize_react(
-                support.read_text(encoding="utf-8"), seo / "vendor" / "js")))
+            support_js = localize_react(
+                support.read_text(encoding="utf-8"), seo / "vendor" / "js")
+            writes.append((support, strip_babel_loader(support_js)))
 
         data = site / "services-data.js"
         if testis is not None and data.exists():
