@@ -244,3 +244,12 @@ cron/logs/
 
 # jez artifacts
 .jez/
+
+# --- generated web root and Django mirror -----------------------------------
+# deploy.sh wipes and regenerates both of these from the design-tool export on
+# every run (see CLAUDE.md), so tracking them meant ~99 MB of regenerated
+# binaries churning on every deploy — including the mp4s that deploy.sh itself
+# rewrites with ffmpeg +faststart. Edit the sources instead: the design-tool
+# export, seo/, pages/, backend/assets/ or deploy.sh.
+site/
+frontend/template/
