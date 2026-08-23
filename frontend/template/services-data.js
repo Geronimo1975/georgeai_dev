@@ -244,34 +244,14 @@ window.GA_EXTRA = {
     eyebrow: { en: "Testimonials", de: "Referenzen", fr: "Témoignages", ro: "Testimoniale", ar: "آراء العملاء" },
     items: {
       en: [
-        { quote: "George automated our entire SEO and reporting pipeline. What used to take two people a week now runs overnight — and the output is better.", name: "Anna Krause", role: "Head of Marketing, MedTech GmbH" },
-        { quote: "The AI phone agent answers every call now, even after hours. We stopped losing leads to voicemail within the first week.", name: "Sara Müller", role: "Owner, Aeon Residence" },
-        { quote: "He bridged the gap between our messy spreadsheets and a clean Django dashboard the whole team actually uses. Rare to find someone this technical who also gets the business.", name: "Marco Rossi", role: "Founder, Rossi Studio" },
-        { quote: "Fast, reliable and genuinely thoughtful about where automation makes sense — and where it doesn't. Exactly the partner you want.", name: "Tom Becker", role: "Operations, Becker & Co" },
       ],
       de: [
-        { quote: "George hat unsere komplette SEO- und Reporting-Pipeline automatisiert. Was früher zwei Leute eine Woche kostete, läuft jetzt über Nacht — und das Ergebnis ist besser.", name: "Anna Krause", role: "Head of Marketing, MedTech GmbH" },
-        { quote: "Der KI-Telefonagent nimmt jetzt jeden Anruf an, auch nach Feierabend. Schon in der ersten Woche haben wir keine Leads mehr an die Mailbox verloren.", name: "Sara Müller", role: "Inhaberin, Aeon Residence" },
-        { quote: "Er hat die Lücke zwischen unseren chaotischen Tabellen und einem sauberen Django-Dashboard geschlossen, das das ganze Team nutzt. Selten jemand so Technisches, der auch das Geschäft versteht.", name: "Marco Rossi", role: "Gründer, Rossi Studio" },
-        { quote: "Schnell, zuverlässig und wirklich durchdacht, wo Automatisierung Sinn ergibt — und wo nicht. Genau der Partner, den man will.", name: "Tom Becker", role: "Operations, Becker & Co" },
       ],
       fr: [
-        { quote: "George a automatisé tout notre pipeline SEO et reporting. Ce qui prenait une semaine à deux personnes tourne maintenant la nuit — et le résultat est meilleur.", name: "Anna Krause", role: "Directrice marketing, MedTech GmbH" },
-        { quote: "L'agent téléphonique IA répond à chaque appel, même en dehors des heures. Dès la première semaine, nous avons cessé de perdre des leads.", name: "Sara Müller", role: "Propriétaire, Aeon Residence" },
-        { quote: "Il a comblé le fossé entre nos tableurs en désordre et un dashboard Django propre que toute l'équipe utilise vraiment. Rare de trouver quelqu'un d'aussi technique qui comprend aussi le business.", name: "Marco Rossi", role: "Fondateur, Rossi Studio" },
-        { quote: "Rapide, fiable et réellement réfléchi sur où l'automatisation a du sens — et où non. Exactement le partenaire qu'on veut.", name: "Tom Becker", role: "Opérations, Becker & Co" },
       ],
       ro: [
-        { quote: "George ne-a automatizat tot pipeline-ul de SEO și raportare. Ce le lua două persoane o săptămână acum rulează peste noapte — și rezultatul e mai bun.", name: "Anna Krause", role: "Head of Marketing, MedTech GmbH" },
-        { quote: "Agentul telefonic AI răspunde acum la fiecare apel, chiar și după program. Am încetat să pierdem lead-uri încă din prima săptămână.", name: "Sara Müller", role: "Proprietar, Aeon Residence" },
-        { quote: "A făcut legătura între foile noastre de calcul haotice și un dashboard Django curat pe care toată echipa chiar îl folosește. Rar găsești pe cineva atât de tehnic care înțelege și business-ul.", name: "Marco Rossi", role: "Fondator, Rossi Studio" },
-        { quote: "Rapid, de încredere și chibzuit cu adevărat asupra locului unde automatizarea are sens — și unde nu. Exact partenerul pe care ți-l dorești.", name: "Tom Becker", role: "Operațiuni, Becker & Co" },
       ],
       ar: [
-        { quote: "أتمت جورج خط SEO والتقارير بالكامل لدينا. ما كان يستغرق شخصين أسبوعًا صار يعمل ليلًا — والنتيجة أفضل.", name: "آنا كراوزه", role: "مديرة التسويق، MedTech GmbH" },
-        { quote: "يردّ الوكيل الهاتفي بالذكاء الاصطناعي على كل مكالمة الآن، حتى بعد ساعات العمل. توقّفنا عن فقدان العملاء منذ الأسبوع الأول.", name: "سارة مولر", role: "المالكة، Aeon Residence" },
-        { quote: "ردم الفجوة بين جداولنا الفوضوية ولوحة Django نظيفة يستخدمها الفريق كله فعلًا. نادر أن تجد بهذا المستوى التقني ويفهم الأعمال أيضًا.", name: "ماركو روسي", role: "المؤسس، Rossi Studio" },
-        { quote: "سريع وموثوق ومدروس فعلًا حول أين تنفع الأتمتة — وأين لا. الشريك الذي تريده تمامًا.", name: "توم بيكر", role: "العمليات، Becker & Co" },
       ],
     },
   },

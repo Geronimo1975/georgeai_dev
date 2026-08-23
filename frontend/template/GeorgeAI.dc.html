@@ -139,12 +139,18 @@
               <div style="font-family:'JetBrains Mono','Noto Sans Arabic',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#e8a55a">{{ s.num }} · {{ s.cat }}</div>
               <h3 style="font-family:{{ fontDisplay }};font-weight:400;font-size:26px;letter-spacing:-.4px;margin-top:8px;line-height:1.15">{{ s.name }}</h3>
               <p style="font-size:15px;line-height:1.55;color:rgba(255,255,255,.9);margin-top:8px;max-width:460px">{{ s.desc }}</p>
-              <span style="display:inline-block;margin-top:16px;font-size:14px;font-weight:500;color:#fff;border-bottom:2px solid var(--accent);padding-bottom:2px;cursor:pointer">{{ t.featured.cta }} →</span>
             </div>
           </sc-if>
         </div>
       </sc-for>
     </div>
+    <!-- seo:hero-copy -->
+    <div style="position:relative;z-index:1;max-width:820px">
+      <div style="display:inline-block;font-family:'JetBrains Mono','Noto Sans Arabic',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);border:1px solid var(--cardBorder);border-radius:9999px;padding:6px 14px">{{ t.hero.eyebrow }}</div>
+      <h1 style="font-family:{{ fontDisplay }};font-weight:400;font-size:{{ heroTitleSize }};line-height:1.04;letter-spacing:-1.5px;color:var(--ink);margin-top:18px;text-wrap:balance">{{ t.hero.title }}</h1>
+      <p style="font-size:17px;line-height:1.6;color:var(--muted);max-width:620px;margin-top:16px">{{ t.hero.sub }}</p>
+    </div>
+
     <div style="position:relative;z-index:1;display:flex;gap:12px;margin-top:34px;flex-wrap:wrap">
       <span onClick="{{ goServices }}" style="background:var(--accentBtn);color:#fff;padding:15px 26px;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer">{{ t.hero.cta1 }}</span>
       <span onClick="{{ goContact }}" style="background:var(--card);color:var(--ink);border:1px solid var(--cardBorder);padding:15px 26px;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer">{{ t.hero.cta2 }}</span>
@@ -164,6 +170,13 @@
       <div style="position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,rgba(240,169,138,.7),transparent)"></div>
     </div>
     <div style="position:relative;z-index:1">
+      <!-- seo:hero-copy -->
+      <div style="position:relative;z-index:1;max-width:820px">
+        <div style="display:inline-block;font-family:'JetBrains Mono','Noto Sans Arabic',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);border:1px solid var(--cardBorder);border-radius:9999px;padding:6px 14px">{{ t.hero.eyebrow }}</div>
+        <h1 style="font-family:{{ fontDisplay }};font-weight:400;font-size:{{ heroTitleSize }};line-height:1.04;letter-spacing:-1.5px;color:var(--ink);margin-top:18px;text-wrap:balance">{{ t.hero.title }}</h1>
+        <p style="font-size:17px;line-height:1.6;color:var(--muted);max-width:620px;margin-top:16px">{{ t.hero.sub }}</p>
+      </div>
+
       <div style="display:flex;gap:12px;flex-wrap:wrap">
         <span onClick="{{ goServices }}" style="background:var(--accentBtn);color:#fff;padding:15px 26px;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer">{{ t.hero.cta1 }}</span>
         <span style="background:var(--card);color:var(--ink);border:1px solid var(--cardBorder);padding:15px 26px;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer">{{ t.hero.cta2 }}</span>
@@ -224,7 +237,6 @@
               <div style="font-family:'JetBrains Mono','Noto Sans Arabic',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#e8a55a">{{ s.num }} · {{ s.cat }}</div>
               <h3 style="font-family:{{ fontDisplay }};font-weight:400;font-size:26px;letter-spacing:-.4px;margin-top:8px;line-height:1.15">{{ s.name }}</h3>
               <p style="font-size:15px;line-height:1.55;color:rgba(255,255,255,.9);margin-top:8px;max-width:460px">{{ s.desc }}</p>
-              <span style="display:inline-block;margin-top:16px;font-size:14px;font-weight:500;color:#fff;border-bottom:2px solid var(--accent);padding-bottom:2px;cursor:pointer">{{ t.featured.cta }} →</span>
             </div>
           </sc-if>
         </div>
@@ -299,6 +311,7 @@
   </div>
 
   <!-- TESTIMONIALS -->
+  <sc-if value="{{ hasTesti }}">
   <div style="padding:{{ sectionPadY }} {{ padX }};border-top:1px solid var(--hairline);background:var(--surface)">
     <div style="text-align:center;max-width:640px;margin:0 auto 40px">
       <div style="display:inline-block;font-family:'JetBrains Mono','Noto Sans Arabic',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);border:1px solid var(--cardBorder);border-radius:9999px;padding:6px 14px;margin-bottom:18px">{{ testiT.eyebrow }}</div>
@@ -333,6 +346,8 @@
     </div>
   </div>
 
+  </sc-if>
+
   <!-- FAQ -->
   <div style="padding:{{ sectionPadY }} {{ padX }};border-top:1px solid var(--hairline)">
     <div style="display:grid;grid-template-columns:{{ faqCols }};gap:40px;align-items:start">
@@ -363,7 +378,7 @@
         <h2 style="font-family:{{ fontDisplay }};font-weight:400;font-size:{{ h2Size }};letter-spacing:-.5px;line-height:1.12">{{ t.cta.title }}</h2>
         <p style="font-size:16px;line-height:1.55;opacity:.92;margin-top:14px;max-width:460px">{{ t.cta.sub }}</p>
       </div>
-      <span style="background:#faf9f5;color:#141413;padding:15px 28px;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer;white-space:nowrap">{{ t.cta.btn }}</span>
+      <span onClick="{{ goContact }}" style="background:#faf9f5;color:#141413;padding:15px 28px;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer;white-space:nowrap">{{ t.cta.btn }}</span>
     </div>
   </div>
 
@@ -959,7 +974,7 @@ class Component extends DCLogic {
         contact: "Get in touch",
         auth: { login: "Log in", signup: "Sign up" },
         heroSwitch: { showcase: "Showcase", video: "Video" },
-        hero: { eyebrow: "AI & Automation Engineer — open for projects", title: "I build AI automations and the systems that run them.", sub: "George Cucuiet — Python backend developer and automation engineer. Django data analytics, n8n workflows, SEO/AIO/GEO and AI chatbots — including AI phone agents — built to scale.", cta1: "See services", cta2: "View work" },
+        hero: { eyebrow: "For owner-run trades, clinics and service firms in Germany", title: "The enquiry you miss on a Saturday still ends up in your calendar.", sub: "An AI voice agent picks up the phone and an assistant answers on your website — day or night, in the caller's own language — every enquiry qualified and booked in. 8+ years, 40+ projects delivered, five languages — your pilot goes live in about two weeks.", cta1: "See the services", cta2: "Ask about a pilot" },
         featured: { eyebrow: "Flagship project", slidesTitle: "Selected projects, up close", desc: "An AI-driven SEO engine on OpenAI and n8n — keyword research, content generation and workflow automation that cut manual SEO work and scaled output.", cta: "Read the case study" },
         workTitle: "Selected work", workAll: "All projects",
         work: ["An OpenAI + Python + RAG assistant for medical data processing and query automation.", "n8n, OpenAI (RAG) and Python for smart-building monitoring and operational control.", "Scalable infrastructure with Docker, PostgreSQL, Redis and Nginx — built for high availability.", "A scalable Django platform with WordPress integration, AI services and API automations."],
@@ -969,7 +984,7 @@ class Component extends DCLogic {
         footerTag: "AI automation, Python backend and infrastructure. Hanstedt, Germany — working remotely.",
         pg: { servicesEyebrow: "Services", servicesTitle: "Automation that pays for itself.", servicesSub: "Eleven ways I help teams move faster — from connecting your tools to putting an AI voice on your phone line. Grouped into four areas; pick one or combine them.", included: "What's included", process: "How it works", outcome: "The outcome", explore: "Explore service", backToServices: "All services", bookCta: "Book a free call", quoteCta: "Request a quote", detailHelp: "Not sure which fits? Let's talk it through." },
         about: { eyebrow: "About", title: "I'm George — I build AI systems that do the work.", lead: "For over eight years I've worked across IT infrastructure, automation and software — turning manual, repetitive operations into systems that run themselves.", bio1: "I'm a Python backend developer and automation engineer based in Hanstedt, Germany. I work with OpenAI, Claude, n8n and Django to ship automations, AI agents and data platforms that save teams real hours every week.", bio2: "I bridge the technical and the business side — turning a vague \"this is too slow\" into a concrete system that scales. Remote-first, working across Europe and the Middle East.", statL: ["Years experience", "Projects delivered", "Technologies", "Languages spoken"], skillsTitle: "Skills & stack", skillLabels: ["AI & Automation", "Backend", "Infrastructure", "Web & SEO"], projectsTitle: "Selected work", ctaTitle: "Let's build something that works.", ctaBtn: "Get in touch" },
-        ct: { eyebrow: "Contact", title: "Let's talk about your project.", lead: "Book a free 30-minute call, or send a message. I usually reply within two days.", infoTitle: "Direct", phoneL: "Phone", emailL: "Email", locationL: "Location", location: "Hanstedt, Germany", hoursL: "Hours", hours: "Mon–Fri, 9:00–18:00 CET", bookTitle: "Book a call", serviceL: "What's it about?", servicePh: "Select a service", dateL: "Pick a day", timeL: "Pick a time", nameL: "Your name", emailFieldL: "Your email", msgL: "A line about your project", submit: "Request booking", doneTitle: "Request sent.", doneMsg: "Thanks — I'll confirm your slot by email shortly." },
+        ct: { eyebrow: "Contact", title: "Let's talk about your project.", lead: "Book a free 30-minute call, or send a message. I usually reply within two days.", infoTitle: "Direct", phoneL: "Phone", emailL: "Email", locationL: "Location", location: "Hanstedt, Germany", hoursL: "Hours", hours: "Mon–Fri, 9:00–18:00 CET", bookTitle: "Book a call", serviceL: "What's it about?", servicePh: "Select a service", dateL: "Pick a day", timeL: "Pick a time", nameL: "Your name", emailFieldL: "Your email", msgL: "A line about your project", submit: "Request booking", doneTitle: "Your email is open.", doneMsg: "Send the message that just opened and I'll confirm your slot." },
         footerLinks: { work: "Portfolio", services: "Services", elsewhere: "Elsewhere" },
         au: { login: "Log in", signup: "Sign up", welcome: "Welcome back", create: "Create your account", subL: "Log in to manage your projects and proposals.", subS: "Join to save configurations and track your requests.", name: "Full name", email: "Email", password: "Password", confirm: "Confirm password", remember: "Remember me", forgot: "Forgot password?", or: "or continue with", ctaL: "Log in", ctaS: "Create account", switchL: "No account yet?", switchLcta: "Sign up", switchS: "Already have an account?", switchScta: "Log in", terms: "By continuing you agree to the Terms & Privacy Policy." },
         ftNews: { title: "Stay in the loop.", sub: "Occasional notes on AI automation, new projects and the odd build log. No spam.", ph: "Your email", btn: "Subscribe", rights: "All rights reserved.", privacy: "Privacy", imprint: "Imprint" },
@@ -979,7 +994,7 @@ class Component extends DCLogic {
         contact: "Kontakt",
         auth: { login: "Anmelden", signup: "Registrieren" },
         heroSwitch: { showcase: "Showcase", video: "Video" },
-        hero: { eyebrow: "AI- & Automatisierungs-Engineer — offen für Projekte", title: "Ich baue KI-Automatisierungen und die Systeme dahinter.", sub: "George Cucuiet — Python-Backend-Entwickler und Automatisierungs-Engineer. Django-Datenanalyse, n8n-Workflows, SEO/AIO/GEO und KI-Chatbots — inklusive KI-Telefonagenten — skalierbar gebaut.", cta1: "Leistungen ansehen", cta2: "Arbeiten ansehen" },
+        hero: { eyebrow: "Für Handwerk, Praxen und Dienstleister im Mittelstand", title: "Der Anruf, den Sie samstags verpassen, steht montags in Ihrem Kalender.", sub: "Ein KI-Assistent geht ans Telefon und antwortet auf Ihrer Website — Tag und Nacht, in der Sprache des Kunden: Anliegen notiert, Termin gebucht. 8+ Jahre Erfahrung, 40+ Projekte, fünf Sprachen — nach rund zwei Wochen läuft Ihr Pilotprojekt.", cta1: "Leistungen ansehen", cta2: "Pilotprojekt anfragen" },
         featured: { eyebrow: "Leuchtturm-Projekt", slidesTitle: "Ausgewählte Projekte aus der Nähe", desc: "Eine KI-gestützte SEO-Engine auf OpenAI und n8n — Keyword-Recherche, Content-Erstellung und Workflow-Automatisierung, die manuelle SEO-Arbeit reduziert und den Output skaliert.", cta: "Case Study lesen" },
         workTitle: "Ausgewählte Arbeiten", workAll: "Alle Projekte",
         work: ["OpenAI- + Python- + RAG-Assistent für die Verarbeitung medizinischer Daten und Abfrage-Automatisierung.", "n8n, OpenAI (RAG) und Python für Smart-Building-Monitoring und Betriebssteuerung.", "Skalierbare Infrastruktur mit Docker, PostgreSQL, Redis und Nginx — für hohe Verfügbarkeit gebaut.", "Eine skalierbare Django-Plattform mit WordPress-Integration, KI-Diensten und API-Automatisierungen."],
@@ -989,7 +1004,7 @@ class Component extends DCLogic {
         footerTag: "KI-Automatisierung, Python-Backend und Infrastruktur. Hanstedt, Deutschland — remote tätig.",
         pg: { servicesEyebrow: "Leistungen", servicesTitle: "Automatisierung, die sich selbst bezahlt.", servicesSub: "Elf Wege, wie ich Teams schneller mache — vom Verbinden Ihrer Tools bis zur KI-Stimme an Ihrer Telefonleitung. In vier Bereiche gruppiert; einzeln oder kombiniert.", included: "Das ist enthalten", process: "So läuft es ab", outcome: "Das Ergebnis", explore: "Leistung ansehen", backToServices: "Alle Leistungen", bookCta: "Kostenlosen Termin buchen", quoteCta: "Angebot anfragen", detailHelp: "Unsicher, was passt? Lassen Sie uns reden." },
         about: { eyebrow: "Über mich", title: "Ich bin George — ich baue KI-Systeme, die die Arbeit erledigen.", lead: "Seit über acht Jahren arbeite ich an IT-Infrastruktur, Automatisierung und Software — und mache aus manuellen, repetitiven Abläufen Systeme, die sich selbst betreiben.", bio1: "Ich bin Python-Backend-Entwickler und Automatisierungs-Engineer aus Hanstedt, Deutschland. Mit OpenAI, Claude, n8n und Django liefere ich Automationen, KI-Agenten und Datenplattformen, die Teams jede Woche echte Stunden sparen.", bio2: "Ich verbinde die technische und die geschäftliche Seite — aus einem vagen \"das ist zu langsam\" wird ein konkretes, skalierbares System. Remote-first, tätig in Europa und im Nahen Osten.", statL: ["Jahre Erfahrung", "Projekte geliefert", "Technologien", "Sprachen"], skillsTitle: "Skills & Stack", skillLabels: ["KI & Automatisierung", "Backend", "Infrastruktur", "Web & SEO"], projectsTitle: "Ausgewählte Arbeiten", ctaTitle: "Bauen wir etwas, das funktioniert.", ctaBtn: "Kontakt aufnehmen" },
-        ct: { eyebrow: "Kontakt", title: "Sprechen wir über Ihr Projekt.", lead: "Buchen Sie einen kostenlosen 30-Minuten-Call oder senden Sie eine Nachricht. Antwort meist in zwei Tagen.", infoTitle: "Direkt", phoneL: "Telefon", emailL: "E-Mail", locationL: "Standort", location: "Hanstedt, Deutschland", hoursL: "Zeiten", hours: "Mo–Fr, 9:00–18:00 MEZ", bookTitle: "Termin buchen", serviceL: "Worum geht es?", servicePh: "Leistung wählen", dateL: "Tag wählen", timeL: "Uhrzeit wählen", nameL: "Ihr Name", emailFieldL: "Ihre E-Mail", msgL: "Eine Zeile zu Ihrem Projekt", submit: "Termin anfragen", doneTitle: "Anfrage gesendet.", doneMsg: "Danke — ich bestätige Ihren Termin in Kürze per E-Mail." },
+        ct: { eyebrow: "Kontakt", title: "Sprechen wir über Ihr Projekt.", lead: "Buchen Sie einen kostenlosen 30-Minuten-Call oder senden Sie eine Nachricht. Antwort meist in zwei Tagen.", infoTitle: "Direkt", phoneL: "Telefon", emailL: "E-Mail", locationL: "Standort", location: "Hanstedt, Deutschland", hoursL: "Zeiten", hours: "Mo–Fr, 9:00–18:00 MEZ", bookTitle: "Termin buchen", serviceL: "Worum geht es?", servicePh: "Leistung wählen", dateL: "Tag wählen", timeL: "Uhrzeit wählen", nameL: "Ihr Name", emailFieldL: "Ihre E-Mail", msgL: "Eine Zeile zu Ihrem Projekt", submit: "Termin anfragen", doneTitle: "Ihre E-Mail ist offen.", doneMsg: "Senden Sie die geöffnete Nachricht ab — ich bestätige den Termin." },
         footerLinks: { work: "Portfolio", services: "Leistungen", elsewhere: "Anderswo" },
         au: { login: "Anmelden", signup: "Registrieren", welcome: "Willkommen zurück", create: "Konto erstellen", subL: "Melden Sie sich an, um Projekte und Angebote zu verwalten.", subS: "Registrieren Sie sich, um Konfigurationen zu speichern.", name: "Vollständiger Name", email: "E-Mail", password: "Passwort", confirm: "Passwort bestätigen", remember: "Angemeldet bleiben", forgot: "Passwort vergessen?", or: "oder weiter mit", ctaL: "Anmelden", ctaS: "Konto erstellen", switchL: "Noch kein Konto?", switchLcta: "Registrieren", switchS: "Bereits ein Konto?", switchScta: "Anmelden", terms: "Mit dem Fortfahren stimmen Sie den AGB & Datenschutz zu." },
         ftNews: { title: "Bleiben Sie informiert.", sub: "Gelegentliche Notizen zu KI-Automatisierung, neuen Projekten und Build-Logs. Kein Spam.", ph: "Ihre E-Mail", btn: "Abonnieren", rights: "Alle Rechte vorbehalten.", privacy: "Datenschutz", imprint: "Impressum" },
@@ -999,7 +1014,7 @@ class Component extends DCLogic {
         contact: "Contact",
         auth: { login: "Connexion", signup: "S'inscrire" },
         heroSwitch: { showcase: "Vitrine", video: "Vidéo" },
-        hero: { eyebrow: "Ingénieur IA & Automatisation — disponible", title: "Je conçois des automatisations IA et les systèmes qui les font tourner.", sub: "George Cucuiet — développeur backend Python et ingénieur en automatisation. Analytics Django, workflows n8n, SEO/AIO/GEO et chatbots IA — y compris des agents téléphoniques IA — pensés pour évoluer.", cta1: "Voir les services", cta2: "Voir les travaux" },
+        hero: { eyebrow: "Pour les artisans, cabinets et PME de services en Allemagne", title: "L'appel manqué du samedi soir finit quand même dans votre agenda.", sub: "Un agent vocal IA décroche, un assistant répond sur votre site — jour et nuit, dans la langue du client — chaque demande arrive qualifiée dans votre agenda. 8+ ans d'expérience, 40+ projets, cinq langues. Votre pilote démarre en deux semaines environ.", cta1: "Voir les services", cta2: "Demander un pilote" },
         featured: { eyebrow: "Projet phare", slidesTitle: "Projets choisis, de près", desc: "Un moteur SEO piloté par l'IA sur OpenAI et n8n — recherche de mots-clés, génération de contenu et automatisation des workflows, réduisant le travail manuel et augmentant la production.", cta: "Lire l'étude de cas" },
         workTitle: "Travaux choisis", workAll: "Tous les projets",
         work: ["Assistant OpenAI + Python + RAG pour le traitement de données médicales et l'automatisation des requêtes.", "n8n, OpenAI (RAG) et Python pour la supervision et le contrôle de bâtiments intelligents.", "Infrastructure évolutive avec Docker, PostgreSQL, Redis et Nginx — conçue pour la haute disponibilité.", "Une plateforme Django évolutive avec intégration WordPress, services IA et automatisations d'API."],
@@ -1009,7 +1024,7 @@ class Component extends DCLogic {
         footerTag: "Automatisation IA, backend Python et infrastructure. Hanstedt, Allemagne — en télétravail.",
         pg: { servicesEyebrow: "Services", servicesTitle: "Une automatisation qui se rentabilise.", servicesSub: "Onze façons d'aider les équipes à aller plus vite — de la connexion de vos outils à une voix IA sur votre ligne. Regroupées en quatre domaines ; à l'unité ou combinées.", included: "Ce qui est inclus", process: "Comment ça marche", outcome: "Le résultat", explore: "Voir le service", backToServices: "Tous les services", bookCta: "Réserver un appel gratuit", quoteCta: "Demander un devis", detailHelp: "Vous hésitez ? Parlons-en." },
         about: { eyebrow: "À propos", title: "Je suis George — je conçois des systèmes IA qui font le travail.", lead: "Depuis plus de huit ans, je travaille sur l'infrastructure IT, l'automatisation et le logiciel — transformant les opérations manuelles et répétitives en systèmes autonomes.", bio1: "Je suis développeur backend Python et ingénieur en automatisation, basé à Hanstedt, en Allemagne. Avec OpenAI, Claude, n8n et Django, je livre des automatisations, des agents IA et des plateformes data qui font gagner de vraies heures chaque semaine.", bio2: "Je relie le technique et le métier — je transforme un vague \"c'est trop lent\" en un système concret et évolutif. Remote-first, j'interviens en Europe et au Moyen-Orient.", statL: ["Ans d'expérience", "Projets livrés", "Technologies", "Langues parlées"], skillsTitle: "Compétences & stack", skillLabels: ["IA & Automatisation", "Backend", "Infrastructure", "Web & SEO"], projectsTitle: "Travaux choisis", ctaTitle: "Construisons quelque chose qui fonctionne.", ctaBtn: "Me contacter" },
-        ct: { eyebrow: "Contact", title: "Parlons de votre projet.", lead: "Réservez un appel gratuit de 30 minutes, ou envoyez un message. Je réponds en général sous deux jours.", infoTitle: "Direct", phoneL: "Téléphone", emailL: "E-mail", locationL: "Localisation", location: "Hanstedt, Allemagne", hoursL: "Horaires", hours: "Lun–Ven, 9h–18h CET", bookTitle: "Réserver un appel", serviceL: "À quel sujet ?", servicePh: "Choisir un service", dateL: "Choisir un jour", timeL: "Choisir une heure", nameL: "Votre nom", emailFieldL: "Votre e-mail", msgL: "Une ligne sur votre projet", submit: "Demander un rendez-vous", doneTitle: "Demande envoyée.", doneMsg: "Merci — je confirme votre créneau par e-mail très vite." },
+        ct: { eyebrow: "Contact", title: "Parlons de votre projet.", lead: "Réservez un appel gratuit de 30 minutes, ou envoyez un message. Je réponds en général sous deux jours.", infoTitle: "Direct", phoneL: "Téléphone", emailL: "E-mail", locationL: "Localisation", location: "Hanstedt, Allemagne", hoursL: "Horaires", hours: "Lun–Ven, 9h–18h CET", bookTitle: "Réserver un appel", serviceL: "À quel sujet ?", servicePh: "Choisir un service", dateL: "Choisir un jour", timeL: "Choisir une heure", nameL: "Votre nom", emailFieldL: "Votre e-mail", msgL: "Une ligne sur votre projet", submit: "Demander un rendez-vous", doneTitle: "Votre e-mail est ouvert.", doneMsg: "Envoyez le message qui vient de s'ouvrir et je confirme le créneau." },
         footerLinks: { work: "Portfolio", services: "Services", elsewhere: "Ailleurs" },
         au: { login: "Connexion", signup: "Inscription", welcome: "Bon retour", create: "Créez votre compte", subL: "Connectez-vous pour gérer vos projets et devis.", subS: "Inscrivez-vous pour sauvegarder vos configurations.", name: "Nom complet", email: "E-mail", password: "Mot de passe", confirm: "Confirmer le mot de passe", remember: "Se souvenir de moi", forgot: "Mot de passe oublié ?", or: "ou continuer avec", ctaL: "Se connecter", ctaS: "Créer un compte", switchL: "Pas encore de compte ?", switchLcta: "S'inscrire", switchS: "Déjà un compte ?", switchScta: "Se connecter", terms: "En continuant, vous acceptez les Conditions & la Confidentialité." },
         ftNews: { title: "Restez informé.", sub: "Quelques notes sur l'automatisation IA, les nouveaux projets et des journaux de build. Pas de spam.", ph: "Votre e-mail", btn: "S'abonner", rights: "Tous droits réservés.", privacy: "Confidentialité", imprint: "Mentions légales" },
@@ -1019,7 +1034,7 @@ class Component extends DCLogic {
         contact: "Contact",
         auth: { login: "Autentificare", signup: "Înregistrare" },
         heroSwitch: { showcase: "Showcase", video: "Video" },
-        hero: { eyebrow: "Inginer AI & Automatizare — disponibil pentru proiecte", title: "Construiesc automatizări AI și sistemele care le susțin.", sub: "George Cucuiet — dezvoltator backend Python și inginer de automatizare. Analiză de date în Django, workflow-uri n8n, SEO/AIO/GEO și chatboți AI — inclusiv agenți telefonici AI — construite să scaleze.", cta1: "Vezi serviciile", cta2: "Vezi lucrările" },
+        hero: { eyebrow: "Pentru patroni din Germania — ateliere, clinici și firme de servicii", title: "Clientul care sună sâmbăta, când nu răspunde nimeni, vă apare tot în calendar.", sub: "Un agent vocal AI vă preia apelurile, iar un asistent răspunde pe site — zi și noapte, în limba clientului — fiecare cerere ajunge calificată în calendar. 8+ ani de experiență, 40+ proiecte, cinci limbi — pilotul intră în funcțiune în circa două săptămâni.", cta1: "Vedeți serviciile", cta2: "Întrebați despre pilot" },
         featured: { eyebrow: "Proiect de referință", slidesTitle: "Proiecte selectate, în detaliu", desc: "Un motor SEO bazat pe AI, pe OpenAI și n8n — cercetare de cuvinte-cheie, generare de conținut și automatizarea fluxurilor, care a redus munca manuală de SEO și a scalat producția.", cta: "Citește studiul de caz" },
         workTitle: "Lucrări selectate", workAll: "Toate proiectele",
         work: ["Asistent OpenAI + Python + RAG pentru procesarea datelor medicale și automatizarea interogărilor.", "n8n, OpenAI (RAG) și Python pentru monitorizarea și controlul clădirilor inteligente.", "Infrastructură scalabilă cu Docker, PostgreSQL, Redis și Nginx — construită pentru disponibilitate ridicată.", "O platformă Django scalabilă cu integrare WordPress, servicii AI și automatizări API."],
@@ -1029,7 +1044,7 @@ class Component extends DCLogic {
         footerTag: "Automatizare AI, backend Python și infrastructură. Hanstedt, Germania — lucrez remote.",
         pg: { servicesEyebrow: "Servicii", servicesTitle: "Automatizare care se plătește singură.", servicesSub: "Unsprezece moduri prin care ajut echipele să avanseze mai repede — de la conectarea instrumentelor până la o voce AI pe linia ta telefonică. Grupate în patru zone; individual sau combinate.", included: "Ce include", process: "Cum funcționează", outcome: "Rezultatul", explore: "Vezi serviciul", backToServices: "Toate serviciile", bookCta: "Programează o discuție gratuită", quoteCta: "Cere o ofertă", detailHelp: "Nu ești sigur ce ți se potrivește? Hai să discutăm." },
         about: { eyebrow: "Despre", title: "Sunt George — construiesc sisteme AI care fac treaba.", lead: "De peste opt ani lucrez în infrastructură IT, automatizare și software — transformând operațiunile manuale și repetitive în sisteme care rulează singure.", bio1: "Sunt dezvoltator backend Python și inginer de automatizare, din Hanstedt, Germania. Cu OpenAI, Claude, n8n și Django livrez automatizări, agenți AI și platforme de date care economisesc echipelor ore reale în fiecare săptămână.", bio2: "Fac legătura între partea tehnică și cea de business — transform un vag \"e prea lent\" într-un sistem concret care scalează. Remote-first, lucrez în Europa și Orientul Mijlociu.", statL: ["Ani de experiență", "Proiecte livrate", "Tehnologii", "Limbi vorbite"], skillsTitle: "Competențe & stack", skillLabels: ["AI & Automatizare", "Backend", "Infrastructură", "Web & SEO"], projectsTitle: "Lucrări selectate", ctaTitle: "Hai să construim ceva care funcționează.", ctaBtn: "Contactează-mă" },
-        ct: { eyebrow: "Contact", title: "Hai să discutăm despre proiectul tău.", lead: "Programează o discuție gratuită de 30 de minute sau trimite un mesaj. De obicei răspund în două zile.", infoTitle: "Direct", phoneL: "Telefon", emailL: "Email", locationL: "Locație", location: "Hanstedt, Germania", hoursL: "Program", hours: "Lun–Vin, 9:00–18:00 CET", bookTitle: "Programează o discuție", serviceL: "Despre ce e vorba?", servicePh: "Alege un serviciu", dateL: "Alege o zi", timeL: "Alege o oră", nameL: "Numele tău", emailFieldL: "Emailul tău", msgL: "O linie despre proiectul tău", submit: "Trimite solicitarea", doneTitle: "Solicitare trimisă.", doneMsg: "Mulțumesc — îți confirm intervalul prin email în scurt timp." },
+        ct: { eyebrow: "Contact", title: "Hai să discutăm despre proiectul tău.", lead: "Programează o discuție gratuită de 30 de minute sau trimite un mesaj. De obicei răspund în două zile.", infoTitle: "Direct", phoneL: "Telefon", emailL: "Email", locationL: "Locație", location: "Hanstedt, Germania", hoursL: "Program", hours: "Lun–Vin, 9:00–18:00 CET", bookTitle: "Programează o discuție", serviceL: "Despre ce e vorba?", servicePh: "Alege un serviciu", dateL: "Alege o zi", timeL: "Alege o oră", nameL: "Numele tău", emailFieldL: "Emailul tău", msgL: "O linie despre proiectul tău", submit: "Trimite solicitarea", doneTitle: "Ți s-a deschis emailul.", doneMsg: "Trimite mesajul care tocmai s-a deschis și îți confirm intervalul." },
         footerLinks: { work: "Portofoliu", services: "Servicii", elsewhere: "În altă parte" },
         au: { login: "Autentificare", signup: "Înregistrare", welcome: "Bine ai revenit", create: "Creează-ți contul", subL: "Autentifică-te pentru a-ți gestiona proiectele și ofertele.", subS: "Înregistrează-te pentru a salva configurații și a urmări cererile.", name: "Nume complet", email: "Email", password: "Parolă", confirm: "Confirmă parola", remember: "Ține-mă minte", forgot: "Ai uitat parola?", or: "sau continuă cu", ctaL: "Autentificare", ctaS: "Creează cont", switchL: "Nu ai cont încă?", switchLcta: "Înregistrează-te", switchS: "Ai deja cont?", switchScta: "Autentificare", terms: "Continuând, accepți Termenii și Politica de confidențialitate." },
         ftNews: { title: "Rămâi la curent.", sub: "Note ocazionale despre automatizare AI, proiecte noi și jurnale de build. Fără spam.", ph: "Emailul tău", btn: "Abonează-te", rights: "Toate drepturile rezervate.", privacy: "Confidențialitate", imprint: "Imprint" },
@@ -1039,7 +1054,7 @@ class Component extends DCLogic {
         contact: "تواصل معنا",
         auth: { login: "تسجيل الدخول", signup: "إنشاء حساب" },
         heroSwitch: { showcase: "عرض", video: "فيديو" },
-        hero: { eyebrow: "مهندس ذكاء اصطناعي وأتمتة — متاح للمشاريع", title: "أبني أتمتة الذكاء الاصطناعي والأنظمة التي تُشغّلها.", sub: "جورج كوكويت — مطوّر backend بلغة Python ومهندس أتمتة. تحليلات بيانات Django، وتدفّقات n8n، وSEO/AIO/GEO، وروبوتات دردشة بالذكاء الاصطناعي — بما فيها وكلاء هاتفيون — مبنية للتوسّع.", cta1: "اطّلع على الخدمات", cta2: "شاهد الأعمال" },
+        hero: { eyebrow: "لأصحاب الورش والعيادات وشركات الخدمات في ألمانيا", title: "الاستفسار الذي يفوتك يوم السبت يصبح موعدًا في جدولك.", sub: "وكيل صوتي بالذكاء الاصطناعي يردّ على هاتفك، ومساعد يردّ على موقعك — ليلًا ونهارًا وبلغة العميل — فيؤهّل كل استفسار ويحجز له موعدًا في جدولك. أكثر من 8 سنوات خبرة، وما يزيد على 40 مشروعًا، وخمس لغات — ونظامك التجريبي يدخل الخدمة خلال أسبوعين تقريبًا.", cta1: "تصفّح الخدمات", cta2: "اسأل عن مشروع تجريبي" },
         featured: { eyebrow: "مشروع بارز", slidesTitle: "مشاريع مختارة عن قرب", desc: "محرّك SEO مدعوم بالذكاء الاصطناعي على OpenAI وn8n — بحث الكلمات المفتاحية وتوليد المحتوى وأتمتة سير العمل، ما قلّل العمل اليدوي وزاد الإنتاج.", cta: "اقرأ دراسة الحالة" },
         workTitle: "أعمال مختارة", workAll: "كل المشاريع",
         work: ["مساعد بـ OpenAI وPython وRAG لمعالجة البيانات الطبية وأتمتة الاستعلامات.", "n8n وOpenAI (RAG) وPython لمراقبة المباني الذكية والتحكّم التشغيلي.", "بنية تحتية قابلة للتوسّع مع Docker وPostgreSQL وRedis وNginx — مبنية لتوافر عالٍ.", "منصّة Django قابلة للتوسّع مع تكامل WordPress وخدمات ذكاء اصطناعي وأتمتة واجهات API."],
@@ -1049,7 +1064,7 @@ class Component extends DCLogic {
         footerTag: "أتمتة الذكاء الاصطناعي وbackend بلغة Python والبنية التحتية. هانشتيت، ألمانيا — أعمل عن بُعد.",
         pg: { servicesEyebrow: "الخدمات", servicesTitle: "أتمتة تسدّد تكلفتها بنفسها.", servicesSub: "إحدى عشرة طريقة أساعد بها الفرق على التحرّك أسرع — من ربط أدواتك إلى صوت ذكاء اصطناعي على خطّك الهاتفي. مجمّعة في أربعة مجالات؛ منفردة أو مدمجة.", included: "ما الذي يتضمّنه", process: "كيف يعمل", outcome: "النتيجة", explore: "اطّلع على الخدمة", backToServices: "كل الخدمات", bookCta: "احجز مكالمة مجانية", quoteCta: "اطلب عرض سعر", detailHelp: "غير متأكّد ما يناسبك؟ لنتحدّث." },
         about: { eyebrow: "نبذة", title: "أنا جورج — أبني أنظمة ذكاء اصطناعي تنجز العمل.", lead: "منذ أكثر من ثماني سنوات أعمل في البنية التحتية لتقنية المعلومات والأتمتة والبرمجيات — محوّلًا العمليات اليدوية المتكرّرة إلى أنظمة تعمل ذاتيًا.", bio1: "أنا مطوّر backend بلغة Python ومهندس أتمتة من هانشتيت بألمانيا. أعمل بـ OpenAI وClaude وn8n وDjango لتسليم أتمتة ووكلاء ذكاء اصطناعي ومنصّات بيانات توفّر للفرق ساعات حقيقية كل أسبوع.", bio2: "أربط بين الجانب التقني وجانب الأعمال — أحوّل عبارة غامضة مثل \"هذا بطيء جدًا\" إلى نظام ملموس قابل للتوسّع. أعمل عن بُعد في أوروبا والشرق الأوسط.", statL: ["سنوات خبرة", "مشاريع مُنجزة", "تقنيات", "لغات"], skillsTitle: "المهارات والأدوات", skillLabels: ["الذكاء الاصطناعي والأتمتة", "الخلفية البرمجية", "البنية التحتية", "الويب وSEO"], projectsTitle: "أعمال مختارة", ctaTitle: "لنبنِ شيئًا يعمل فعلًا.", ctaBtn: "تواصل معي" },
-        ct: { eyebrow: "تواصل", title: "لنتحدّث عن مشروعك.", lead: "احجز مكالمة مجانية مدّتها 30 دقيقة، أو أرسل رسالة. عادةً أرد خلال يومين.", infoTitle: "مباشر", phoneL: "الهاتف", emailL: "البريد", locationL: "الموقع", location: "هانشتيت، ألمانيا", hoursL: "الأوقات", hours: "الإثنين–الجمعة، 9:00–18:00 بتوقيت وسط أوروبا", bookTitle: "احجز مكالمة", serviceL: "بخصوص ماذا؟", servicePh: "اختر خدمة", dateL: "اختر يومًا", timeL: "اختر وقتًا", nameL: "اسمك", emailFieldL: "بريدك", msgL: "سطر عن مشروعك", submit: "أرسل الطلب", doneTitle: "تم إرسال الطلب.", doneMsg: "شكرًا — سأؤكّد موعدك عبر البريد قريبًا." },
+        ct: { eyebrow: "تواصل", title: "لنتحدّث عن مشروعك.", lead: "احجز مكالمة مجانية مدّتها 30 دقيقة، أو أرسل رسالة. عادةً أرد خلال يومين.", infoTitle: "مباشر", phoneL: "الهاتف", emailL: "البريد", locationL: "الموقع", location: "هانشتيت، ألمانيا", hoursL: "الأوقات", hours: "الإثنين–الجمعة، 9:00–18:00 بتوقيت وسط أوروبا", bookTitle: "احجز مكالمة", serviceL: "بخصوص ماذا؟", servicePh: "اختر خدمة", dateL: "اختر يومًا", timeL: "اختر وقتًا", nameL: "اسمك", emailFieldL: "بريدك", msgL: "سطر عن مشروعك", submit: "أرسل الطلب", doneTitle: "فُتح بريدك.", doneMsg: "أرسل الرسالة التي فُتحت وسأؤكّد موعدك." },
         footerLinks: { work: "الأعمال", services: "الخدمات", elsewhere: "روابط أخرى" },
         au: { login: "تسجيل الدخول", signup: "إنشاء حساب", welcome: "مرحبًا بعودتك", create: "أنشئ حسابك", subL: "سجّل الدخول لإدارة مشاريعك وعروضك.", subS: "سجّل لحفظ التهيئات ومتابعة طلباتك.", name: "الاسم الكامل", email: "البريد", password: "كلمة المرور", confirm: "تأكيد كلمة المرور", remember: "تذكّرني", forgot: "نسيت كلمة المرور؟", or: "أو تابع عبر", ctaL: "تسجيل الدخول", ctaS: "إنشاء حساب", switchL: "لا تملك حسابًا؟", switchLcta: "سجّل", switchS: "لديك حساب بالفعل؟", switchScta: "تسجيل الدخول", terms: "بالمتابعة فأنت توافق على الشروط وسياسة الخصوصية." },
         ftNews: { title: "ابقَ على اطّلاع.", sub: "ملاحظات من حين لآخر عن أتمتة الذكاء الاصطناعي والمشاريع الجديدة. بلا إزعاج.", ph: "بريدك", btn: "اشترك", rights: "جميع الحقوق محفوظة.", privacy: "الخصوصية", imprint: "بيانات الناشر" },
@@ -1104,10 +1119,6 @@ class Component extends DCLogic {
     const _soc = (s) => "https://cdn.simpleicons.org/" + s + "/8e8b82";
     const socials = [
       { name: "WhatsApp", url: _soc("whatsapp"), href: "https://wa.me/491604155546" },
-      { name: "Facebook", url: _soc("facebook"), href: "https://facebook.com" },
-      { name: "Instagram", url: _soc("instagram"), href: "https://instagram.com" },
-      { name: "TikTok", url: _soc("tiktok"), href: "https://tiktok.com" },
-      { name: "YouTube", url: _soc("youtube"), href: "https://youtube.com" },
       { name: "LinkedIn", url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%238e8b82' fill-rule='evenodd' d='M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.42v1.56h.05c.47-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.07 2.07 0 1 1 0-4.14 2.07 2.07 0 0 1 0 4.14ZM7.12 20.45H3.56V9h3.56v11.45ZM22.22 0H1.77C.8 0 0 .78 0 1.73v20.54C0 23.22.8 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.73V1.73C24 .78 23.2 0 22.22 0Z'/></svg>", href: "https://www.linkedin.com/in/george-sebastian-c-212b7455" },
       { name: "GitHub", url: _soc("github"), href: "https://github.com/Geronimo1975" },
     ];
@@ -1212,6 +1223,7 @@ class Component extends DCLogic {
     });
     const testiT = { title: (GX && GX.testi.titles[lang]) || "", eyebrow: (GX && GX.testi.eyebrow[lang]) || "" };
     const testiAll = (GX && GX.testi.items[lang]) || [];
+    const hasTesti = testiAll.length > 0;
     const tIdx = this.state.testiIdx || 0;
     const testiCur = testiAll[tIdx] || { quote: "", name: "", role: "" };
     const testiDots = testiAll.map((_, i) => ({ style: `width:8px;height:8px;border-radius:50%;cursor:pointer;background:${i === tIdx ? "#cc785c" : "var(--cardBorder)"}`, onClick: () => this.setState({ testiIdx: i }) }));
@@ -1295,7 +1307,16 @@ class Component extends DCLogic {
     });
     const bookReady = !!(this.state.bookDate && this.state.bookTime);
     const submitStyle = "width:100%;text-align:center;padding:15px;border-radius:8px;font-size:15px;font-weight:500;border:none;margin-top:4px;" + (bookReady ? "background:var(--accentBtn);color:#fff;cursor:pointer" : "background:var(--surface);color:var(--muted);cursor:not-allowed");
-    const submitBooking = () => { if (this.state.bookDate && this.state.bookTime) this.setState({ bookDone: true }); };
+    const submitBooking = () => {
+      if (!(this.state.bookDate && this.state.bookTime)) return;
+      const when = (chosen ? chosen + ", " : "") + this.state.bookTime;
+      const body = "Hi George,\n\nI would like to book the " + when + " slot."
+        + "\n\nName:\nEmail:\nWhat it is about:\n\nThanks,";
+      window.location.href = "mailto:contact@georgeai.dev?subject="
+        + encodeURIComponent("Booking request: " + when)
+        + "&body=" + encodeURIComponent(body);
+      this.setState({ bookDone: true });
+    };
     const chosen = this.state.bookDate
       ? new Intl.DateTimeFormat(bkLocale, { weekday: "long", day: "numeric", month: "long" }).format(new Date(this.state.bookDate))
       : "";
@@ -1354,7 +1375,16 @@ class Component extends DCLogic {
     const complexityText = selectedCount ? ((cfg.complexity || [])[_cIdx] || "") : "\u2014";
     const cfgReady = selectedCount > 0;
     const scaleName = (cfg.scales && cfg.scales[this.state.cfgScale]) ? cfg.scales[this.state.cfgScale].name : "\u2014";
-    const submitConfig = () => { if (Object.keys(this.state.cfgServices || {}).length > 0) this.setState({ cfgDone: true }); };
+    const submitConfig = () => {
+      if (!(Object.keys(this.state.cfgServices || {}).length > 0)) return;
+      const picked = (selectedNames || []).join(", ");
+      const body = "Hi George,\n\nI am interested in: " + picked
+        + "\nScale: " + scaleName + "\n\nName:\nCompany:\nWhat I need:\n\nThanks,";
+      window.location.href = "mailto:contact@georgeai.dev?subject="
+        + encodeURIComponent("Project enquiry: " + picked)
+        + "&body=" + encodeURIComponent(body);
+      this.setState({ cfgDone: true });
+    };
     const cfgSubmitStyle = "width:100%;text-align:center;padding:15px;border-radius:8px;font-size:15px;font-weight:500;border:none;margin-top:6px;" + (cfgReady ? "background:var(--accentBtn);color:#fff;cursor:pointer" : "background:var(--surface);color:var(--muted);cursor:not-allowed");
 
     return {
@@ -1388,7 +1418,7 @@ class Component extends DCLogic {
       contactCols: isMobile ? "1fr" : ".8fr 1.2fr",
       footerCols: isMobile ? "1fr" : "1.3fr 1fr",
       timeline, tlTitle, tlCols: isNarrow ? "58px 16px 1fr" : "120px 28px 1fr",
-      howT, howCards, faqT, faqItems, testiT, testiCur, testiDots, testiInitials, testiPrev, testiNext,
+      howT, howCards, faqT, faqItems, hasTesti, testiT, testiCur, testiDots, testiInitials, testiPrev, testiNext,
       howCols: isMobile ? "1fr" : "1fr 1fr", faqCols: isMobile ? "1fr" : ".42fr .58fr",
       isLegal: page === "legal", legalNav, legalCur, lgLabels, legalUpdated,
       legalCols: isMobile ? "1fr" : "240px 1fr",

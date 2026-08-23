@@ -14,12 +14,68 @@
   var WEBHOOK = "https://n8n.rotocon.world/webhook/georgeai-free-audit";
   var CONTACT = "contact@georgeai.dev";
 
+  // ---- copy ----------------------------------------------------------------
+  // The target market is German; the site itself is multilingual and stores the
+  // visitor's choice in localStorage under ga_lang (see the export's setLang).
+  // Follow that, then the browser, then fall back to English. Add fr/ro/ar here
+  // when they are needed — missing keys fall through to English, never blank.
+  var COPY = {
+    en: {
+      fab: "Free visibility check", badge: "Free \u00b7 2 minutes",
+      title: "Free visibility check",
+      sub: "See how your website shows up in Google and inside AI assistants " +
+           "like ChatGPT, Claude and Perplexity \u2014 a short report, straight to your inbox.",
+      first: "First name", last: "Surname", email: "E-mail address",
+      phone: "Phone (optional)", url: "Website to check",
+      phFirst: "Jane", phLast: "Doe", phEmail: "jane@company.com",
+      phPhone: "+49 170 1234567", phUrl: "yourcompany.com",
+      submit: "Send me the report", sending: "Starting the check\u2026",
+      fine: "Free and without obligation. Your details are used only to send you this " +
+            "report \u2014 never passed to third parties. Ask me to delete them any time at ",
+      errName: "Please fill in your name.",
+      errEmail: "Please enter a valid e-mail address.",
+      errUrl: "Please enter a valid website address.",
+      errSend: "Something went wrong sending your request. Please try again, or email",
+      doneTitle: "On its way", doneA: "I am checking your website now. The report will reach ",
+      doneB: " in a few minutes."
+    },
+    de: {
+      fab: "Kostenloser Sichtbarkeits-Check", badge: "Kostenlos \u00b7 2 Minuten",
+      title: "Kostenloser Sichtbarkeits-Check",
+      sub: "Sehen Sie, wie Ihre Website bei Google und in KI-Assistenten wie ChatGPT, " +
+           "Claude und Perplexity auftaucht \u2014 ein kurzer Bericht, direkt in Ihr Postfach.",
+      first: "Vorname", last: "Nachname", email: "E-Mail-Adresse",
+      phone: "Telefon (optional)", url: "Zu pr\u00fcfende Website",
+      phFirst: "Max", phLast: "Mustermann", phEmail: "max@firma.de",
+      phPhone: "+49 170 1234567", phUrl: "ihrefirma.de",
+      submit: "Bericht anfordern", sending: "Check l\u00e4uft\u2026",
+      fine: "Kostenlos und unverbindlich. Ihre Angaben verwende ich ausschlie\u00dflich, um Ihnen " +
+            "diesen Bericht zu senden \u2014 keine Weitergabe an Dritte. L\u00f6schung jederzeit m\u00f6glich unter ",
+      errName: "Bitte tragen Sie Ihren Namen ein.",
+      errEmail: "Bitte geben Sie eine g\u00fcltige E-Mail-Adresse ein.",
+      errUrl: "Bitte geben Sie eine g\u00fcltige Website-Adresse ein.",
+      errSend: "Beim Senden ist etwas schiefgelaufen. Bitte erneut versuchen oder mailen an",
+      doneTitle: "Unterwegs", doneA: "Ich pr\u00fcfe Ihre Website jetzt. Der Bericht erreicht ",
+      doneB: " in wenigen Minuten."
+    }
+  };
+
+  function T() {
+    var code = "";
+    try { code = localStorage.getItem("ga_lang") || ""; } catch (e) {}
+    if (!code && navigator.language) code = navigator.language;
+    var lang = COPY[String(code).slice(0, 2).toLowerCase()] ? String(code).slice(0, 2).toLowerCase() : "en";
+    var base = COPY.en, pick = COPY[lang], out = {};
+    for (var k in base) out[k] = pick[k] !== undefined ? pick[k] : base[k];
+    return out;
+  }
+
   var SERIF = '"Copernicus","Tiempos Headline",Georgia,"Times New Roman",serif';
   var SANS = '"StyreneB",Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
 
   // ---- styles ------------------------------------------------------------
   var css =
-    "#ga-audit-fab{position:fixed;right:20px;bottom:20px;z-index:99990;display:flex;" +
+    "#ga-audit-fab{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom));z-index:99990;display:flex;" +
     "align-items:center;gap:8px;background:#cc785c;color:#fff;border:none;cursor:pointer;" +
     "border-radius:9999px;padding:12px 20px;font:500 14px/1 " + SANS + ";" +
     "box-shadow:0 6px 24px rgba(20,20,19,.25)}" +
@@ -128,17 +184,13 @@
   }
 
   function showSuccess(modal, email) {
+    var t = T();
     modal.replaceChildren(
       el("button", { class: "ga-audit-close", "aria-label": "Close", text: "×" }),
       el("div", { class: "ga-audit-done" }, [
         el("div", { class: "ga-audit-done-mark", text: "✓" }),
-        el("div", { class: "ga-audit-title", text: "Your audit is on its way" }),
-        el("p", {
-          class: "ga-audit-sub",
-          text:
-            "We're analyzing your website right now. The full SEO, AEO, AIO & GEO " +
-            "report will land in " + email + " within a few minutes.",
-        }),
+        el("div", { class: "ga-audit-title", text: t.doneTitle }),
+        el("p", { class: "ga-audit-sub", text: t.doneA + email + t.doneB }),
       ])
     );
   }
@@ -146,11 +198,12 @@
   function open() {
     if (overlay) return;
 
-    var fFirst = field("First name", "first_name", "text", "Jane", "given-name");
-    var fLast = field("Surname", "surname", "text", "Doe", "family-name");
-    var fEmail = field("E-mail address", "email", "email", "jane@company.com", "email");
-    var fPhone = field("Contact number", "phone", "tel", "+27 82 000 0000", "tel");
-    var fUrl = field("Website URL to audit", "website", "text", "yourcompany.com", "url");
+    var t = T();
+    var fFirst = field(t.first, "first_name", "text", t.phFirst, "given-name");
+    var fLast = field(t.last, "surname", "text", t.phLast, "family-name");
+    var fEmail = field(t.email, "email", "email", t.phEmail, "email");
+    var fPhone = field(t.phone, "phone", "tel", t.phPhone, "tel");
+    var fUrl = field(t.url, "website", "text", t.phUrl, "url");
 
     // honeypot — humans never see it; bots that fill it are dropped in n8n
     var hp = el("input", { class: "ga-audit-input", name: "company", type: "text",
@@ -158,7 +211,11 @@
 
     var msg = el("div", { class: "ga-audit-msg" });
     var submit = el("button", { class: "ga-audit-submit", type: "submit",
-      text: "Get my free audit" });
+      text: t.submit });
+
+    var fine = el("p", { class: "ga-audit-fine", text: t.fine });
+    fine.appendChild(el("a", { href: "mailto:" + CONTACT, text: CONTACT }));
+    fine.appendChild(document.createTextNode("."));
 
     var form = el("form", { novalidate: "novalidate" }, [
       el("div", { class: "ga-audit-row" }, [fFirst.wrap, fLast.wrap]),
@@ -168,22 +225,16 @@
       el("div", { class: "ga-audit-hp" }, [hp]),
       submit,
       msg,
-      el("p", {
-        class: "ga-audit-fine",
-        text: "Free, no obligation. Your details are only used to send the report.",
-      }),
+      fine,
     ]);
 
     var modal = el("div", { id: "ga-audit-modal", role: "dialog", "aria-modal": "true" }, [
       el("button", { class: "ga-audit-close", "aria-label": "Close", text: "×" }),
-      el("span", { class: "ga-audit-badge", text: "Free · 5 minutes" }),
-      el("div", { class: "ga-audit-title", text: "Free Visibility Audit" }),
+      el("span", { class: "ga-audit-badge", text: t.badge }),
+      el("div", { class: "ga-audit-title", text: t.title }),
       el("p", {
         class: "ga-audit-sub",
-        text:
-          "See how your website performs in Google search and inside AI assistants " +
-          "like ChatGPT, Claude and Perplexity — one report covering SEO, AEO, " +
-          "AIO & GEO, straight to your inbox.",
+        text: t.sub,
       }),
       form,
     ]);
@@ -208,21 +259,18 @@
       };
 
       if (!payload.first_name || !payload.surname) {
-        setMsg(msg, "Please fill in your name.", true); return;
+        setMsg(msg, t.errName, true); return;
       }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(payload.email)) {
-        setMsg(msg, "Please enter a valid e-mail address.", true); return;
-      }
-      if (!payload.phone) {
-        setMsg(msg, "Please fill in your contact number.", true); return;
+        setMsg(msg, t.errEmail, true); return;
       }
       if (!payload.website) {
-        setMsg(msg, "Please enter a valid website URL.", true); return;
+        setMsg(msg, t.errUrl, true); return;
       }
 
       setMsg(msg, "", false);
       submit.disabled = true;
-      submit.textContent = "Starting your audit…";
+      submit.textContent = t.sending;
 
       fetch(WEBHOOK, {
         method: "POST",
@@ -235,10 +283,8 @@
         })
         .catch(function () {
           submit.disabled = false;
-          submit.textContent = "Get my free audit";
-          setMsg(msg,
-            "Something went wrong sending your request. Please try again, or email",
-            true, true);
+          submit.textContent = t.submit;
+          setMsg(msg, t.errSend, true, true);
         });
     });
 
@@ -247,6 +293,24 @@
   }
 
   // ---- floating button ---------------------------------------------------
+  // The consent banner owns the bottom of the viewport until it is dismissed.
+  // The export records consent as localStorage ga_cookie === "done"
+  // (site/index.html:1403-1405); mounting before that puts this button on top of
+  // the banner's "Accept all" target on a phone.
+  function consentSettled() {
+    try { return localStorage.getItem("ga_cookie") === "done"; }
+    catch (e) { return true; }  // storage blocked: never withhold the button
+  }
+
+  function mountWhenConsentSettled() {
+    if (consentSettled()) { mount(); return; }
+    var tries = 0;
+    var timer = setInterval(function () {
+      if (consentSettled()) { clearInterval(timer); mount(); }
+      else if (++tries > 600) { clearInterval(timer); mount(); }  // 5 min, then show anyway
+    }, 500);
+  }
+
   function mount() {
     if (document.getElementById("ga-audit-fab")) return;
     var fab = el("button", { id: "ga-audit-fab", type: "button" });
@@ -267,13 +331,13 @@
     svg.appendChild(ring);
     svg.appendChild(dot);
     fab.appendChild(svg);
-    fab.appendChild(document.createTextNode("Free Visibility Audit"));
+    fab.appendChild(document.createTextNode(T().fab));
     fab.addEventListener("click", open);
     document.body.appendChild(fab);
   }
 
   window.gaAudit = { open: open, close: close };
 
-  if (document.readyState !== "loading") mount();
-  else document.addEventListener("DOMContentLoaded", mount);
+  if (document.readyState !== "loading") mountWhenConsentSettled();
+  else document.addEventListener("DOMContentLoaded", mountWhenConsentSettled);
 })();
