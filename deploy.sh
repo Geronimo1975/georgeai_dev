@@ -90,7 +90,13 @@ head = open(head_p, encoding="utf-8").read().rstrip() + "\n"
 # always inserted immediately before it). Strip it so an edited seo/head.html
 # actually reaches an already-deployed index.html — the marker comment promises
 # "on every deploy", and skipping when the marker exists made that untrue.
-html = re.sub(r"<!--\s*seo:head\b.*?(?=</head>)", "", html, count=1, flags=re.I | re.S)
+# Bounded by the closing /seo:head marker: an unbounded strip to </head> also
+# ate whatever a later layer had injected before </head> (apply_hero's
+# stylesheet links), leaving the hero JS running with no CSS at all.
+html, n = re.subn(r"<!--\s*seo:head\b.*?<!--\s*/seo:head\s*-->\s*", "",
+                  html, count=1, flags=re.I | re.S)
+if not n:  # legacy block predating the closing marker
+    html = re.sub(r"<!--\s*seo:head\b.*?(?=</head>)", "", html, count=1, flags=re.I | re.S)
 if re.search(r"</head>", html, re.I):
     html = re.sub(r"</head>", lambda m: head + m.group(0), html, count=1, flags=re.I)
 else:  # no <head> in the export — prepend the block
@@ -385,7 +391,10 @@ apply_hero() {
     ok "hero video: $(du -h "$HERO_DIR/assets/hero.mp4" | cut -f1) (repo-owned re-encode)"
   fi
 
-  if [ -f "$SITE_DIR/index.html" ] && ! grep -q 'hero-cinema.js' "$SITE_DIR/index.html"; then
+  # No outer marker gate: the per-asset guards inside are already idempotent, and
+  # gating the whole block on hero-cinema.js meant a head rewritten by a later
+  # layer could never get its stylesheet links back while the scripts survived.
+  if [ -f "$SITE_DIR/index.html" ]; then
     if command -v python3 >/dev/null; then
       python3 - "$SITE_DIR/index.html" <<'PY'
 import re, sys
