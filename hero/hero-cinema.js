@@ -437,36 +437,51 @@
 
   /* ==== 5. Canvas: the automation graph ================================== */
 
-  /* Normalised layout, mapped into the graph box at paint time. Three columns
-   * left to right: what starts the work, what decides, what it delivers. */
+  /* Normalised layout, mapped into the graph box at paint time. Left to right:
+   * what starts the work, what decides, what it delivers — the same funnel the
+   * three text bands describe. It is drawn as a HUD (rings, a reticle, live
+   * readouts) rather than as node cards, but the topology underneath is a real
+   * workflow: three triggers, two routers, one core, four deliveries. */
+  var TAU = Math.PI * 2;
+
   var NODES = [
     /* z is depth: 1 is the near plane, smaller sits further back and paints
      * smaller and dimmer. It is what stops the graph reading as a flat diagram.
      * The left of the field is deliberately the far plane, because that is the
-     * half the text lane sits over. */
-    { x: 0.43, y: 0.16, t: 0.02, z: 0.55, kind: 'in' },
-    { x: 0.45, y: 0.62, t: 0.06, z: 0.62, kind: 'in' },
-    { x: 0.53, y: 0.86, t: 0.12, z: 0.5,  kind: 'in' },
-    { x: 0.60, y: 0.34, t: 0.16, z: 0.72, kind: 'hub' },
-    { x: 0.70, y: 0.66, t: 0.24, z: 0.9,  kind: 'hub' },
-    { x: 0.80, y: 0.22, t: 0.32, z: 1,    kind: 'out' },
-    { x: 0.82, y: 0.80, t: 0.40, z: 0.95, kind: 'out' },
-    { x: 0.92, y: 0.46, t: 0.48, z: 1,    kind: 'out' },
-    { x: 0.97, y: 0.14, t: 0.56, z: 0.7,  kind: 'out' },
-    { x: 0.96, y: 0.90, t: 0.60, z: 0.66, kind: 'out' }
+     * half the text lane sits over.
+     *
+     * tel is an optional readout. Digits and ASCII only, on purpose: the rest
+     * of the hero ships in five languages, and a HUD that spelled out words
+     * would drag the canvas into that translation surface for no gain. */
+    { x: 0.42, y: 0.18, t: 0.02, z: 0.52, kind: 'in',   tel: { k: 'REQ', b: 128, a: 46, u: '' } },
+    { x: 0.44, y: 0.60, t: 0.06, z: 0.60, kind: 'in' },
+    { x: 0.50, y: 0.88, t: 0.12, z: 0.48, kind: 'in' },
+    { x: 0.72, y: 0.50, t: 0.16, z: 1,    kind: 'core', tel: { k: 'SYS', b: 96,  a: 3,  u: '%' } },
+    { x: 0.60, y: 0.30, t: 0.22, z: 0.72, kind: 'hub' },
+    { x: 0.62, y: 0.74, t: 0.26, z: 0.74, kind: 'hub',  tel: { k: 'LAT', b: 38,  a: 11, u: 'ms' } },
+    { x: 0.87, y: 0.20, t: 0.34, z: 0.90, kind: 'out' },
+    { x: 0.89, y: 0.76, t: 0.40, z: 0.88, kind: 'out',  tel: { k: 'Q',   b: 3,   a: 2,  u: '' } },
+    { x: 0.96, y: 0.46, t: 0.48, z: 0.70, kind: 'out' },
+    { x: 0.97, y: 0.12, t: 0.56, z: 0.58, kind: 'out' }
   ];
   var EDGES = [
-    { a: 0, b: 3, t: 0.10 },
-    { a: 1, b: 3, t: 0.14 },
-    { a: 2, b: 4, t: 0.20 },
-    { a: 3, b: 4, t: 0.24 },
-    { a: 3, b: 5, t: 0.30 },
-    { a: 4, b: 6, t: 0.36 },
-    { a: 5, b: 7, t: 0.44 },
-    { a: 6, b: 7, t: 0.48 },
-    { a: 7, b: 8, t: 0.54 },
-    { a: 6, b: 9, t: 0.58 }
+    { a: 0, b: 4, t: 0.10 },
+    { a: 1, b: 5, t: 0.14 },
+    { a: 2, b: 5, t: 0.20 },
+    { a: 4, b: 3, t: 0.24 },
+    { a: 5, b: 3, t: 0.28 },
+    { a: 3, b: 6, t: 0.34 },
+    { a: 3, b: 7, t: 0.40 },
+    { a: 6, b: 8, t: 0.46 },
+    { a: 7, b: 8, t: 0.50 },
+    { a: 6, b: 9, t: 0.56 }
   ];
+
+  /* The reticle's settle. drawGraph is otherwise stateless per frame, but a
+   * bracket that teleports between nodes reads as a redraw rather than as an
+   * instrument tracking something, so its position is carried across frames and
+   * eased. Snapped, not eased, when motion is off. */
+  var hud = { rx: 0, ry: 0, rr: 0, live: false };
 
   /* Full bleed. The references the brief pointed at (both AiO sites) put one
    * big visual across the whole frame and lay the type over it, so the graph
@@ -483,18 +498,10 @@
     return { x: box.x + n.x * box.w, y: box.y + n.y * box.h };
   }
 
-  function roundRect(ctx, x, y, w, h, r) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.lineTo(x + w - r, y);
-    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-    ctx.lineTo(x + w, y + h - r);
-    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-    ctx.lineTo(x + r, y + h);
-    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-    ctx.lineTo(x, y + r);
-    ctx.quadraticCurveTo(x, y, x + r, y);
-    ctx.closePath();
+  /* The core is the near plane and the thing everything routes through, so it
+   * gets its own size class rather than sitting at the top of the depth ramp. */
+  function nodeRadius(n, unit) {
+    return n.kind === 'core' ? unit * 0.92 : unit * (0.30 + 0.40 * n.z);
   }
 
   /* A point on the edge's curve. The control points are horizontal, which is
@@ -510,6 +517,49 @@
     };
   }
 
+  /* ---- HUD primitives ---------------------------------------------------
+   * All four batch their geometry into a single path where they can: the field
+   * paints ten nodes a frame and a stroke per tick mark would be ~500 calls. */
+
+  function tickRing(ctx, cx, cy, r0, r1, count, rot) {
+    for (var i = 0; i < count; i++) {
+      var a = rot + (i / count) * TAU;
+      var ca = Math.cos(a), sa = Math.sin(a);
+      ctx.moveTo(cx + ca * r0, cy + sa * r0);
+      ctx.lineTo(cx + ca * r1, cy + sa * r1);
+    }
+  }
+
+  function gappedRing(ctx, cx, cy, r, segs, gap, rot) {
+    var span = TAU / segs;
+    for (var i = 0; i < segs; i++) {
+      var a0 = rot + i * span;
+      ctx.moveTo(cx + Math.cos(a0) * r, cy + Math.sin(a0) * r);
+      ctx.arc(cx, cy, r, a0, a0 + span - gap);
+    }
+  }
+
+  /* Corner brackets rather than a box: a closed rectangle around a node reads
+   * as a selection in a design tool, the open corners read as an instrument. */
+  function reticle(ctx, cx, cy, r, arm) {
+    var sx, sy, i;
+    for (i = 0; i < 4; i++) {
+      sx = (i === 0 || i === 2) ? -1 : 1;
+      sy = i < 2 ? -1 : 1;
+      ctx.moveTo(cx + sx * r - sx * arm, cy + sy * r);
+      ctx.lineTo(cx + sx * r, cy + sy * r);
+      ctx.lineTo(cx + sx * r, cy + sy * r - sy * arm);
+    }
+  }
+
+  /* Deterministic, never Math.random(): a readout reseeded every frame jitters
+   * into noise, and the same scroll position has to paint the same frame twice
+   * for the static and reduced-motion passes to agree with the live one. */
+  function telemetry(tel, time) {
+    var v = tel.b + tel.a * Math.sin(time * 0.00042 + tel.b);
+    return tel.k + ' ' + (tel.b < 10 ? Math.max(0, Math.round(v)) : Math.round(v)) + tel.u;
+  }
+
   function drawGraph(p, time) {
     var ctx = state.ctx;
     if (!ctx || !state.w || !state.h) return;
@@ -517,6 +567,11 @@
 
     var box = graphBox();
     var unit = Math.max(14, Math.min(box.w, box.h) * 0.11);
+    /* One gate for every autonomous motion in the field. Scroll-driven motion
+     * is left alone — the sweep and the assembly answer the user's own scroll,
+     * which is not what the preference is about. */
+    var t = reduceMotion.matches ? 0 : time;
+    var i, n, k, pos, r, depth;
 
     // The environment: one soft glow in the graph's own colour, so the stage
     // reads as a place rather than a flat panel.
@@ -541,117 +596,217 @@
     ctx.globalAlpha = 0.055;
     ctx.strokeStyle = colors.ink;
     ctx.lineWidth = 1;
+    ctx.beginPath();
     for (var ge = 0; ge < EDGES.length; ge++) {
       var gp0 = nodePos(NODES[EDGES[ge].a], box);
       var gp1 = nodePos(NODES[EDGES[ge].b], box);
-      ctx.beginPath();
       for (var gs = 0; gs <= 24; gs++) {
         var gpt = edgePoint(gp0, gp1, gs / 24);
         if (gs === 0) ctx.moveTo(gpt.x, gpt.y); else ctx.lineTo(gpt.x, gpt.y);
       }
-      ctx.stroke();
     }
     for (var gn = 0; gn < NODES.length; gn++) {
       var gpos = nodePos(NODES[gn], box);
-      var gsize = unit * (0.45 + 0.55 * NODES[gn].z);
-      roundRect(ctx, gpos.x - gsize / 2, gpos.y - gsize / 2, gsize, gsize, gsize * 0.28);
-      ctx.stroke();
+      var gr = nodeRadius(NODES[gn], unit);
+      ctx.moveTo(gpos.x + gr, gpos.y);
+      ctx.arc(gpos.x, gpos.y, gr, 0, TAU);
     }
+    ctx.stroke();
     ctx.restore();
 
-    // Edges, drawn as a dash reveal from source to target.
+    // Edges, drawn as a reveal from source to target. Two traces, not one: a
+    // solid line plus a dimmer copy a couple of pixels below it. The doubling
+    // is the whole difference between "a diagram" and "an instrument".
     for (var e = 0; e < EDGES.length; e++) {
       var edge = EDGES[e];
       var g = clamp((p - edge.t) / 0.12, 0, 1);
       if (g <= 0) continue;
       var p0 = nodePos(NODES[edge.a], box);
       var p1 = nodePos(NODES[edge.b], box);
-      var depth = (NODES[edge.a].z + NODES[edge.b].z) / 2;
+      depth = (NODES[edge.a].z + NODES[edge.b].z) / 2;
+      var steps = 26;
+      var lit = Math.floor(steps * g);
+
       ctx.save();
       /* --cardBorder is nearly the canvas itself, so an edge drawn in it
        * disappears. The ink at low alpha, scaled by depth, is what actually
        * reads as wiring on both themes. */
       ctx.strokeStyle = colors.ink;
-      ctx.globalAlpha = 0.10 + 0.26 * depth;
       ctx.lineWidth = depth > 0.85 ? 1.25 : 1;
-      ctx.beginPath();
-      var steps = 26;
-      for (var s = 0; s <= steps * g; s++) {
-        var pt = edgePoint(p0, p1, (s / steps));
-        if (s === 0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y);
+      var off, pass, pt, s;
+      for (pass = 0; pass < 2; pass++) {
+        off = pass === 0 ? 0 : 2 * depth;
+        ctx.globalAlpha = (pass === 0 ? 0.10 + 0.26 * depth : 0.05 + 0.10 * depth);
+        ctx.beginPath();
+        for (s = 0; s <= lit; s++) {
+          pt = edgePoint(p0, p1, s / steps);
+          if (s === 0) ctx.moveTo(pt.x, pt.y + off); else ctx.lineTo(pt.x, pt.y + off);
+        }
+        ctx.stroke();
       }
-      ctx.stroke();
       ctx.restore();
 
       // Payloads. They start once the graph is wired and keep running after it
       // settles: the pipeline is supposed to still be working when you stop
       // scrolling. This is the hero's one living element.
       var flow = smoothstep(p, 0.55, 0.8);
-      if (flow > 0 && g >= 1) {
-        var phase = ((time * 0.00016) + e * 0.37) % 1;
-        var dot = edgePoint(p0, p1, phase);
-        ctx.save();
-        ctx.globalAlpha = flow * depth * (0.35 + 0.65 * Math.sin(Math.PI * phase));
-        ctx.fillStyle = colors.accent;
-        ctx.beginPath();
-        ctx.arc(dot.x, dot.y, unit * 0.075 * (0.6 + 0.4 * depth), 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+      if (flow > 0 && g >= 1 && t) {
+        var phase = ((t * 0.00016) + e * 0.37) % 1;
+        // Head plus a short trail, so a payload has a direction of travel.
+        for (var tr = 0; tr < 3; tr++) {
+          var tp = phase - tr * 0.035;
+          if (tp < 0) continue;
+          var dot = edgePoint(p0, p1, tp);
+          ctx.save();
+          ctx.globalAlpha = flow * depth * (0.35 + 0.65 * Math.sin(Math.PI * tp)) * (1 - tr * 0.32);
+          ctx.fillStyle = colors.accent;
+          ctx.beginPath();
+          ctx.arc(dot.x, dot.y, unit * 0.075 * (0.6 + 0.4 * depth) * (1 - tr * 0.22), 0, TAU);
+          ctx.fill();
+          ctx.restore();
+        }
       }
     }
 
-    // Nodes.
-    for (var i = 0; i < NODES.length; i++) {
-      var n = NODES[i];
-      var k = clamp((p - n.t) / 0.10, 0, 1);
+    /* The sweep. One scanline per band, so it fires exactly at the three
+     * moments the copy changes underneath it and never on its own schedule.
+     * It has to stay a LINE: widened into a band it stops reading as a pass
+     * over the field and starts reading as a flat panel sitting on top of it,
+     * which is exactly what the first cut of this did. Hence the narrow trail,
+     * and the fade that spends the sweep well before the far edge. */
+    var sPhase = (p * 3) % 1;
+    var sweepAt = box.x + box.w * sPhase;
+    var sweepFade = smoothstep(p, 0.04, 0.18) * (1 - smoothstep(sPhase, 0.15, 0.75));
+    if (sweepFade > 0.01) {
+      var trail = unit * 0.9;
+      var sg = ctx.createLinearGradient(sweepAt - trail, 0, sweepAt, 0);
+      sg.addColorStop(0, 'rgba(0,0,0,0)');
+      sg.addColorStop(1, colors.accent);
+      ctx.save();
+      ctx.globalAlpha = 0.10 * sweepFade;
+      ctx.fillStyle = sg;
+      ctx.fillRect(sweepAt - trail, box.y, trail, box.h);
+      ctx.globalAlpha = 0.28 * sweepFade;
+      ctx.fillStyle = colors.accent;
+      ctx.fillRect(sweepAt, box.y, 1, box.h);
+      ctx.restore();
+    }
+
+    // Nodes, and the reticle's target picked out along the way.
+    var bestBusy = 0, bestNode = null;
+    for (i = 0; i < NODES.length; i++) {
+      n = NODES[i];
+      k = clamp((p - n.t) / 0.10, 0, 1);
       if (k <= 0) continue;
-      var pos = nodePos(n, box);
-      var size = unit * (0.45 + 0.55 * n.z) * (0.78 + 0.22 * k);
-      var half = size / 2;
+      pos = nodePos(n, box);
+      r = nodeRadius(n, unit) * (0.82 + 0.18 * k);
+      depth = n.z;
+      var core = n.kind === 'core';
+      var dir = n.kind === 'out' ? -1 : 1;
+
+      /* The working ring: the node the graph is busy with right now. Narrow on
+       * purpose — the accent is supposed to be rare, and a wider window lit two
+       * nodes at once at the opening frame. */
+      var busy = clamp(1 - Math.abs(p - (n.t + 0.08)) / 0.09, 0, 1);
+      if (busy > bestBusy) { bestBusy = busy; bestNode = { x: pos.x, y: pos.y, r: r }; }
 
       ctx.save();
       ctx.globalAlpha = k;
 
-      // The working ring: the node the graph is busy with right now.
-      /* Narrow on purpose: the accent is supposed to be rare, and a wider
-       * window lit two nodes at once at the opening frame. */
-      var busy = clamp(1 - Math.abs(p - (n.t + 0.08)) / 0.09, 0, 1);
-      if (busy > 0) {
-        ctx.save();
-        ctx.globalAlpha = k * busy * 0.7;
+      // Ring body.
+      ctx.strokeStyle = busy > 0.05 ? colors.accent : colors.ink;
+      ctx.lineWidth = core ? 1.5 : 1;
+      ctx.globalAlpha = k * (core ? 0.55 : 0.18 + 0.34 * depth) * (1 + busy);
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, r, 0, TAU);
+      ctx.stroke();
+
+      // Graduations. The core carries a full instrument ring; the satellites
+      // get a dozen ticks, enough to read as calibrated without becoming lace.
+      ctx.globalAlpha = k * (0.10 + 0.22 * depth) * (1 + busy * 0.8);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      tickRing(ctx, pos.x, pos.y, r * 1.10, r * (core ? 1.26 : 1.20),
+               core ? 60 : 12, t * 0.00007 * dir + i);
+      ctx.stroke();
+
+      if (core) {
+        // Counter-rotating gapped arcs, and a disc that breathes.
+        ctx.globalAlpha = k * 0.42;
         ctx.strokeStyle = colors.accent;
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, half + unit * (0.14 + 0.16 * (1 - busy)), 0, Math.PI * 2);
+        gappedRing(ctx, pos.x, pos.y, r * 0.72, 3, 0.7, -t * 0.00019);
         ctx.stroke();
-        ctx.restore();
-      }
 
-      ctx.fillStyle = colors.ground;
-      roundRect(ctx, pos.x - half, pos.y - half, size, size, size * 0.28);
-      ctx.fill();
-      ctx.strokeStyle = n.kind === 'hub' ? colors.accent : colors.ink;
-      ctx.lineWidth = n.kind === 'hub' ? 1.5 : 1;
-      ctx.globalAlpha = k * (n.kind === 'hub' ? 0.55 + 0.45 * n.z : 0.18 + 0.34 * n.z);
-      ctx.stroke();
-
-      // The mark inside: a dot for a trigger, a bar for the hub, a tick lane
-      // for a delivery. Small, quiet, and different per kind so the graph reads
-      // as a real pipeline rather than a row of identical boxes.
-      ctx.globalAlpha = k * (0.25 + 0.5 * n.z);
-      ctx.fillStyle = n.kind === 'hub' ? colors.accent : colors.ink;
-      if (n.kind === 'in') {
+        ctx.globalAlpha = k * 0.30;
+        ctx.strokeStyle = colors.ink;
+        ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, size * 0.14, 0, Math.PI * 2);
+        gappedRing(ctx, pos.x, pos.y, r * 0.52, 5, 0.45, t * 0.00031);
+        ctx.stroke();
+
+        ctx.globalAlpha = k * (0.26 + 0.14 * Math.sin(t * 0.0011));
+        ctx.fillStyle = colors.accent;
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, r * 0.20, 0, TAU);
         ctx.fill();
-      } else if (n.kind === 'hub') {
-        ctx.fillRect(pos.x - size * 0.2, pos.y - size * 0.02, size * 0.4, size * 0.05);
-        ctx.fillRect(pos.x - size * 0.02, pos.y - size * 0.2, size * 0.05, size * 0.4);
       } else {
-        ctx.fillRect(pos.x - size * 0.2, pos.y - size * 0.1, size * 0.4, size * 0.045);
-        ctx.fillRect(pos.x - size * 0.2, pos.y + size * 0.06, size * 0.28, size * 0.045);
+        // The mark inside: a dot for a trigger, a cross for a router, a pair of
+        // lanes for a delivery. Different per kind so the field reads as a real
+        // pipeline rather than a ring of identical instruments.
+        ctx.globalAlpha = k * (0.25 + 0.5 * depth) * (1 + busy);
+        ctx.fillStyle = busy > 0.05 ? colors.accent : colors.ink;
+        if (n.kind === 'in') {
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, r * 0.22, 0, TAU);
+          ctx.fill();
+        } else if (n.kind === 'hub') {
+          ctx.fillRect(pos.x - r * 0.34, pos.y - r * 0.04, r * 0.68, r * 0.08);
+          ctx.fillRect(pos.x - r * 0.04, pos.y - r * 0.34, r * 0.08, r * 0.68);
+        } else {
+          ctx.fillRect(pos.x - r * 0.34, pos.y - r * 0.18, r * 0.68, r * 0.075);
+          ctx.fillRect(pos.x - r * 0.34, pos.y + r * 0.06, r * 0.48, r * 0.075);
+        }
       }
+
+      // Readout, hung under the ring once the field is past its opening build.
+      if (n.tel) {
+        var telFade = smoothstep(p, 0.22, 0.45) * k;
+        if (telFade > 0) {
+          ctx.globalAlpha = telFade * (0.22 + 0.26 * depth);
+          ctx.fillStyle = colors.body;
+          ctx.font = Math.max(9, Math.round(unit * 0.17)) + 'px "JetBrains Mono", ui-monospace, monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'top';
+          ctx.fillText(telemetry(n.tel, t), pos.x, pos.y + r * 1.42);
+        }
+      }
+
       ctx.restore();
+    }
+
+    /* The reticle. One per field: an instrument tracks one thing at a time, and
+     * two brackets on screen would just read as more decoration. */
+    if (bestNode && bestBusy > 0.02) {
+      var rr = bestNode.r * 1.5;
+      if (!hud.live || !t) {
+        hud.rx = bestNode.x; hud.ry = bestNode.y; hud.rr = rr; hud.live = true;
+      } else {
+        hud.rx += (bestNode.x - hud.rx) * 0.18;
+        hud.ry += (bestNode.y - hud.ry) * 0.18;
+        hud.rr += (rr - hud.rr) * 0.18;
+      }
+      ctx.save();
+      ctx.globalAlpha = 0.30 + 0.45 * bestBusy;
+      ctx.strokeStyle = colors.accent;
+      ctx.lineWidth = 1.25;
+      ctx.beginPath();
+      reticle(ctx, hud.rx, hud.ry, hud.rr, hud.rr * 0.42);
+      ctx.stroke();
+      ctx.restore();
+    } else {
+      hud.live = false;
     }
   }
 
