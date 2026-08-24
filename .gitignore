@@ -247,3 +247,12 @@ cron/logs/
 
 # production env for the Django API — server-side only
 deploy/backend.env
+
+# Claude Code — personal overrides (never commit)
+CLAUDE.local.md
+.claude/settings.local.json
+
+# stray working files at repo root
+/10k-websites-skill.zip
+/gc-0.png
+/hero-desktop.png
