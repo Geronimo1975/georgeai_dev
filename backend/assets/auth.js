@@ -15,7 +15,7 @@
   "use strict";
 
   var API = "/api/auth";
-  var ORANGE = "rgb(204, 120, 92)"; // #cc785c — the primary CTA colour
+  var ORANGE = "rgb(255, 131, 0)"; // #ff8300, the primary CTA colour
 
   // ---- helpers ----------------------------------------------------------
   function getCookie(name) {
@@ -33,9 +33,18 @@
       credentials: "same-origin",
       body: body === undefined ? undefined : JSON.stringify(body),
     }).then(function (r) {
-      return r.json().then(function (data) {
-        return { ok: r.ok, status: r.status, data: data };
-      });
+      // The nginx-only production has no /api/auth/* — it answers 404 with an
+      // HTML error page, and r.json() on that threw an uncaught SyntaxError on
+      // every page load. Only parse what actually claims to be JSON; callers
+      // already treat a null body as "no session".
+      var ct = r.headers.get("content-type") || "";
+      if (ct.indexOf("json") === -1) {
+        return { ok: false, status: r.status, data: null };
+      }
+      return r.json().then(
+        function (data) { return { ok: r.ok, status: r.status, data: data }; },
+        function () { return { ok: false, status: r.status, data: null }; }
+      );
     });
   }
 
@@ -143,7 +152,7 @@
     var out = document.createElement("button");
     out.textContent = "Log out";
     out.style.cssText =
-      "cursor:pointer;border:none;border-radius:8px;background:#cc785c;color:#fff;" +
+      "cursor:pointer;border:none;border-radius:8px;background:#ff8300;color:#141413;" +
       "padding:6px 10px;font:600 12px system-ui,sans-serif";
     out.addEventListener("click", function () {
       api("/logout", {}).then(refreshState);

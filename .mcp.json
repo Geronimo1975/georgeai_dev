@@ -1,0 +1,25 @@
+{
+  "mcpServers": {
+    "n8n-personal": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["n8n-mcp"],
+      "env": {
+        "MCP_MODE": "stdio",
+        "LOG_LEVEL": "error",
+        "DISABLE_CONSOLE_OUTPUT": "true",
+        "N8N_API_URL": "https://app.n8n-studio.com",
+        "N8N_API_KEY": "${GEORGEAI_N8N_API_KEY}"
+      }
+    },
+    "postgres-n8n": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "${GEORGEAI_N8N_PG_URL}"
+      ]
+    }
+  }
+}

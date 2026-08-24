@@ -1,0 +1,36 @@
+<!-- hero:lede — repo-owned. Injected at the end of the body by deploy.sh:apply_hero().
+     Static so it is crawlable in the raw HTML (the export renders the homepage
+     client-side and ships NO <h1> on the home view); hero-motion.js relocates it
+     into the hero above the panel row at runtime. NEVER edit the copy in site/.
+
+     Copy rules this block is held to, because the previous version broke all of
+     them and read as machine-written:
+       no em-dash, no "not just X" contrast, no abstract noun pairs,
+       no eyebrow, no middot separators, no decorative italic accent.
+     First person, concrete verbs, names the actual tools. The site already
+     speaks in first person ("What I build for you"), so this matches it.
+
+     data-i18n covers an in-session language switch; hero-motion.js detects the
+     active language from GA_SERVICES. Arabic falls back to English rather than
+     shipping RTL copy nobody has reviewed.
+     TRANSLATIONS ARE UNREVIEWED. -->
+<div class="ga-lede" data-ga-lede data-i18n='{
+  "de": {
+    "title": "Ich automatisiere die Arbeit, die Ihr Team ständig wiederholt.",
+    "sub": "n8n-Workflows, KI-Agenten, RAG-Assistenten und Django-Plattformen. Alles, was ich baue, gehört Ihnen."
+  },
+  "fr": {
+    "title": "J&apos;automatise le travail que votre équipe refait sans cesse.",
+    "sub": "Workflows n8n, agents IA, assistants RAG et plateformes Django. Tout ce que je construis vous appartient."
+  },
+  "ro": {
+    "title": "Automatizez munca pe care echipa ta o reface la nesfârșit.",
+    "sub": "Fluxuri n8n, agenți AI, asistenți RAG și platforme Django. Tot ce construiesc îți aparține."
+  }
+}'>
+  <h1 class="ga-lede__title">I automate the work your team keeps redoing.</h1>
+  <p class="ga-lede__sub">
+    n8n workflows, AI agents, RAG assistants and Django platforms.
+    You own everything I build.
+  </p>
+</div>

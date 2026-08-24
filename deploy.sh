@@ -45,6 +45,11 @@ PAGES_DIR="$PROJECT_DIR/pages"
 # brand accent layer — rewrites the export's hard-coded coral into theme-aware,
 # WCAG-passing accents (see brand/apply_brand.py). Survives re-exports.
 BRAND_DIR="$PROJECT_DIR/brand"
+# image layer — the export leaves empty placeholder slots (About portrait, News
+# cards, every service-detail view). images/apply_images.py swaps them for the
+# committed on-brand SVG mockups. Survives re-exports.
+IMAGES_DIR="$PROJECT_DIR/images"
+HERO_DIR="$PROJECT_DIR/hero"
 
 # ---------------------------------------------------------------------------
 # frontend assets — JS kept out of the export (backend/assets/) so it survives
@@ -240,6 +245,35 @@ PY
 }
 
 # ---------------------------------------------------------------------------
+# image layer — the export ships empty placeholder slots (diagonal-hatch divs
+# with a `[ label ]`) on the About page, the News cards and every service-detail
+# view. Copy the committed on-brand SVG mockups into site/assets/mock/ and let
+# images/apply_images.py rewrite those placeholders to <img> elements. Kept out
+# of the export so it survives re-exports. Runs on every deploy, incl.
+# --no-content. Idempotent (see images/apply_images.py). Failure must not block
+# the deploy — the placeholders simply stay.
+# ---------------------------------------------------------------------------
+apply_images() {
+  [ -f "$IMAGES_DIR/apply_images.py" ] || { warn "images/ not found — skipping image layer"; return 0; }
+  command -v python3 >/dev/null || { warn "python3 not found — skipped image layer"; return 0; }
+  # ship the mockups next to the other site assets
+  if [ -d "$IMAGES_DIR/mock" ]; then
+    mkdir -p "$SITE_DIR/assets/mock"
+    cp "$IMAGES_DIR"/mock/*.svg "$SITE_DIR/assets/mock/" 2>/dev/null || true
+  fi
+  local targets=() f
+  for f in "$SITE_DIR/index.html" "$SITE_DIR/GeorgeAI.dc.html"; do
+    [ -f "$f" ] && targets+=("$f")
+  done
+  [ ${#targets[@]} -eq 0 ] && return 0
+  if python3 "$IMAGES_DIR/apply_images.py" "${targets[@]}"; then
+    ok "image layer applied (${#targets[@]} files)"
+  else
+    warn "image layer failed — deploy continues with placeholder slots"
+  fi
+}
+
+# ---------------------------------------------------------------------------
 # repo-owned pages (e.g. pages/pricing/) — kept out of the export so they
 # survive re-exports. Copied verbatim into site/. Runs on every deploy,
 # including --no-content. Idempotent.
@@ -250,6 +284,154 @@ apply_pages() {
   ok "pages: $(find "$PAGES_DIR" -name index.html | sed "s|$PAGES_DIR/||;s|/index.html||" | tr '\n' ' ')"
 }
 
+
+# ---------------------------------------------------------------------------
+# hero motion layer — hero/hero-motion.{css,js} add autoplay, entrance
+# choreography, pointer parallax and the video backdrop to the homepage hero.
+# Kept out of the export (the export has no classes and re-renders the hero
+# subtree, so the JS hooks it by structure) and re-applied on every deploy,
+# including --no-content. Idempotent per asset (hero:motion / hero-cinema markers).
+# ---------------------------------------------------------------------------
+apply_hero() {
+  [ -d "$HERO_DIR" ] || { warn "hero/ not found — skipping hero motion layer"; return 0; }
+
+  local f copied=""
+  for f in hero-motion.css hero-motion.js hero-cinema.css hero-cinema.js; do
+    [ -f "$HERO_DIR/$f" ] && { cp "$HERO_DIR/$f" "$SITE_DIR/$f"; copied="$copied $f"; }
+  done
+  [ -n "$copied" ] && ok "hero motion:$copied"
+
+  # The export ships the hero backdrop at 1920p/3.8Mbps — 7.2MB for a video
+  # that plays dimmed behind the hero. hero/assets/ holds a 1280p re-encode at
+  # a quarter the weight and no visible difference in context. Copied after
+  # apply_media so it wins, and it is already +faststart.
+  if [ -f "$HERO_DIR/assets/hero.mp4" ] && [ -d "$SITE_DIR/assets" ]; then
+    cp "$HERO_DIR/assets/hero.mp4" "$SITE_DIR/assets/hero.mp4"
+    ok "hero video: $(du -h "$HERO_DIR/assets/hero.mp4" | cut -f1) (repo-owned re-encode)"
+  fi
+
+  if [ -f "$SITE_DIR/index.html" ] && ! grep -q 'hero-cinema.js' "$SITE_DIR/index.html"; then
+    if command -v python3 >/dev/null; then
+      python3 - "$SITE_DIR/index.html" <<'PY'
+import re, sys
+p = sys.argv[1]
+html = open(p, encoding="utf-8").read()
+
+# Idempotent per asset, not per layer: a site/ that survived an earlier deploy
+# already carries the motion layer, and a single hero:motion guard would then
+# skip the cinema layer forever.
+def in_head(markup):
+    global html
+    if re.search(r"</head>", html, re.I):
+        html = re.sub(r"</head>", lambda m: markup + m.group(0), html, count=1, flags=re.I)
+    else:
+        html = markup + html
+
+def at_body_end(markup):
+    # the LAST closing body tag: an injected block may mention one inside its own
+    # comment, and matching that buries the tag inside a comment.
+    global html
+    hits = list(re.finditer(r"</body>", html, re.I))
+    if hits:
+        at = hits[-1].start()
+        html = html[:at] + markup + html[at:]
+    else:
+        html = html + "\n" + markup + "\n"
+
+if "hero:motion" not in html:
+    in_head("<!-- hero:motion — see hero/hero-motion.css, never edit site/ -->"
+            "<link rel=\"stylesheet\" href=\"/hero-motion.css\">")
+    at_body_end("<script src=\"/hero-motion.js\" defer></script>")
+
+# hero-cinema.js must run AFTER hero-motion.js: both defer, so load order is
+# execution order, and the cinema's mount pass expects the motion layer's hooks
+# to already exist.
+if "hero-cinema.css" not in html:
+    in_head("<link rel=\"stylesheet\" href=\"/hero-cinema.css\">")
+if "hero-cinema.js" not in html:
+    at_body_end("<script src=\"/hero-cinema.js\" defer></script>")
+
+open(p, "w", encoding="utf-8").write(html)
+PY
+      ok "injected hero motion + cinema layers into index.html"
+    else
+      warn "python3 not found — skipped hero motion injection"
+    fi
+  fi
+
+  # hero lede — the export's home view renders no <h1> and no value proposition
+  # (its 7 <h1>s all belong to sub-page views). The block goes into the raw HTML
+  # between hero:lede markers so crawlers get the heading without executing JS;
+  # hero-motion.js relocates it into the hero above the panel row at runtime.
+  # Re-injected (not skipped) when already present, so edits to hero-lede.html
+  # actually reach a site/ that survived from an earlier deploy.
+  if [ -f "$HERO_DIR/hero-lede.html" ] && [ -f "$SITE_DIR/index.html" ]; then
+    if command -v python3 >/dev/null; then
+      python3 - "$SITE_DIR/index.html" "$HERO_DIR/hero-lede.html" <<'LEDE'
+import re, sys
+page, block = sys.argv[1], sys.argv[2]
+html = open(page, encoding="utf-8").read()
+lede = ("<!-- hero:lede:start -->\n"
+        + open(block, encoding="utf-8").read().strip()
+        + "\n<!-- hero:lede:end -->")
+existing = re.search(r"<!-- hero:lede:start -->.*?<!-- hero:lede:end -->", html, re.S)
+if existing:
+    html = html[:existing.start()] + lede + html[existing.end():]
+else:
+    # first run on this file, or an older marker-less block from a previous
+    # deploy — drop that too so the two never coexist
+    html = re.sub(r"<!-- hero:lede\b.*?</div>\s*(?=</body>)", "", html, count=1, flags=re.S | re.I)
+    # the LAST closing body tag, never the first — see the same note in the
+    # cinema injection below.
+    hits = list(re.finditer(r"</body>", html, re.I))
+    if hits:
+        at = hits[-1].start()
+        html = html[:at] + lede + "\n" + html[at:]
+    else:
+        html = html + "\n" + lede + "\n"
+open(page, "w", encoding="utf-8").write(html)
+LEDE
+      ok "injected hero lede (h1) into index.html"
+    else
+      warn "python3 not found — skipped hero lede injection"
+    fi
+  fi
+
+  # hero cinema — the scroll-driven stage that opens the home view. Static in
+  # the raw HTML so both headings, both paragraphs and both calls to action are
+  # crawlable without JS; hero-cinema.js moves it to the top of the home view at
+  # runtime and takes the <h1> block into its first caption band.
+  # Re-injected (not skipped) so copy edits reach a surviving site/.
+  if [ -f "$HERO_DIR/hero-cinema.html" ] && [ -f "$SITE_DIR/index.html" ]; then
+    if command -v python3 >/dev/null; then
+      python3 - "$SITE_DIR/index.html" "$HERO_DIR/hero-cinema.html" <<'CINEMA'
+import re, sys
+page, block = sys.argv[1], sys.argv[2]
+html = open(page, encoding="utf-8").read()
+cinema = ("<!-- hero:cinema:start -->\n"
+          + open(block, encoding="utf-8").read().strip()
+          + "\n<!-- hero:cinema:end -->")
+existing = re.search(r"<!-- hero:cinema:start -->.*?<!-- hero:cinema:end -->", html, re.S)
+if existing:
+    html = html[:existing.start()] + cinema + html[existing.end():]
+else:
+    # the LAST closing body tag, never the first: an earlier injected block may
+    # mention one inside its own comment, and matching that buries this block
+    # inside a comment where the parser silently swallows it.
+    hits = list(re.finditer(r"</body>", html, re.I))
+    if hits:
+        at = hits[-1].start()
+        html = html[:at] + cinema + "\n" + html[at:]
+    else:
+        html = html + "\n" + cinema + "\n"
+open(page, "w", encoding="utf-8").write(html)
+CINEMA
+      ok "injected hero cinema stage into index.html"
+    else
+      warn "python3 not found — skipped hero cinema injection"
+    fi
+  fi
+}
 
 # ---------------------------------------------------------------------------
 # pretty output
@@ -360,9 +542,10 @@ PY
   apply_assets
   apply_seo
   apply_brand
+  apply_images
   apply_pages
   apply_media
-
+  apply_hero
   # mirror the unpacked content (incl. the derived index.html) into the frontend
   # template dir so the Django backend in backend/ can build against the same export.
   if [ -n "$TEMPLATE_DIR" ]; then
@@ -377,8 +560,10 @@ else
   apply_assets
   apply_seo
   apply_brand
+  apply_images
   apply_pages
   apply_media
+  apply_hero
 fi
 
 [ -f "$SITE_DIR/index.html" ] || die "./site has no index.html — nothing to deploy"
@@ -411,6 +596,15 @@ rsync -az -e ssh "$PROJECT_DIR/deploy/nginx.conf"         "$SSH_HOST:$REMOTE_DIR
 rsync -az -e ssh "$PROJECT_DIR/deploy/docker-compose.yml" "$SSH_HOST:$REMOTE_DIR/docker-compose.yml"
 ok "deploy config synced"
 
+# The Django API is built on the VPS from this source. Excludes keep the local
+# venv, caches and — critically — the dev backend/.env off the server; the
+# production env lives at deploy/backend.env and is never in this repo.
+rsync -az --delete -e ssh \
+  --exclude '.venv/' --exclude '__pycache__/' --exclude '*.pyc' \
+  --exclude '.env' --exclude 'logs/' --exclude 'staticfiles/' \
+  "$PROJECT_DIR/backend/" "$SSH_HOST:$REMOTE_DIR/backend/"
+ok "backend source synced"
+
 # ---------------------------------------------------------------------------
 # 4. bring up the container behind Traefik
 # ---------------------------------------------------------------------------
@@ -424,9 +618,18 @@ if [ "$NGINX_CHANGED" = 1 ]; then
   warn "nginx.conf changed — force-recreating container so the file mount rebinds"
   COMPOSE_FLAGS="$COMPOSE_FLAGS --force-recreate"
 fi
-ssh "$SSH_HOST" "cd \"$REMOTE_DIR\" && docker compose up -d $COMPOSE_FLAGS" \
+ssh "$SSH_HOST" "cd \"$REMOTE_DIR\" && docker compose up -d --build $COMPOSE_FLAGS" \
   || die "docker compose failed on VPS"
 ok "georgeai-web is up"
+
+# Migrations run after the container is up but before the health checks gate
+# the deploy, so a bad migration fails the run rather than surfacing later as
+# 500s on /api/auth/*.
+if ssh "$SSH_HOST" "cd \"$REMOTE_DIR\" && docker compose exec -T georgeai-app python manage.py migrate --noinput" >/dev/null 2>&1; then
+  ok "migrations applied"
+else
+  die "migrate failed — inspect: ssh $SSH_HOST 'docker logs georgeai-app'"
+fi
 
 # ---------------------------------------------------------------------------
 # 5. health checks
@@ -439,6 +642,15 @@ if ssh "$SSH_HOST" "docker exec georgeai-web wget -qO- http://localhost/healthz 
   ok "container healthy (internal /healthz)"
 else
   die "internal health check failed — inspect: ssh $SSH_HOST 'docker logs georgeai-web'"
+fi
+
+# The API is the whole point of shipping Django — a 404 here means nginx is
+# still answering /api/ with an HTML error page, which is the bug this
+# replaced. Check the JSON shape, not just the status code.
+if ssh "$SSH_HOST" "docker exec georgeai-web wget -qO- http://localhost/api/auth/me 2>/dev/null" | grep -q 'authenticated'; then
+  ok "API healthy (/api/auth/me returns JSON)"
+else
+  die "API check failed — inspect: ssh $SSH_HOST 'docker logs georgeai-app'"
 fi
 
 DEPLOY_FAIL=0

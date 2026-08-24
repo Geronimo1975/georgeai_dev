@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(./deploy.sh)",
+      "Bash(./deploy.sh --no-content)",
+      "Bash(python3 tests/test_payments_pipeline.py)",
+      "Bash(python3 images/gen_mockups.py)",
+      "Bash(python3 seo/generate_service_pages.py)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git ls-files:*)",
+      "Bash(git branch:*)",
+      "Bash(ls:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(find:*)",
+      "Bash(wc:*)",
+      "Bash(file:*)",
+      "Bash(diff:*)",
+      "Bash(ffprobe:*)",
+      "Bash(unzip -l:*)"
+    ],
+    "ask": [
+      "Bash(./deploy.sh:*)",
+      "Bash(python3:*)",
+      "Bash(pytest:*)",
+      "Bash(./cron/check_payments.sh)",
+      "Bash(ssh:*)",
+      "Bash(rsync:*)",
+      "Bash(curl:*)",
+      "Bash(git push:*)",
+      "Bash(git commit:*)",
+      "Bash(docker:*)",
+      "Bash(ffmpeg:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./backend/.env)",
+      "Read(./deploy/backend.env)",
+      "Bash(cat .env:*)",
+      "Bash(cat ./.env:*)",
+      "Bash(cat backend/.env:*)",
+      "Bash(cat deploy/backend.env:*)",
+      "Bash(rm -rf:*)"
+    ]
+  }
+}

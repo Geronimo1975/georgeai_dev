@@ -298,6 +298,25 @@ components:
     padding: 64px
 ---
 
+> **Production override — read before using `colors.primary`.**
+> The frontmatter above describes the palette **as the design-tool export ships
+> it** (Anthropic's coral `#cc785c`). That coral fails WCAG AA where it carries
+> meaning, so `brand/apply_brand.py` rewrites it at deploy time — the LIVE site
+> never renders it as a functional colour:
+>
+> | Role | Live value | Contrast |
+> |---|---|---|
+> | `--accent` (dark theme) | `#ff8300` | 7.25:1 on dark canvas |
+> | `--accent` (light theme) | `#c2410c` | 4.92:1 on cream |
+> | `--accentBtn` (both themes) | `#ff8300`, label `#141413` | 7.46:1 |
+>
+> Decorative coral (spike glyphs, hero streaks, CTA bands) is intentionally left
+> alone. `on-primary: #ffffff` is therefore **not** the live button label —
+> buttons use ink `#141413`. Every "coral" reference below should be read as
+> "the accent role", not as the literal hex. To change accents, edit
+> `brand/apply_brand.py` — never this file, and never `site/`.
+
+
 ## Overview
 
 Claude.com is the warmest, most editorial interface in the AI-product category. The base atmosphere is a **tinted cream canvas** (`{colors.canvas}` — #faf9f5) — distinctly warm, deliberately not the cool gray-white that every other AI brand uses. Headlines run a **slab-serif display** ("Copernicus" / Tiempos Headline) at weight 400 with negative letter-spacing, paired with **StyreneB / Inter** body sans. The combination feels like a literary publication, not a SaaS marketing page.

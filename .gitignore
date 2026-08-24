@@ -166,8 +166,13 @@ venv.bak/
 
 # mkdocs documentation
 # /site
-# generated frontend export (mirrored from exports/ by deploy.sh)
-# /frontend/template/
+
+# Build output of deploy.sh, NOT source. Both are wiped and regenerated on every
+# deploy and reach the VPS by rsync from the working tree, never via git.
+# Edit content in the design tool, deploy.sh, or the repo-owned layer dirs
+# (seo/, brand/, images/, pages/, backend/assets/) instead.
+/site/
+/frontend/template/
 
 # Django backend
 /backend/.env
@@ -244,3 +249,15 @@ cron/logs/
 
 # jez artifacts
 .jez/
+
+# production env for the Django API — server-side only
+deploy/backend.env
+
+# Claude Code — personal overrides (never commit)
+CLAUDE.local.md
+.claude/settings.local.json
+
+# stray working files at repo root
+/10k-websites-skill.zip
+/gc-0.png
+/hero-desktop.png

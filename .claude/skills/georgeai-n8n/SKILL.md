@@ -34,12 +34,23 @@ app.n8n-studio.com, STOP and confirm with George first.
 
 ## Known assets
 
-- **app.n8n-studio.com** (authoritative): stripe-orders order pipeline (being
-  migrated here 2026-07-02 — see repo `docs/n8n-stripe-orders.json`).
-- **n8n.rotocon.world** (legacy, to migrate/retire): workflow
-  `georgeai-free-audit` (`RpKfWXjt7WuizKMl`) + data table `audit_leads`
-  (`SkhPhTtX5xKxw8aa`); old copy of stripe-orders (`hGndKGfKRk9tKIoG`,
-  deactivate after migration) + data table `orders` (`Safgo17NCrOS579A`).
+- **app.n8n-studio.com** (authoritative): stripe-orders order pipeline
+  (`Nx1WqOlQ1k3IWdgB`) + data table `orders` (`MGvuy74ouTb6vUpB`);
+  `georgeai-free-audit` (`z2KyQTirBkTJN1UG`, active) + data table `audit_leads`
+  (`PO51GZevogi8WCrw`) — migrated here 2026-08-19.
+  API key: the repo-root `.env` `N8N_API_KEY` authenticates against THIS
+  instance (despite the generic name); there is no `N8N_STUDIO_API_KEY`.
+- **n8n.rotocon.world** (legacy, retire): old `georgeai-free-audit`
+  (`RpKfWXjt7WuizKMl`) + `audit_leads` (`SkhPhTtX5xKxw8aa`) — superseded by the
+  migration above, still active as of 2026-08-19, deactivate/delete once the
+  8 stored lead rows have been reviewed; old stripe-orders (`hGndKGfKRk9tKIoG`)
+  + data table `orders` (`Safgo17NCrOS579A`).
+
+## Gotchas
+
+- `GET /api/v1/executions?workflowId=<id>` under-reports on this instance —
+  it returned only 1 of 3 known runs. List without the filter and match on
+  `workflowId` client-side instead.
 
 ## Conventions
 

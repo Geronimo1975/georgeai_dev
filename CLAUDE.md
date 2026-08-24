@@ -9,6 +9,10 @@ Deployment pipeline + backend for **georgeai.dev**, George's portfolio site. The
 1. **Static pipeline** (`deploy.sh`, `site/`, `deploy/`) — currently live in production: nginx container behind the shared `gethub-traefik` (Traefik v2.11, Let's Encrypt) on VPS `85.215.69.83`.
 2. **Django backend** (`backend/`) — serves the same export plus a session-auth API (`/api/auth/*`); intended to replace nginx (gunicorn is in requirements for that).
 
+Bolted onto the static half is a **payments/monitoring layer**: a repo-owned `/pricing/`
+page of Stripe Payment Links, an n8n workflow that turns checkouts into orders, and
+stdlib-only health checks (`tests/`, `cron/`, GitHub Actions) that guard that chain.
+
 ## Commands
 
 ### Deploy (static site)
@@ -33,6 +37,30 @@ python manage.py runserver
 python manage.py test accounts                      # run tests (single test: accounts.tests.ClassName.test_name)
 ```
 
+### Payments-pipeline checks (`tests/`, `cron/`)
+
+Stdlib-only, read-only/side-effect-free health checks over the whole order chain
+(live `/pricing/` page → Stripe Payment Links → n8n `stripe-orders` workflow +
+`orders` data table). No pytest/deps required; `pytest tests/ -v` also works.
+
+```bash
+python3 tests/test_payments_pipeline.py     # standalone, exit 0/1 — what cron runs
+./cron/check_payments.sh                    # same + logging to cron/logs/ (gitignored)
+GEORGEAI_STRIPE_MODE=live python3 tests/test_payments_pipeline.py   # after go-live
+```
+
+Secrets (`STRIPE_TOKEN`, `N8N_API_KEY`) are read from the **repo-root `.env`**
+(not `backend/.env`) and never printed. `EXPECTED_STRIPE_MODE` defaults to `test` —
+the suite fails on purpose if the site is switched to live links without flipping it.
+See `cron/README.md` for the crontab install and the pattern for adding a new suite.
+
+### CI (`.github/workflows/`)
+
+- `backend-ci.yml` — on push/PR touching `backend/**`: `pip-audit` + `migrate` +
+  `python manage.py test accounts` against a Postgres 16 service container.
+- `payments-pipeline.yml` — runs `tests/test_payments_pipeline.py` every 6h against
+  **production**; needs the `STRIPE_TOKEN` / `N8N_API_KEY` repo secrets.
+
 **Database:** PostgreSQL in the shared `gethub-postgres` container on the VPS — no local DB. For local dev, tunnel on port **5434** (5433 is taken by the n8n tunnel):
 
 ```bash
@@ -54,8 +82,20 @@ site/ → rsync → VPS:/opt/georgeai → nginx (georgeai-web) → Traefik → h
 `deploy.sh` does non-obvious work during unpack — read it before changing anything about content handling:
 
 - The export ships **no `index.html`**. The real homepage is `GeorgeAI.dc.html` (renders client-side from `support.js` + `services-data.js`, both refreshed every export). `GeorgeAI - Portfolio.html` is a **stale one-off "Bundled Page" snapshot** — never use it as the homepage.
-- It injects `<script src="/auth.js" defer>` into `index.html` (idempotent). `auth.js` lives in `backend/assets/`, *not* in the export, so it survives re-exports.
-- It applies the **SEO layer** from `seo/` (idempotent, runs even with `--no-content`): injects `seo/head.html` (title/meta/OG/JSON-LD, marker `seo:head`) before `</head>`, a crawlable footer link block (marker `seo:footer`) before `</body>`, sets `lang="en"` on `<html>`, and copies `robots.txt`, `sitemap.xml`, `llms.txt`, `favicon.svg` into `site/`. Edit SEO in `seo/`, never in `site/`.
+Everything the export itself does *not* contain is layered back on at deploy time, from
+repo-owned source dirs, so it **survives every re-export**. All layers are idempotent and
+all of them run even with `--no-content`:
+
+| Layer | Source | What it does |
+|---|---|---|
+| `apply_assets` | `backend/assets/` | copies `auth.js` + `audit.js` into `site/`, injects `<script src="/auth.js" defer>` and `/audit.js` into `index.html` |
+| `apply_seo` | `seo/` | see below |
+| `apply_brand` | `brand/apply_brand.py` | rewrites the export's hard-coded coral `#cc785c` into theme-aware WCAG-AA accents (`--accent` / `--accentBtn`), mutes decorative accents |
+| `apply_images` | `images/apply_images.py` + `images/mock/` | the export leaves empty placeholder slots (diagonal-hatch `[ label ]` divs). Copies the committed on-brand SVG mockups into `site/assets/mock/` and rewrites the placeholders to `<img>`: the About portrait (`about.svg`), the 3 News cards (`news-{{ $index }}.svg`), and all 15 service-detail views (adds `img:` to `svcMeta`, binds `{{ detail.img }}`). Regenerate the SVGs with `python3 images/gen_mockups.py` after a palette change |
+| `apply_media` | — | remuxes export mp4s with `ffmpeg -c copy -movflags +faststart` (the design tool writes `moov` after `mdat`, so the hero video stalls until fully downloaded); skips already-faststarted files |
+| `apply_pages` | `pages/` | copies repo-owned static pages (currently `pages/pricing/`) verbatim into `site/` |
+
+The **SEO layer** injects `seo/head.html` (title/meta/OG/JSON-LD, marker `seo:head`) before `</head>`, a crawlable footer link block (marker `seo:footer`) before `</body>`, sets `lang="en"` on `<html>`, and copies `robots.txt`, `sitemap.xml`, `llms.txt`, `favicon.svg`, `responsive.css` into `site/`. Edit SEO in `seo/`, never in `site/`.
 - It then runs `seo/generate_service_pages.py`, which generates **static crawlable pages** — `/services/` hub + one page per service from `georgeai_services.json`, plus `/blog/` from the HTML-fragment posts in `blog/` (meta in a `<!--meta {json} -->` header: title, description, date, tags, faq) — and regenerates `sitemap.xml` with all URLs. Service names in the JSON must stay in sync with the design-tool export.
 - `site/` and `frontend/template/` are **wiped and regenerated on every deploy** — never hand-edit files there; changes belong in the design tool, `deploy.sh`, or `backend/assets/`.
 
@@ -68,6 +108,38 @@ site/ → rsync → VPS:/opt/georgeai → nginx (georgeai-web) → Traefik → h
 
 ### Other files
 
-- `DESIGN-claude.md` — the site's design system (warm cream/coral/dark palette, `#cc785c` primary, serif display type). Reference it for any UI/styling work. For UI/UX work on this repo, always invoke the `ui-ux-pro-max` skill alongside it — it takes precedence on style/palette/typography decisions specific to this site, and `ui-ux-pro-max` fills in broader UX/component/accessibility guidance.
+- `DESIGN-claude.md` — the site's design system (warm cream/dark palette, serif display type). Its frontmatter documents the **export's** coral `#cc785c`; the live accent is `#ff8300` (dark) / `#c2410c` (light) with ink `#141413` button labels, applied by `brand/apply_brand.py` at deploy time — see the "Production override" note at the top of the document body. Reference it for any UI/styling work. For UI/UX work on this repo, always invoke the `ui-ux-pro-max` skill alongside it — it takes precedence on style/palette/typography decisions specific to this site, and `ui-ux-pro-max` fills in broader UX/component/accessibility guidance.
 - `deploy/docker-compose.yml` + `deploy/nginx.conf` — the production nginx service, Traefik routing labels, and per-location headers. The compose file joins the external `gethub_gethub-network`. `nginx.conf` ships a `Content-Security-Policy-Report-Only` header (not yet enforced) — `unsafe-eval`/`unsafe-inline` are required because `support.js` runs Babel-transpiled JSX via `new Function(...)` for the generated-page feature and the design-tool export emits ~490 inline `style=""` attributes. To flip to enforced: check browser DevTools console on the live site for `Content-Security-Policy-Report-Only` violation reports across the homepage, a service page, `/blog/`, `/pricing/`, and any page using the generated-page/React feature; once clean, rename the header to `Content-Security-Policy` in all three `nginx.conf` `location` blocks.
 - `Media/`, `georgeai_services.json`, `CPQ_prompt.md` — content assets/source data for the site.
+
+### Payments / lead capture
+
+The money path is **not** in this codebase's runtime — it's Stripe Payment Links on a
+static page, wired to n8n:
+
+```
+pages/pricing/index.html  ──7 buy buttons (data-product slug)──▶  Stripe Payment Link
+                                                                        │ checkout.session.completed
+  n8n `stripe-orders` workflow (app.n8n-studio.com) ◀─────webhook───────┘
+                    └──▶ `orders` data table + confirmation email
+```
+
+- Each Payment Link and product carries `metadata.data_product = <slug>`; that's how n8n
+  maps an event back to a product. IDs/URLs/prices: `docs/stripe-payment-links.md`;
+  workflow export: `docs/n8n-stripe-orders.json`.
+- **Still Stripe TEST mode** (`acct_1TIuuYEffkWmXH1r`, get-hub Sandbox). Go-live means:
+  recreate the links in live mode, swap the URLs in `pages/pricing/index.html`, redeploy,
+  and set `GEORGEAI_STRIPE_MODE=live` in the crontab.
+- Prices live in three places that must stay in sync: `pages/pricing/index.html`, Stripe,
+  and the `CATALOG` dict in `tests/test_payments_pipeline.py` — the test suite exists to
+  catch exactly that drift, so update it alongside any price change.
+- `backend/assets/audit.js` — the free-visibility-audit floating CTA + lead modal. Posts to
+  an n8n webhook that audits the submitted URL and emails a report.
+- n8n work for this project goes to **`app.n8n-studio.com`** (George's own VPS), not
+  `n8n.rotocon.world` — see the `georgeai-n8n` skill.
+
+### Project skills
+
+`.claude/skills/` holds task-scoped playbooks that go deeper than this file — prefer them
+over rediscovering: `georgeai-deploy`, `georgeai-backend`, `georgeai-seo`, `georgeai-vps`,
+`georgeai-n8n`.

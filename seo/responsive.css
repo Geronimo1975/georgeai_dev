@@ -82,3 +82,21 @@
     scroll-snap-align: start !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Page canvas — kill the white band above the header.
+ *
+ * The export wraps everything in custom elements (<x-dc>, <helmet>) that the UA
+ * treats as inline. <helmet> holds only <link>/<style>/<script> plus the
+ * whitespace between them, and that whitespace generates a line box at the very
+ * top of <body> — the ~25px white strip above the sticky header.
+ *
+ * The theme variables (--canvas et al.) live on the export's own root <div>,
+ * not on <html>, so <html>/<body> keep the UA's white underneath. That shows in
+ * the same strip and in the overscroll/rubber-band area. The static default
+ * below matches themes.dark.canvas; hero-motion.js mirrors the live value onto
+ * <html> so the light theme tracks too.
+ * ------------------------------------------------------------------------ */
+helmet { display: none !important; }
+x-dc { display: block !important; }
+html, body { background: #181715; }
