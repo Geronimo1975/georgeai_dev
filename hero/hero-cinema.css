@@ -369,14 +369,33 @@
     display: none;
   }
 
-  /* The graph still paints, once, in its finished state — behind a flat veil
-   * rather than the left-to-right gradient the wide layout uses. */
-  .gc__scrim {
-    background: var(--gc-veil, rgba(13, 12, 11, 0.9));
+  /* On a phone the canvas stops being a backdrop and becomes a band of its
+   * own, below the headline and the buttons. Behind the text it had to sit
+   * under a near-opaque veil to keep the copy legible, which left the workflow
+   * as a smudge nobody could read; given its own strip it can run at full
+   * strength and the text above it never loses a point of contrast. */
+  .gc__stage {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .gc__lane {
+    order: 1;
   }
 
   .gc__canvas {
-    opacity: 0.85;
+    order: 2;
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: clamp(320px, 82vw, 390px);
+    margin-top: clamp(28px, 7vw, 44px);
+    opacity: 1;
+  }
+
+  /* Nothing left to veil. */
+  .gc__scrim {
+    display: none;
   }
 }
 

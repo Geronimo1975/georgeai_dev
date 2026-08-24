@@ -78,6 +78,7 @@
   var target = 0;   // 0..1 scroll progress, written by the scroll handler
   var shown = 0;    // what is actually displayed; eased toward target
   var rafId = null;
+  var idleId = null;
   var lastTick = 0;
 
   var colors = { ink: '#f5f2ec', body: '#a8a29a', accent: '#ff8300', line: '#2a2724', ground: '#141413' };
@@ -437,71 +438,114 @@
 
   /* ==== 5. Canvas: the automation graph ================================== */
 
-  /* Normalised layout, mapped into the graph box at paint time. Left to right:
-   * what starts the work, what decides, what it delivers — the same funnel the
-   * three text bands describe. It is drawn as a HUD (rings, a reticle, live
-   * readouts) rather than as node cards, but the topology underneath is a real
-   * workflow: three triggers, two routers, one core, four deliveries. */
+  /* The field is a workflow canvas, drawn the way the real editor draws one:
+   * a dot grid, node cards carrying a coloured icon tile, the node's name set
+   * underneath it, solid connectors with an arrow at the midpoint for the main
+   * path and dashed ones for the model / memory / tool ports that hang off an
+   * agent, and a "+" stub where an output has not been wired yet.
+   *
+   * The names are product names — HTTP Request, AI Agent, Airtable — and those
+   * stay in English in every locale the rest of the hero ships in, so putting
+   * words on the canvas does not drag it into the translation surface.
+   *
+   * Two things survive from the instrument pass this replaced, because neither
+   * fights the register: the payloads that travel the wires, and the reticle
+   * that brackets whichever node the progress is working on. */
   var TAU = Math.PI * 2;
 
+  /* The sanctioned secondary hues from DESIGN-claude.md. A real n8n canvas is
+   * multicoloured and a monochrome one stops reading as one, but the palette is
+   * the site's own — nothing invented, and the orange accent stays reserved for
+   * the trigger and the agent, which are the two nodes the eye should land on. */
+  var HUES = { teal: '#5db8a6', amber: '#e8a55a' };
+
+  /* x/y are normalised into the graph box. t is when the node joins during the
+   * build. z is depth: the left of the field is the far plane, because that is
+   * the half the text lane sits over. */
   var NODES = [
-    /* z is depth: 1 is the near plane, smaller sits further back and paints
-     * smaller and dimmer. It is what stops the graph reading as a flat diagram.
-     * The left of the field is deliberately the far plane, because that is the
-     * half the text lane sits over.
-     *
-     * tel is an optional readout. Digits and ASCII only, on purpose: the rest
-     * of the hero ships in five languages, and a HUD that spelled out words
-     * would drag the canvas into that translation surface for no gain. */
-    { x: 0.42, y: 0.18, t: 0.02, z: 0.52, kind: 'in',   tel: { k: 'REQ', b: 128, a: 46, u: '' } },
-    { x: 0.44, y: 0.60, t: 0.06, z: 0.60, kind: 'in' },
-    { x: 0.50, y: 0.88, t: 0.12, z: 0.48, kind: 'in' },
-    { x: 0.72, y: 0.50, t: 0.16, z: 1,    kind: 'core', tel: { k: 'SYS', b: 96,  a: 3,  u: '%' } },
-    { x: 0.60, y: 0.30, t: 0.22, z: 0.72, kind: 'hub' },
-    { x: 0.62, y: 0.74, t: 0.26, z: 0.74, kind: 'hub',  tel: { k: 'LAT', b: 38,  a: 11, u: 'ms' } },
-    { x: 0.87, y: 0.20, t: 0.34, z: 0.90, kind: 'out' },
-    { x: 0.89, y: 0.76, t: 0.40, z: 0.88, kind: 'out',  tel: { k: 'Q',   b: 3,   a: 2,  u: '' } },
-    { x: 0.96, y: 0.46, t: 0.48, z: 0.70, kind: 'out' },
-    { x: 0.97, y: 0.12, t: 0.56, z: 0.58, kind: 'out' }
+    { x: 0.05, y: 0.16, t: 0.02, z: 0.66, kind: 'card', icon: 'bolt',  hue: 'accent',
+      label: 'Webhook',      sub: 'form submitted' },
+    { x: 0.05, y: 0.48, t: 0.08, z: 0.70, kind: 'card', icon: 'globe', hue: 'teal',
+      label: 'HTTP Request', sub: 'GET:' },
+    { x: 0.36, y: 0.30, t: 0.16, z: 1,    kind: 'wide', icon: 'spark', hue: 'accent',
+      label: 'AI Agent',     sub: 'Tools Agent' },
+    { x: 0.72, y: 0.16, t: 0.26, z: 0.9,  kind: 'card', icon: 'branch', hue: 'amber',
+      label: 'If',           sub: '' },
+    { x: 1.00, y: 0.14, t: 0.34, z: 0.86, kind: 'card', icon: 'mail',  hue: 'teal',
+      label: 'Gmail',        sub: 'send:' },
+    { x: 0.86, y: 0.50, t: 0.40, z: 0.84, kind: 'card', icon: 'table', hue: 'amber',
+      label: 'Airtable',     sub: 'create: row' },
+    /* The sub-nodes. In the editor these hang below an agent on dashed ports,
+     * which is the shape that makes a canvas unmistakably n8n. */
+    { x: 0.22, y: 0.68, t: 0.48, z: 0.7,  kind: 'sub', icon: 'spark', hue: 'ink',
+      label: 'OpenAI Chat',  sub: 'Model' },
+    { x: 0.42, y: 0.74, t: 0.52, z: 0.72, kind: 'sub', icon: 'db',    hue: 'ink',
+      label: 'Postgres',     sub: 'Memory' },
+    { x: 0.62, y: 0.68, t: 0.56, z: 0.7,  kind: 'sub', icon: 'code',  hue: 'ink',
+      label: 'Vector Store', sub: 'Tool' }
   ];
+  /* d marks a port connection: drawn dashed and without an arrow, the way the
+   * editor distinguishes what an agent USES from what it PASSES ON. */
   var EDGES = [
-    { a: 0, b: 4, t: 0.10 },
-    { a: 1, b: 5, t: 0.14 },
-    { a: 2, b: 5, t: 0.20 },
-    { a: 4, b: 3, t: 0.24 },
-    { a: 5, b: 3, t: 0.28 },
-    { a: 3, b: 6, t: 0.34 },
-    { a: 3, b: 7, t: 0.40 },
-    { a: 6, b: 8, t: 0.46 },
-    { a: 7, b: 8, t: 0.50 },
-    { a: 6, b: 9, t: 0.56 }
+    { a: 0, b: 2, t: 0.10 },
+    { a: 1, b: 2, t: 0.14 },
+    { a: 2, b: 3, t: 0.24 },
+    { a: 3, b: 4, t: 0.32 },
+    { a: 3, b: 5, t: 0.38 },
+    { a: 6, b: 2, t: 0.46, d: 1 },
+    { a: 7, b: 2, t: 0.50, d: 1 },
+    { a: 8, b: 2, t: 0.54, d: 1 }
   ];
 
   /* The reticle's settle. drawGraph is otherwise stateless per frame, but a
-   * bracket that teleports between nodes reads as a redraw rather than as an
-   * instrument tracking something, so its position is carried across frames and
+   * bracket that teleports between nodes reads as a redraw rather than as
+   * something tracking the run, so its position is carried across frames and
    * eased. Snapped, not eased, when motion is off. */
-  var hud = { rx: 0, ry: 0, rr: 0, live: false };
+  var hud = { rx: 0, ry: 0, rw: 0, rh: 0, live: false };
 
-  /* Full bleed. The references the brief pointed at (both AiO sites) put one
-   * big visual across the whole frame and lay the type over it, so the graph
-   * takes the whole stage instead of sitting in a panel on the right. The text
-   * stays legible because the veil in hero-cinema.css darkens the left of the
-   * frame, and because the field's near plane is composed on the right. */
+  /* Set once per frame, read by nodePos. The narrow box a phone gives the
+   * canvas cannot take the wide composition, so the field is re-spread rather
+   * than merely scaled down — at 390px the desktop layout would pile the whole
+   * flow into the right edge. */
+  var compact = false;
+
   function graphBox() {
     var padX = Math.min(80, state.w * 0.06);
     var padY = Math.min(90, state.h * 0.12);
     return { x: padX, y: padY, w: state.w - padX * 2, h: state.h - padY * 2 };
   }
 
+  /* Wide layout keeps the flow on the right, clear of the text lane. Compact
+   * hands it the whole box. */
   function nodePos(n, box) {
-    return { x: box.x + n.x * box.w, y: box.y + n.y * box.h };
+    /* The wide layout starts at 0.44 rather than hard against the text lane:
+     * the veil is near-opaque out to 30% and still heavy at 40%, and a card
+     * with a name under it does not survive that the way a bare ring did — it
+     * just looks like something failed to load. */
+    var nx = compact ? 0.06 + n.x * 0.88 : 0.44 + n.x * 0.54;
+    return { x: box.x + nx * box.w, y: box.y + n.y * box.h };
   }
 
-  /* The core is the near plane and the thing everything routes through, so it
-   * gets its own size class rather than sitting at the top of the depth ramp. */
-  function nodeRadius(n, unit) {
-    return n.kind === 'core' ? unit * 0.92 : unit * (0.30 + 0.40 * n.z);
+  /* Small on purpose. A real canvas is dense — a dozen modest nodes, not four
+   * billboards — and the first pass at this drew cards wide enough that the
+   * names under them collided and the flow ran off the frame. */
+  function cardSize(n, box) {
+    var w = box.w * (compact ? 0.155 : 0.062);
+    if (n.kind === 'wide') w *= 1.5;
+    if (n.kind === 'sub') return { w: w * 0.62, h: w * 0.62, r: w * 0.31 };
+    return { w: w, h: w * 0.60, r: Math.min(8, w * 0.14) };
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
   }
 
   /* A point on the edge's curve. The control points are horizontal, which is
@@ -517,47 +561,120 @@
     };
   }
 
-  /* ---- HUD primitives ---------------------------------------------------
-   * All four batch their geometry into a single path where they can: the field
-   * paints ten nodes a frame and a stroke per tick mark would be ~500 calls. */
-
-  function tickRing(ctx, cx, cy, r0, r1, count, rot) {
-    for (var i = 0; i < count; i++) {
-      var a = rot + (i / count) * TAU;
-      var ca = Math.cos(a), sa = Math.sin(a);
-      ctx.moveTo(cx + ca * r0, cy + sa * r0);
-      ctx.lineTo(cx + ca * r1, cy + sa * r1);
-    }
+  function hueOf(name) {
+    if (name === 'accent') return colors.accent;
+    if (name === 'ink') return colors.ink;
+    return HUES[name] || colors.ink;
   }
 
-  function gappedRing(ctx, cx, cy, r, segs, gap, rot) {
-    var span = TAU / segs;
-    for (var i = 0; i < segs; i++) {
-      var a0 = rot + i * span;
-      ctx.moveTo(cx + Math.cos(a0) * r, cy + Math.sin(a0) * r);
-      ctx.arc(cx, cy, r, a0, a0 + span - gap);
+  /* ---- Glyphs -----------------------------------------------------------
+   * Drawn rather than fetched: an icon font or a sprite sheet would be another
+   * request in the hero's critical path, and at tile size these are a dozen
+   * segments each. s is the tile's inner size; every glyph is centred on 0,0. */
+  function glyph(ctx, name, cx, cy, s) {
+    var u = s * 0.5;
+    ctx.beginPath();
+    if (name === 'bolt') {
+      ctx.moveTo(cx + u * 0.25, cy - u);
+      ctx.lineTo(cx - u * 0.55, cy + u * 0.12);
+      ctx.lineTo(cx + u * 0.02, cy + u * 0.12);
+      ctx.lineTo(cx - u * 0.22, cy + u);
+      ctx.lineTo(cx + u * 0.6, cy - u * 0.16);
+      ctx.lineTo(cx - u * 0.02, cy - u * 0.16);
+      ctx.closePath();
+      ctx.fill();
+      return;
     }
+    if (name === 'spark') {
+      // The site's own four-point star, the mark already in the wordmark.
+      ctx.moveTo(cx, cy - u);
+      ctx.quadraticCurveTo(cx + u * 0.16, cy - u * 0.16, cx + u, cy);
+      ctx.quadraticCurveTo(cx + u * 0.16, cy + u * 0.16, cx, cy + u);
+      ctx.quadraticCurveTo(cx - u * 0.16, cy + u * 0.16, cx - u, cy);
+      ctx.quadraticCurveTo(cx - u * 0.16, cy - u * 0.16, cx, cy - u);
+      ctx.fill();
+      return;
+    }
+    if (name === 'globe') {
+      ctx.arc(cx, cy, u * 0.9, 0, TAU);
+      ctx.moveTo(cx - u * 0.9, cy);
+      ctx.lineTo(cx + u * 0.9, cy);
+      ctx.moveTo(cx, cy - u * 0.9);
+      ctx.bezierCurveTo(cx + u * 0.62, cy - u * 0.3, cx + u * 0.62, cy + u * 0.3, cx, cy + u * 0.9);
+      ctx.bezierCurveTo(cx - u * 0.62, cy + u * 0.3, cx - u * 0.62, cy - u * 0.3, cx, cy - u * 0.9);
+      ctx.stroke();
+      return;
+    }
+    if (name === 'branch') {
+      /* Two sliders, the way the editor draws a routing node. A literal fork
+       * was the first choice and it collapsed into an ambiguous chevron at
+       * tile size — twenty-four pixels does not carry three diverging lines. */
+      ctx.moveTo(cx - u * 0.85, cy - u * 0.42);
+      ctx.lineTo(cx + u * 0.85, cy - u * 0.42);
+      ctx.moveTo(cx - u * 0.85, cy + u * 0.42);
+      ctx.lineTo(cx + u * 0.85, cy + u * 0.42);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(cx + u * 0.3, cy - u * 0.42, u * 0.26, 0, TAU);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(cx - u * 0.3, cy + u * 0.42, u * 0.26, 0, TAU);
+      ctx.fill();
+      return;
+    }
+    if (name === 'mail') {
+      ctx.rect(cx - u * 0.9, cy - u * 0.65, u * 1.8, u * 1.3);
+      ctx.moveTo(cx - u * 0.9, cy - u * 0.65);
+      ctx.lineTo(cx, cy + u * 0.15);
+      ctx.lineTo(cx + u * 0.9, cy - u * 0.65);
+      ctx.stroke();
+      return;
+    }
+    if (name === 'table') {
+      ctx.rect(cx - u * 0.9, cy - u * 0.8, u * 1.8, u * 1.6);
+      ctx.moveTo(cx - u * 0.9, cy - u * 0.24);
+      ctx.lineTo(cx + u * 0.9, cy - u * 0.24);
+      ctx.moveTo(cx - u * 0.9, cy + u * 0.28);
+      ctx.lineTo(cx + u * 0.9, cy + u * 0.28);
+      ctx.moveTo(cx - u * 0.16, cy - u * 0.8);
+      ctx.lineTo(cx - u * 0.16, cy + u * 0.8);
+      ctx.stroke();
+      return;
+    }
+    if (name === 'db') {
+      ctx.ellipse(cx, cy - u * 0.55, u * 0.85, u * 0.32, 0, 0, TAU);
+      ctx.moveTo(cx - u * 0.85, cy - u * 0.55);
+      ctx.lineTo(cx - u * 0.85, cy + u * 0.55);
+      ctx.moveTo(cx + u * 0.85, cy - u * 0.55);
+      ctx.lineTo(cx + u * 0.85, cy + u * 0.55);
+      ctx.moveTo(cx - u * 0.85, cy + u * 0.55);
+      ctx.bezierCurveTo(cx - u * 0.85, cy + u * 0.9, cx + u * 0.85, cy + u * 0.9, cx + u * 0.85, cy + u * 0.55);
+      ctx.stroke();
+      return;
+    }
+    // code
+    ctx.moveTo(cx - u * 0.3, cy - u * 0.8);
+    ctx.lineTo(cx - u * 0.85, cy);
+    ctx.lineTo(cx - u * 0.3, cy + u * 0.8);
+    ctx.moveTo(cx + u * 0.3, cy - u * 0.8);
+    ctx.lineTo(cx + u * 0.85, cy);
+    ctx.lineTo(cx + u * 0.3, cy + u * 0.8);
+    ctx.stroke();
   }
 
   /* Corner brackets rather than a box: a closed rectangle around a node reads
-   * as a selection in a design tool, the open corners read as an instrument. */
-  function reticle(ctx, cx, cy, r, arm) {
-    var sx, sy, i;
+   * as a selection in a design tool, the open corners read as a run in flight. */
+  function reticle(ctx, x, y, w, h, arm) {
+    var i, sx, sy, cx, cy;
     for (i = 0; i < 4; i++) {
       sx = (i === 0 || i === 2) ? -1 : 1;
       sy = i < 2 ? -1 : 1;
-      ctx.moveTo(cx + sx * r - sx * arm, cy + sy * r);
-      ctx.lineTo(cx + sx * r, cy + sy * r);
-      ctx.lineTo(cx + sx * r, cy + sy * r - sy * arm);
+      cx = x + sx * w / 2;
+      cy = y + sy * h / 2;
+      ctx.moveTo(cx - sx * arm, cy);
+      ctx.lineTo(cx, cy);
+      ctx.lineTo(cx, cy - sy * arm);
     }
-  }
-
-  /* Deterministic, never Math.random(): a readout reseeded every frame jitters
-   * into noise, and the same scroll position has to paint the same frame twice
-   * for the static and reduced-motion passes to agree with the live one. */
-  function telemetry(tel, time) {
-    var v = tel.b + tel.a * Math.sin(time * 0.00042 + tel.b);
-    return tel.k + ' ' + (tel.b < 10 ? Math.max(0, Math.round(v)) : Math.round(v)) + tel.u;
   }
 
   function drawGraph(p, time) {
@@ -566,15 +683,19 @@
     ctx.clearRect(0, 0, state.w, state.h);
 
     var box = graphBox();
-    var unit = Math.max(14, Math.min(box.w, box.h) * 0.11);
+    /* Absolute width, not aspect ratio. The phone band is 343x184 once padded,
+     * which is a 1.86 ratio and sailed past an aspect test — leaving the whole
+     * flow squeezed into the right-hand third of a canvas that had no text lane
+     * to keep clear. What actually decides this is whether there is room. */
+    compact = box.w < 640;
     /* One gate for every autonomous motion in the field. Scroll-driven motion
-     * is left alone — the sweep and the assembly answer the user's own scroll,
-     * which is not what the preference is about. */
+     * is left alone — the build answers the user's own scroll, which is not
+     * what the preference is about. */
     var t = reduceMotion.matches ? 0 : time;
-    var i, n, k, pos, r, depth;
+    var i, n, k, pos, sz, e;
 
-    // The environment: one soft glow in the graph's own colour, so the stage
-    // reads as a place rather than a flat panel.
+    // The environment: one soft glow in the accent, so the canvas reads as a
+    // place rather than a flat panel.
     var glow = ctx.createRadialGradient(
       box.x + box.w * 0.72, box.y + box.h * 0.5, 0,
       box.x + box.w * 0.72, box.y + box.h * 0.5, Math.max(box.w, box.h) * 0.75
@@ -582,114 +703,98 @@
     glow.addColorStop(0, colors.accent);
     glow.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.save();
-    ctx.globalAlpha = 0.09 + 0.07 * smoothstep(p, 0.3, 1);
+    ctx.globalAlpha = 0.07 + 0.05 * smoothstep(p, 0.3, 1);
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, state.w, state.h);
     ctx.restore();
 
-    /* The blueprint. Every edge and every node painted at a whisper first, so
-     * the frame is composed from the very first paint and the scroll reads as
-     * the pipeline LIGHTING UP rather than as an empty canvas slowly filling.
-     * It also keeps the right of the frame occupied at progress zero, where the
-     * live build has not reached yet. */
+    /* The dot grid. It is the single strongest cue that this is a node editor
+     * and not a diagram, and it costs one path. */
+    var step = Math.max(16, Math.min(box.w, box.h) * 0.032);
     ctx.save();
-    ctx.globalAlpha = 0.055;
-    ctx.strokeStyle = colors.ink;
-    ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.07 + 0.05 * smoothstep(p, 0.1, 0.6);
+    ctx.fillStyle = colors.ink;
     ctx.beginPath();
-    for (var ge = 0; ge < EDGES.length; ge++) {
-      var gp0 = nodePos(NODES[EDGES[ge].a], box);
-      var gp1 = nodePos(NODES[EDGES[ge].b], box);
-      for (var gs = 0; gs <= 24; gs++) {
-        var gpt = edgePoint(gp0, gp1, gs / 24);
-        if (gs === 0) ctx.moveTo(gpt.x, gpt.y); else ctx.lineTo(gpt.x, gpt.y);
+    for (var gx = box.x; gx <= box.x + box.w; gx += step) {
+      for (var gy = box.y; gy <= box.y + box.h; gy += step) {
+        ctx.moveTo(gx + 0.9, gy);
+        ctx.arc(gx, gy, 0.9, 0, TAU);
       }
     }
-    for (var gn = 0; gn < NODES.length; gn++) {
-      var gpos = nodePos(NODES[gn], box);
-      var gr = nodeRadius(NODES[gn], unit);
-      ctx.moveTo(gpos.x + gr, gpos.y);
-      ctx.arc(gpos.x, gpos.y, gr, 0, TAU);
-    }
-    ctx.stroke();
+    ctx.fill();
     ctx.restore();
 
-    // Edges, drawn as a reveal from source to target. Two traces, not one: a
-    // solid line plus a dimmer copy a couple of pixels below it. The doubling
-    // is the whole difference between "a diagram" and "an instrument".
-    for (var e = 0; e < EDGES.length; e++) {
+    // Connectors, revealed source to target as the build reaches them.
+    for (e = 0; e < EDGES.length; e++) {
       var edge = EDGES[e];
       var g = clamp((p - edge.t) / 0.12, 0, 1);
       if (g <= 0) continue;
-      var p0 = nodePos(NODES[edge.a], box);
-      var p1 = nodePos(NODES[edge.b], box);
-      depth = (NODES[edge.a].z + NODES[edge.b].z) / 2;
+      var na = NODES[edge.a], nb = NODES[edge.b];
+      var pa = nodePos(na, box), pb = nodePos(nb, box);
+      var sa = cardSize(na, box), sb = cardSize(nb, box);
+      /* Leave from the right port and arrive at the left one, except for a
+       * port connection, which rises out of the sub-node's top into the
+       * agent's underside the way the editor routes them. */
+      var p0 = edge.d
+        ? { x: pa.x, y: pa.y - sa.h / 2 }
+        : { x: pa.x + sa.w / 2, y: pa.y };
+      var p1 = edge.d
+        ? { x: pb.x + (edge.a - 7) * sb.w * 0.22, y: pb.y + sb.h / 2 }
+        : { x: pb.x - sb.w / 2, y: pb.y };
+      var depth = (na.z + nb.z) / 2;
       var steps = 26;
       var lit = Math.floor(steps * g);
+      var s, pt;
 
       ctx.save();
-      /* --cardBorder is nearly the canvas itself, so an edge drawn in it
-       * disappears. The ink at low alpha, scaled by depth, is what actually
-       * reads as wiring on both themes. */
       ctx.strokeStyle = colors.ink;
+      ctx.globalAlpha = (edge.d ? 0.10 : 0.16) + 0.24 * depth;
       ctx.lineWidth = depth > 0.85 ? 1.25 : 1;
-      var off, pass, pt, s;
-      for (pass = 0; pass < 2; pass++) {
-        off = pass === 0 ? 0 : 2 * depth;
-        ctx.globalAlpha = (pass === 0 ? 0.10 + 0.26 * depth : 0.05 + 0.10 * depth);
+      if (edge.d) ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      for (s = 0; s <= lit; s++) {
+        pt = edgePoint(p0, p1, s / steps);
+        if (s === 0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Direction arrow at the midpoint, main path only — the editor does not
+      // put one on a port connection, and neither should this.
+      if (!edge.d && g >= 1) {
+        var m0 = edgePoint(p0, p1, 0.46), m1 = edgePoint(p0, p1, 0.54);
+        var ang = Math.atan2(m1.y - m0.y, m1.x - m0.x);
+        var ah = Math.max(3.5, sa.h * 0.13);
+        ctx.globalAlpha = 0.20 + 0.3 * depth;
+        ctx.fillStyle = colors.ink;
         ctx.beginPath();
-        for (s = 0; s <= lit; s++) {
-          pt = edgePoint(p0, p1, s / steps);
-          if (s === 0) ctx.moveTo(pt.x, pt.y + off); else ctx.lineTo(pt.x, pt.y + off);
-        }
-        ctx.stroke();
+        ctx.moveTo(m1.x, m1.y);
+        ctx.lineTo(m1.x - Math.cos(ang - 0.5) * ah, m1.y - Math.sin(ang - 0.5) * ah);
+        ctx.lineTo(m1.x - Math.cos(ang + 0.5) * ah, m1.y - Math.sin(ang + 0.5) * ah);
+        ctx.closePath();
+        ctx.fill();
       }
       ctx.restore();
 
       // Payloads. They start once the graph is wired and keep running after it
-      // settles: the pipeline is supposed to still be working when you stop
+      // settles: the workflow is supposed to still be working when you stop
       // scrolling. This is the hero's one living element.
-      var flow = smoothstep(p, 0.55, 0.8);
+      var flow = smoothstep(p, 0.5, 0.78);
       if (flow > 0 && g >= 1 && t) {
         var phase = ((t * 0.00016) + e * 0.37) % 1;
-        // Head plus a short trail, so a payload has a direction of travel.
         for (var tr = 0; tr < 3; tr++) {
           var tp = phase - tr * 0.035;
           if (tp < 0) continue;
           var dot = edgePoint(p0, p1, tp);
           ctx.save();
-          ctx.globalAlpha = flow * depth * (0.35 + 0.65 * Math.sin(Math.PI * tp)) * (1 - tr * 0.32);
+          ctx.globalAlpha = flow * depth * (0.35 + 0.65 * Math.sin(Math.PI * tp)) * (1 - tr * 0.32) * (edge.d ? 0.5 : 1);
           ctx.fillStyle = colors.accent;
           ctx.beginPath();
-          ctx.arc(dot.x, dot.y, unit * 0.075 * (0.6 + 0.4 * depth) * (1 - tr * 0.22), 0, TAU);
+          ctx.arc(dot.x, dot.y, Math.max(1.6, sa.h * 0.07) * (1 - tr * 0.22), 0, TAU);
           ctx.fill();
           ctx.restore();
         }
       }
-    }
-
-    /* The sweep. One scanline per band, so it fires exactly at the three
-     * moments the copy changes underneath it and never on its own schedule.
-     * It has to stay a LINE: widened into a band it stops reading as a pass
-     * over the field and starts reading as a flat panel sitting on top of it,
-     * which is exactly what the first cut of this did. Hence the narrow trail,
-     * and the fade that spends the sweep well before the far edge. */
-    var sPhase = (p * 3) % 1;
-    var sweepAt = box.x + box.w * sPhase;
-    var sweepFade = smoothstep(p, 0.04, 0.18) * (1 - smoothstep(sPhase, 0.15, 0.75));
-    if (sweepFade > 0.01) {
-      var trail = unit * 0.9;
-      var sg = ctx.createLinearGradient(sweepAt - trail, 0, sweepAt, 0);
-      sg.addColorStop(0, 'rgba(0,0,0,0)');
-      sg.addColorStop(1, colors.accent);
-      ctx.save();
-      ctx.globalAlpha = 0.10 * sweepFade;
-      ctx.fillStyle = sg;
-      ctx.fillRect(sweepAt - trail, box.y, trail, box.h);
-      ctx.globalAlpha = 0.28 * sweepFade;
-      ctx.fillStyle = colors.accent;
-      ctx.fillRect(sweepAt, box.y, 1, box.h);
-      ctx.restore();
     }
 
     // Nodes, and the reticle's target picked out along the way.
@@ -699,110 +804,115 @@
       k = clamp((p - n.t) / 0.10, 0, 1);
       if (k <= 0) continue;
       pos = nodePos(n, box);
-      r = nodeRadius(n, unit) * (0.82 + 0.18 * k);
-      depth = n.z;
-      var core = n.kind === 'core';
-      var dir = n.kind === 'out' ? -1 : 1;
-
-      /* The working ring: the node the graph is busy with right now. Narrow on
-       * purpose — the accent is supposed to be rare, and a wider window lit two
-       * nodes at once at the opening frame. */
+      sz = cardSize(n, box);
+      var isSub = n.kind === 'sub';
+      var scale = 0.88 + 0.12 * k;
+      var w = sz.w * scale, h = sz.h * scale;
       var busy = clamp(1 - Math.abs(p - (n.t + 0.08)) / 0.09, 0, 1);
-      if (busy > bestBusy) { bestBusy = busy; bestNode = { x: pos.x, y: pos.y, r: r }; }
+      if (busy > bestBusy) { bestBusy = busy; bestNode = { x: pos.x, y: pos.y, w: w, h: h }; }
 
       ctx.save();
       ctx.globalAlpha = k;
 
-      // Ring body.
+      // Card body: the page's own background, lifted a touch by its own ink so
+      // the card separates from the canvas on either theme without a hard-coded
+      // surface colour that would be wrong on one of them.
+      ctx.beginPath();
+      if (isSub) ctx.arc(pos.x, pos.y, w / 2, 0, TAU);
+      else roundRect(ctx, pos.x - w / 2, pos.y - h / 2, w, h, sz.r);
+      ctx.fillStyle = colors.ground;
+      ctx.fill();
+      ctx.globalAlpha = k * 0.05;
+      ctx.fillStyle = colors.ink;
+      ctx.fill();
+
+      // Border. The active node borrows the accent, which is how the editor
+      // shows you which step a run is on.
+      ctx.globalAlpha = k * (0.16 + 0.30 * n.z) * (1 + busy * 1.6);
       ctx.strokeStyle = busy > 0.05 ? colors.accent : colors.ink;
-      ctx.lineWidth = core ? 1.5 : 1;
-      ctx.globalAlpha = k * (core ? 0.55 : 0.18 + 0.34 * depth) * (1 + busy);
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y, r, 0, TAU);
+      ctx.lineWidth = busy > 0.05 ? 1.5 : 1;
       ctx.stroke();
 
-      // Graduations. The core carries a full instrument ring; the satellites
-      // get a dozen ticks, enough to read as calibrated without becoming lace.
-      ctx.globalAlpha = k * (0.10 + 0.22 * depth) * (1 + busy * 0.8);
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      tickRing(ctx, pos.x, pos.y, r * 1.10, r * (core ? 1.26 : 1.20),
-               core ? 60 : 12, t * 0.00007 * dir + i);
-      ctx.stroke();
-
-      if (core) {
-        // Counter-rotating gapped arcs, and a disc that breathes.
-        ctx.globalAlpha = k * 0.42;
-        ctx.strokeStyle = colors.accent;
-        ctx.lineWidth = 1.5;
+      // Ports: the little dots the editor puts on a node's edges.
+      if (!isSub) {
+        ctx.globalAlpha = k * (0.20 + 0.25 * n.z);
+        ctx.fillStyle = colors.ink;
         ctx.beginPath();
-        gappedRing(ctx, pos.x, pos.y, r * 0.72, 3, 0.7, -t * 0.00019);
-        ctx.stroke();
+        ctx.arc(pos.x - w / 2, pos.y, Math.max(1.4, h * 0.055), 0, TAU);
+        ctx.arc(pos.x + w / 2, pos.y, Math.max(1.4, h * 0.055), 0, TAU);
+        ctx.fill();
+      }
 
-        ctx.globalAlpha = k * 0.30;
+      // Icon tile, then the glyph on it.
+      var tile = isSub ? w * 0.5 : h * 0.52;
+      var tx = isSub ? pos.x : pos.x - w / 2 + h * 0.42;
+      var hue = hueOf(n.hue);
+      if (!isSub) {
+        ctx.globalAlpha = k * 0.16;
+        ctx.fillStyle = hue;
+        ctx.beginPath();
+        roundRect(ctx, tx - tile * 0.72, pos.y - tile * 0.72, tile * 1.44, tile * 1.44, tile * 0.42);
+        ctx.fill();
+      }
+      ctx.globalAlpha = k * (0.55 + 0.35 * n.z);
+      ctx.fillStyle = hue;
+      ctx.strokeStyle = hue;
+      ctx.lineWidth = Math.max(1, tile * 0.09);
+      ctx.lineJoin = 'round';
+      glyph(ctx, n.icon, tx, pos.y, tile);
+
+      // The name, set under the node the way the editor sets it.
+      var fs = Math.max(9, Math.round(h * (isSub ? 0.34 : 0.26)));
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.globalAlpha = k * (0.34 + 0.34 * n.z);
+      ctx.fillStyle = colors.ink;
+      ctx.font = '600 ' + fs + 'px Inter, system-ui, sans-serif';
+      ctx.fillText(n.label, pos.x, pos.y + h / 2 + fs * 0.55);
+      if (n.sub) {
+        ctx.globalAlpha = k * (0.20 + 0.20 * n.z);
+        ctx.fillStyle = colors.body;
+        ctx.font = Math.max(8, fs - 1) + 'px Inter, system-ui, sans-serif';
+        ctx.fillText(n.sub, pos.x, pos.y + h / 2 + fs * 1.85);
+      }
+
+      /* The unwired output. Every canvas anyone has actually built has one, and
+       * it is the detail that stops the field looking like an illustration. */
+      if (n.kind === 'card' && (i === 4 || i === 5) && k > 0.9) {
+        var px = pos.x + w / 2 + h * 0.55, ps = h * 0.26;
+        ctx.globalAlpha = k * 0.22;
         ctx.strokeStyle = colors.ink;
         ctx.lineWidth = 1;
         ctx.beginPath();
-        gappedRing(ctx, pos.x, pos.y, r * 0.52, 5, 0.45, t * 0.00031);
+        roundRect(ctx, px - ps / 2, pos.y - ps / 2, ps, ps, ps * 0.28);
+        ctx.moveTo(px - ps * 0.22, pos.y);
+        ctx.lineTo(px + ps * 0.22, pos.y);
+        ctx.moveTo(px, pos.y - ps * 0.22);
+        ctx.lineTo(px, pos.y + ps * 0.22);
         ctx.stroke();
-
-        ctx.globalAlpha = k * (0.26 + 0.14 * Math.sin(t * 0.0011));
-        ctx.fillStyle = colors.accent;
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, r * 0.20, 0, TAU);
-        ctx.fill();
-      } else {
-        // The mark inside: a dot for a trigger, a cross for a router, a pair of
-        // lanes for a delivery. Different per kind so the field reads as a real
-        // pipeline rather than a ring of identical instruments.
-        ctx.globalAlpha = k * (0.25 + 0.5 * depth) * (1 + busy);
-        ctx.fillStyle = busy > 0.05 ? colors.accent : colors.ink;
-        if (n.kind === 'in') {
-          ctx.beginPath();
-          ctx.arc(pos.x, pos.y, r * 0.22, 0, TAU);
-          ctx.fill();
-        } else if (n.kind === 'hub') {
-          ctx.fillRect(pos.x - r * 0.34, pos.y - r * 0.04, r * 0.68, r * 0.08);
-          ctx.fillRect(pos.x - r * 0.04, pos.y - r * 0.34, r * 0.08, r * 0.68);
-        } else {
-          ctx.fillRect(pos.x - r * 0.34, pos.y - r * 0.18, r * 0.68, r * 0.075);
-          ctx.fillRect(pos.x - r * 0.34, pos.y + r * 0.06, r * 0.48, r * 0.075);
-        }
-      }
-
-      // Readout, hung under the ring once the field is past its opening build.
-      if (n.tel) {
-        var telFade = smoothstep(p, 0.22, 0.45) * k;
-        if (telFade > 0) {
-          ctx.globalAlpha = telFade * (0.22 + 0.26 * depth);
-          ctx.fillStyle = colors.body;
-          ctx.font = Math.max(9, Math.round(unit * 0.17)) + 'px "JetBrains Mono", ui-monospace, monospace';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'top';
-          ctx.fillText(telemetry(n.tel, t), pos.x, pos.y + r * 1.42);
-        }
       }
 
       ctx.restore();
     }
 
-    /* The reticle. One per field: an instrument tracks one thing at a time, and
-     * two brackets on screen would just read as more decoration. */
+    /* The reticle. One per field: a run is on one node at a time, and two
+     * brackets on screen would just read as more decoration. */
     if (bestNode && bestBusy > 0.02) {
-      var rr = bestNode.r * 1.5;
+      var rw = bestNode.w * 1.28, rh = bestNode.h * 1.55;
       if (!hud.live || !t) {
-        hud.rx = bestNode.x; hud.ry = bestNode.y; hud.rr = rr; hud.live = true;
+        hud.rx = bestNode.x; hud.ry = bestNode.y; hud.rw = rw; hud.rh = rh; hud.live = true;
       } else {
         hud.rx += (bestNode.x - hud.rx) * 0.18;
         hud.ry += (bestNode.y - hud.ry) * 0.18;
-        hud.rr += (rr - hud.rr) * 0.18;
+        hud.rw += (rw - hud.rw) * 0.18;
+        hud.rh += (rh - hud.rh) * 0.18;
       }
       ctx.save();
-      ctx.globalAlpha = 0.30 + 0.45 * bestBusy;
+      ctx.globalAlpha = 0.28 + 0.42 * bestBusy;
       ctx.strokeStyle = colors.accent;
       ctx.lineWidth = 1.25;
       ctx.beginPath();
-      reticle(ctx, hud.rx, hud.ry, hud.rr, hud.rr * 0.42);
+      reticle(ctx, hud.rx, hud.ry, hud.rw, hud.rh, Math.min(hud.rw, hud.rh) * 0.3);
       ctx.stroke();
       ctx.restore();
     } else {
@@ -812,7 +922,11 @@
 
   function resize() {
     if (!state.canvas || !state.stage) return;
-    var rect = state.stage.getBoundingClientRect();
+    /* The canvas's own rect, not the stage's. On a wide screen it is absolutely
+     * positioned over the whole stage and the two are the same box; on a phone
+     * it is a band in the flow below the copy, and measuring the stage there
+     * would size the drawing surface to the text as well. */
+    var rect = state.canvas.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
     state.dpr = Math.min(2, window.devicePixelRatio || 1);
     state.w = rect.width;
@@ -828,6 +942,36 @@
 
   function staticMode() {
     return MQLS.some(function (m) { return m.matches; });
+  }
+
+  /* Static mode pins the copy and drops the scroll choreography, which is right
+   * on a phone: a 3600px scrub track is not something to hand a thumb. It used
+   * to also mean the canvas painted once and stopped. It now idles instead —
+   * the rings turn, the payloads run — so the workflow reads as running rather
+   * than as a screenshot of one. Gated on the same IntersectionObserver the
+   * scrub loop uses, so it costs nothing while it is off screen, and skipped
+   * entirely under reduced motion. */
+  function idleTick(now) {
+    drawGraph(1, now);
+    if (idleAlive()) {
+      idleId = requestAnimationFrame(idleTick);
+    } else {
+      idleId = null;
+    }
+  }
+
+  function idleAlive() {
+    return staticMode() && !reduceMotion.matches && state.onScreen && !state.hidden;
+  }
+
+  function startIdle() {
+    if (idleId !== null) return;
+    if (!idleAlive()) { drawGraph(1, 0); return; }
+    idleId = requestAnimationFrame(idleTick);
+  }
+
+  function stopIdle() {
+    if (idleId !== null) { cancelAnimationFrame(idleId); idleId = null; }
   }
 
   function heroProgress() {
@@ -876,6 +1020,7 @@
     if (rafId === null && state.scrubOn && state.onScreen && !state.hidden) {
       rafId = requestAnimationFrame(tick);
     }
+    if (idleAlive()) startIdle();
   }
 
   function onScroll() {
@@ -907,7 +1052,9 @@
     if (staticMode()) {
       disableScrub();
       pinFinalStates();
+      startIdle();
     } else {
+      stopIdle();
       enableScrub();
     }
   }
