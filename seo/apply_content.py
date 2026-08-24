@@ -389,6 +389,11 @@ _THIRD_PARTY = (
      'const _soc = (s) => "' + ICON_PATH + '" + s + "-8e8b82.svg";'),
     ('"https://cdn.simpleicons.org/google"', '"' + ICON_PATH + 'google.svg"'),
     ('"https://cdn.simpleicons.org/github/cc785c"', '"' + ICON_PATH + 'github-cc785c.svg"'),
+    # apply_brand recolours the social icons to neutral #8e8b82, and site/ persists
+    # between deploys — so on any redeploy the GitHub icon arrives already recoloured
+    # and the cc785c mapping above never matches. Without this line the leftover check
+    # below raises and main() discards EVERY patch, silently (deploy.sh only warns).
+    ('"https://cdn.simpleicons.org/github/8e8b82"', '"' + ICON_PATH + 'github-8e8b82.svg"'),
 )
 
 _STREAMLINE = re.compile(r'https://assets\.streamlinehq\.com/[^"\']+')
