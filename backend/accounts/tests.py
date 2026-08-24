@@ -1,10 +1,19 @@
 from django.contrib.auth import get_user_model
+from django.test import override_settings
 from rest_framework.test import APIClient, APITestCase
 
 User = get_user_model()
 PW = "sup3r-secret-pw"
 
 
+# SECURE_SSL_REDIRECT defaults to `not DEBUG`, so it is ON whenever DEBUG is
+# false — which is exactly how CI runs. Django's test client issues http://
+# requests, so SecurityMiddleware (first in MIDDLEWARE) 301-redirected every
+# request below before it ever reached a view, and each assertion saw 301.
+# Pinned off here rather than in the CI workflow so the suite behaves the same
+# for anyone running it with DEBUG=False locally. SSLRedirectTests below keeps
+# the production behaviour itself covered.
+@override_settings(SECURE_SSL_REDIRECT=False)
 class AuthFlowTests(APITestCase):
     def test_signup_creates_user_and_session(self):
         r = self.client.post(
@@ -56,3 +65,16 @@ class AuthFlowTests(APITestCase):
             "/api/auth/login", {"email": "x@y.z", "password": "p"}, format="json"
         )
         self.assertEqual(r.status_code, 403)
+
+
+@override_settings(SECURE_SSL_REDIRECT=True)
+class SSLRedirectTests(APITestCase):
+    """Guards the setting AuthFlowTests pins off: production must still
+    redirect plain http to https rather than serving the API over it."""
+
+    def test_http_api_request_is_redirected_to_https(self):
+        r = self.client.post(
+            "/api/auth/login", {"email": "x@y.z", "password": "p"}, format="json"
+        )
+        self.assertEqual(r.status_code, 301)
+        self.assertTrue(r["Location"].startswith("https://"))
