@@ -63,24 +63,6 @@ apply_assets() {
     [ -f "$ASSETS_DIR/$f" ] && { cp "$ASSETS_DIR/$f" "$SITE_DIR/$f"; copied="$copied $f"; }
   done
   [ -n "$copied" ] && ok "frontend assets:$copied"
-
-  # inject the audit widget into the homepage (auth.js tag is injected during unpack)
-  if [ -f "$SITE_DIR/index.html" ] && ! grep -q '/audit.js' "$SITE_DIR/index.html"; then
-    if command -v python3 >/dev/null; then
-      python3 - "$SITE_DIR/index.html" <<'PY'
-import re, sys
-p = sys.argv[1]
-html = open(p, encoding="utf-8").read()
-tag = '<script src="/audit.js" defer></script>'
-html = re.sub(r"</body>", tag + "</body>", html, count=1, flags=re.I) \
-    if re.search(r"</body>", html, re.I) else html + "\n" + tag + "\n"
-open(p, "w", encoding="utf-8").write(html)
-PY
-      ok "injected audit.js into index.html"
-    else
-      warn "python3 not found — skipped audit.js injection"
-    fi
-  fi
 }
 
 # ---------------------------------------------------------------------------
@@ -138,16 +120,20 @@ PYEOF
 
   # static <noscript> fallback for crawlers that do not execute JavaScript
   # (GPTBot, ClaudeBot, PerplexityBot). The SPA renders its hero client-side, so
-  # without this the homepage arrives as unrendered {{ }} placeholders. Guarded by
-  # its own seo:noscript marker so it is idempotent and independent of seo:head.
-  if [ -f "$SITE_DIR/index.html" ] && [ -f "$SEO_DIR/noscript.html" ] \
-     && ! grep -q 'seo:noscript' "$SITE_DIR/index.html"; then
+  # without this the homepage arrives as unrendered {{ }} placeholders. Re-injected
+  # on every deploy (stripped then re-added) so edits to seo/noscript.html ship.
+  if [ -f "$SITE_DIR/index.html" ] && [ -f "$SEO_DIR/noscript.html" ]; then
     if command -v python3 >/dev/null; then
       python3 - "$SITE_DIR/index.html" "$SEO_DIR/noscript.html" <<'PYEOF'
 import re, sys
 p, ns_p = sys.argv[1], sys.argv[2]
 html = open(p, encoding="utf-8").read()
 ns = open(ns_p, encoding="utf-8").read().rstrip() + "\n"
+# Strip a previously injected block so an edited seo/noscript.html reaches an
+# already-deployed index.html. Without this the hero H1 that crawlers and AI
+# engines actually read is frozen at whatever the first deploy injected.
+html = re.sub(r'<noscript>\s*<div id="seo:noscript">.*?</noscript>\s*', "",
+              html, count=1, flags=re.I | re.S)
 m = re.search(r"<body[^>]*>", html, re.I)
 if m:
     html = html[:m.end()] + "\n" + ns + html[m.end():]
@@ -175,6 +161,28 @@ PYEOF
 }
 
 # ---------------------------------------------------------------------------
+# content layer — the export hard-codes marketing copy inside the design-tool
+# HTML (hero strings in the T() table, testimonials in services-data.js), so a
+# re-export silently reverts any positioning or compliance work. seo/*.json is
+# the source of truth and seo/apply_content.py re-applies it on every deploy,
+# including --no-content. Idempotent: a full replace, never an append.
+# Edit seo/hero.json and seo/testimonials.json — never site/.
+# ---------------------------------------------------------------------------
+apply_copy() {
+  [ -d "$SEO_DIR" ] || return 0
+  [ -f "$SEO_DIR/apply_content.py" ] || return 0
+  command -v python3 >/dev/null || { warn "python3 not found — skipped content layer"; return 0; }
+
+  if python3 "$SEO_DIR/apply_content.py" "$SITE_DIR" "$SEO_DIR" \
+       index.html "${GEORGEAI_HOMEPAGE:-GeorgeAI.dc.html}"; then
+    ok "content layer applied"
+  else
+    warn "content layer failed — deploy continues with the export's own copy"
+  fi
+  return 0
+}
+
+# ---------------------------------------------------------------------------
 # brand accent layer — the export hard-codes coral #cc785c; apply_brand.py
 # rewrites functional uses (buttons, links) into theme-aware accessible
 # accents and mutes small decorative accents. Runs on every deploy,
@@ -195,6 +203,52 @@ apply_brand() {
   else
     warn "brand layer failed — deploy continues with export colors"
   fi
+}
+
+# ---------------------------------------------------------------------------
+# prune layer — the export ships working files straight into the public web
+# root, and nothing in the site links to any of them. Verified: zero references
+# to uploads/ or screenshots/ from any served page, and robots.txt is Allow: /
+# with no exceptions, so all of it is crawlable.
+#
+#   assets/hero.mp4          6.9 MB fetched on every homepage load for a <video>
+#                            that can never be shown (the hero mode switch was
+#                            never built); apply_content.py removes the markup,
+#                            this removes the file
+#   uploads/                 DESIGN-claude.md, Resume EN.pdf with a home address,
+#                            a 17 MB unused video, pasted-*.png
+#   screenshots/             62 design-tool QA captures
+#   Portfolio.dc.html        an unrelated fictional persona ("Ilse Marlowe")
+#   Studio Site.dc.html      a second one, rendering raw {{ }} placeholders
+#   GeorgeAI - Portfolio.html  a 1.5 MB stale snapshot of an older build
+#   .thumbnail               design-tool metadata
+#
+# Deliberately a denylist, not an allowlist: an allowlist that is wrong takes
+# the site down, while a denylist that is incomplete only leaves junk. The
+# unexpected-entry warning below covers the drift an allowlist would have.
+# ---------------------------------------------------------------------------
+apply_prune() {
+  local removed="" p
+  for p in "assets/hero.mp4" "uploads" "screenshots" ".thumbnail" \
+           "Portfolio.dc.html" "Studio Site.dc.html" "GeorgeAI - Portfolio.html"; do
+    if [ -e "$SITE_DIR/$p" ]; then
+      rm -rf "$SITE_DIR/$p"
+      removed="$removed $p"
+    fi
+  done
+  [ -n "$removed" ] && ok "pruned from web root:$removed"
+
+  # surface anything new the next export drops in, without deleting it
+  local known=" index.html GeorgeAI.dc.html assets services blog pricing about \
+auth.js audit.js support.js services-data.js legal-data.js responsive.css \
+robots.txt sitemap.xml llms.txt favicon.svg "
+  local entry unexpected=""
+  for entry in "$SITE_DIR"/* "$SITE_DIR"/.[!.]*; do
+    [ -e "$entry" ] || continue
+    case "$known" in *" ${entry##*/} "*) ;; *) unexpected="$unexpected ${entry##*/}" ;; esac
+  done
+  [ -n "$unexpected" ] && warn "unexpected files in web root (not pruned, check them):$unexpected"
+  return 0
 }
 
 # ---------------------------------------------------------------------------
@@ -278,6 +332,27 @@ apply_images() {
 # survive re-exports. Copied verbatim into site/. Runs on every deploy,
 # including --no-content. Idempotent.
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# lead-capture widget — the free-visibility-check button is the only thing on
+# the site that turns an anonymous visitor into a name. It used to be injected
+# into the homepage only, which meant a warm visitor who reached /pricing/ or a
+# service page and decided not to buy today left no trace. Runs last, so it
+# also covers the service and blog pages generated by apply_seo and the static
+# pages copied by apply_pages. Idempotent: skips a page that already has it.
+# ---------------------------------------------------------------------------
+apply_widget() {
+  [ -f "$SITE_DIR/audit.js" ] || return 0
+  command -v python3 >/dev/null || { warn "python3 not found — skipped widget injection"; return 0; }
+
+  local n
+  if n=$(python3 "$SEO_DIR/inject_widget.py" "$SITE_DIR"); then
+    ok "lead widget on $n page(s)"
+  else
+    warn "widget injection failed — deploy continues"
+  fi
+  return 0
+}
+
 apply_pages() {
   [ -d "$PAGES_DIR" ] || return 0
   cp -R "$PAGES_DIR"/. "$SITE_DIR"/
@@ -541,11 +616,14 @@ PY
   # the same asset- and SEO-complete content.
   apply_assets
   apply_seo
+  apply_copy
   apply_brand
   apply_images
   apply_pages
+  apply_prune
   apply_media
   apply_hero
+  apply_widget
   # mirror the unpacked content (incl. the derived index.html) into the frontend
   # template dir so the Django backend in backend/ can build against the same export.
   if [ -n "$TEMPLATE_DIR" ]; then
@@ -559,11 +637,14 @@ else
   # keep assets + SEO layer current even on content-less redeploys
   apply_assets
   apply_seo
+  apply_copy
   apply_brand
   apply_images
   apply_pages
+  apply_prune
   apply_media
   apply_hero
+  apply_widget
 fi
 
 [ -f "$SITE_DIR/index.html" ] || die "./site has no index.html — nothing to deploy"

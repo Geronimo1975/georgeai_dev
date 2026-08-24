@@ -167,10 +167,12 @@ venv.bak/
 # mkdocs documentation
 # /site
 
-# Build output of deploy.sh, NOT source. Both are wiped and regenerated on every
-# deploy and reach the VPS by rsync from the working tree, never via git.
-# Edit content in the design tool, deploy.sh, or the repo-owned layer dirs
-# (seo/, brand/, images/, pages/, backend/assets/) instead.
+# Build output of deploy.sh, NOT source. Both are wiped and regenerated from the
+# design-tool export on every run and reach the VPS by rsync from the working
+# tree, never via git. Tracking them meant ~99 MB of regenerated binaries
+# churning on every deploy — including the mp4s deploy.sh itself rewrites with
+# ffmpeg +faststart. Edit the sources instead: the design-tool export, seo/,
+# brand/, images/, pages/, backend/assets/ or deploy.sh.
 /site/
 /frontend/template/
 
