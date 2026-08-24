@@ -99,6 +99,35 @@ The **SEO layer** injects `seo/head.html` (title/meta/OG/JSON-LD, marker `seo:he
 - It then runs `seo/generate_service_pages.py`, which generates **static crawlable pages** — `/services/` hub + one page per service from `georgeai_services.json`, plus `/blog/` from the HTML-fragment posts in `blog/` (meta in a `<!--meta {json} -->` header: title, description, date, tags, faq) — and regenerates `sitemap.xml` with all URLs. Service names in the JSON must stay in sync with the design-tool export.
 - `site/` and `frontend/template/` are **wiped and regenerated on every deploy** — never hand-edit files there; changes belong in the design tool, `deploy.sh`, or `backend/assets/`.
 
+#### Recovering `site/` (it is untracked build output)
+
+Both dirs are **gitignored** — they are build output, and they reach the VPS by
+rsync from the working tree, never via git. That means the working copy can be
+the only copy, so treat `git clean -xfd` as destructive here.
+
+Rebuild in this order:
+
+1. **From an export** (correct path): drop the newest design-tool `.zip` in
+   `exports/` and run `./deploy.sh`. It picks the newest by mtime
+   (`ls -t exports/*.zip | head -1`).
+2. **From git history** (fallback when no export exists):
+
+   ```bash
+   git restore --source=7f47afa --worktree -- site frontend/template
+   ./deploy.sh --no-content     # re-applies every layer; all layers are idempotent
+   ```
+
+   `7f47afa` is the last commit that tracked these dirs, from just before they
+   were untracked. Any commit at or before it works; `git log --oneline -- site`
+   finds others. `--worktree` restores the files without re-staging them.
+
+**Do not seed `exports/` from `~/Downloads`.** The `GeorgeAI.dev*.zip` files
+there are from June 2026 and predate what is live — their `support.js` and
+`services-data.js` are ~4 KB and ~18 KB smaller than the deployed copies, and no
+layer touches those two files, so the gap is export age. A bare `./deploy.sh`
+would unpack one and silently roll production back. Verify any candidate export
+by comparing those two files against `site/` before deploying it.
+
 ### Django backend (`backend/`)
 
 - **Serving the export:** `backend/backend/views.py:serve_frontend` is a catch-all (last URL pattern) that maps any path to a file in `frontend/template/` and returns it **verbatim as a `FileResponse` — never through the Django template engine**. The exported HTML uses `{{ }}` placeholders rendered client-side by `support.js`, which collide with Django template syntax. Keep it that way.
