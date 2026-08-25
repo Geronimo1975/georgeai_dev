@@ -14,13 +14,14 @@ from pathlib import Path
 
 SRC = Path(__file__).resolve().parent.parent / "hero" / "hero-cinema.js"
 
-# These mirror the `colors` fallback object in hero/hero-cinema.js, which in
-# turn mirrors the dark theme in brand/palette.json. All three move together:
-# a palette swap that updates only the site leaves this suite green while it
-# measures a colour nothing paints any more — which is worse than failing.
-GROUND = "#0a1b2d"
-INK = "#f2f6fa"
-BODY = "#b4c4d4"
+# These mirror the `colors` fallback object in hero/hero-cinema.js, which are
+# the export's own cream palette. readColors() normally overrides them, but they
+# matter for the first frame before the export has painted. They must stay in
+# step with hero-cinema.js; if they drift, the test will silently measure
+# contrast for a color nothing paints — worse than failing.
+GROUND = "#141413"
+INK = "#f5f2ec"
+BODY = "#a8a29a"
 
 # The near-plane depth. Nodes sit between z=0.66 and z=1.0; the floor has to
 # hold at the dimmest of them, which is the 0.66 plane.

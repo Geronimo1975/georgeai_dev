@@ -84,11 +84,10 @@
   /* Fallbacks only — readColors() samples the live theme off the export's root
    * div a few lines down. They still matter twice: for the first frame before
    * the export has painted, and because tests/test_hero_contrast.py composites
-   * against THESE values to prove the canvas text clears WCAG AA. Keep them in
-   * step with brand/palette.json (dark theme) and with that test's constants;
-   * all three move together or the test starts checking a colour the site no
-   * longer paints. */
-  var colors = { ink: '#f2f6fa', body: '#b4c4d4', accent: '#2fd4c1', line: '#17304a', ground: '#0a1b2d' };
+   * against THESE values to prove the canvas text clears WCAG AA. These are the
+   * export's own cream palette, NOT brand/palette.json's; the two are completely
+   * separate. Keep these in step with tests/test_hero_contrast.py's constants. */
+  var colors = { ink: '#f5f2ec', body: '#a8a29a', accent: '#ff8300', line: '#2a2724', ground: '#141413' };
 
   /* The export's theme colours live on its own root div, and which element that
    * is depends on the export: some builds wrap it in <x-dc>, this one nests it
