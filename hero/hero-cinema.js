@@ -833,13 +833,17 @@
       else roundRect(ctx, pos.x - w / 2, pos.y - h / 2, w, h, sz.r);
       ctx.fillStyle = colors.ground;
       ctx.fill();
-      ctx.globalAlpha = k * 0.05;
+      /* The card is filled with the page's own ground, then lifted by its own
+       * ink so it separates on either theme without a hard-coded surface
+       * colour. At 0.05 that lift was invisible and the card read as a hole.
+       * 0.08 is the smallest value that gives it a plane at the near depth. */
+      ctx.globalAlpha = k * 0.08;
       ctx.fillStyle = colors.ink;
       ctx.fill();
 
       // Border. The active node borrows the accent, which is how the editor
       // shows you which step a run is on.
-      ctx.globalAlpha = k * (0.16 + 0.30 * n.z) * (1 + busy * 1.6);
+      ctx.globalAlpha = k * (0.28 + 0.30 * n.z) * (1 + busy * 1.6);
       ctx.strokeStyle = busy > 0.05 ? colors.accent : colors.ink;
       ctx.lineWidth = busy > 0.05 ? 1.5 : 1;
       ctx.stroke();
@@ -880,9 +884,14 @@
       ctx.fillStyle = colors.ink;
       ctx.font = '600 ' + fs + 'px Inter, system-ui, sans-serif';
       ctx.fillText(n.label, pos.x, pos.y + h / 2 + fs * 0.55);
+      /* Ink, not body, and the token change is the point: body needs alpha
+       * 0.74 to clear 4.5:1 over the ground, which pins the sub-line near
+       * opaque and erases its depth cue. Ink clears the same floor at 0.48.
+       * The label above stays brighter still, so the hierarchy holds.
+       * tests/test_hero_contrast.py recomputes this and fails if it slips. */
       if (n.sub) {
-        ctx.globalAlpha = k * (0.20 + 0.20 * n.z);
-        ctx.fillStyle = colors.body;
+        ctx.globalAlpha = k * (0.36 + 0.18 * n.z);
+        ctx.fillStyle = colors.ink;
         ctx.font = Math.max(8, fs - 1) + 'px Inter, system-ui, sans-serif';
         ctx.fillText(n.sub, pos.x, pos.y + h / 2 + fs * 1.85);
       }
