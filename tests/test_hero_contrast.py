@@ -16,13 +16,19 @@ SRC = Path(__file__).resolve().parent.parent / "hero" / "hero-cinema.js"
 
 GROUND = "#141413"
 INK = "#f5f2ec"
-BODY = "#a8a29a"  # kept for reference; the sub-line moved to ink
+BODY = "#a8a29a"
 
 # The near-plane depth. Nodes sit between z=0.66 and z=1.0; the floor has to
 # hold at the dimmest of them, which is the 0.66 plane.
 NEAR_Z = 0.66
 
 FLOOR = 4.5
+
+# Palette: resolved color tokens from hero-cinema.js
+PALETTE = {
+    "ink": INK,
+    "body": BODY,
+}
 
 
 def _rgb(h):
@@ -56,7 +62,7 @@ def alpha_at(base, slope, z):
 
 
 def find_alpha(label, pattern):
-    """Pull (base, slope) out of a `k * (BASE + SLOPE * n.z)` expression."""
+    """Pull (base, slope, color_token) out of a `k * (BASE + SLOPE * n.z)` expression."""
     src = SRC.read_text(encoding="utf-8")
     m = re.search(pattern, src)
     if not m:
@@ -65,10 +71,22 @@ def find_alpha(label, pattern):
             "reworded, update the pattern here rather than deleting the check."
             % (label, SRC.name)
         )
-    return float(m.group(1)), float(m.group(2))
+    base = float(m.group(1))
+    slope = float(m.group(2))
+    token = m.group(3)
+
+    if token not in PALETTE:
+        raise AssertionError(
+            "%s: unknown color token 'colors.%s' in %s. Update PALETTE or the "
+            "pattern if the source changed."
+            % (label, token, SRC.name)
+        )
+
+    return base, slope, token
 
 
-def check(label, fg, base, slope):
+def check(label, token, base, slope):
+    fg = PALETTE[token]
     a = alpha_at(base, slope, NEAR_Z)
     ratio = contrast(composite(fg, a, GROUND), GROUND)
     ok = ratio >= FLOOR
@@ -80,20 +98,19 @@ def main():
     results = []
 
     # The sub-line is the only draw inside `if (n.sub)`, which is what anchors
-    # it. It is drawn in ink, same as the label, so a colour-based anchor would
-    # be ambiguous.
-    base, slope = find_alpha(
+    # it. It is drawn in body, not ink. Capture both the alpha and the color token.
+    base, slope, token = find_alpha(
         "sub-label",
-        r"if \(n\.sub\) \{\s*\n\s*ctx\.globalAlpha = k \* \(([\d.]+) \+ ([\d.]+) \* n\.z\);")
-    results.append(check("sub-label", INK, base, slope))
+        r"if \(n\.sub\) \{\s*\n\s*ctx\.globalAlpha = k \* \(([\d.]+) \+ ([\d.]+) \* n\.z\);\s*\n\s*ctx\.fillStyle = colors\.(\w+);")
+    results.append(check("sub-label", token, base, slope))
 
     # Anchored on the `'600 '` font weight, which only the label sets. Two other
     # draws combine a `k * (base + slope * n.z)` alpha with colors.ink, and a
     # bare search would silently measure one of those instead.
-    base, slope = find_alpha(
+    base, slope, token = find_alpha(
         "label",
-        r"ctx\.globalAlpha = k \* \(([\d.]+) \+ ([\d.]+) \* n\.z\);\s*\n\s*ctx\.fillStyle = colors\.ink;\s*\n\s*ctx\.font = '600 '")
-    results.append(check("label", INK, base, slope))
+        r"ctx\.globalAlpha = k \* \(([\d.]+) \+ ([\d.]+) \* n\.z\);\s*\n\s*ctx\.fillStyle = colors\.(\w+);\s*\n\s*ctx\.font = '600 '")
+    results.append(check("label", token, base, slope))
 
     if all(results):
         print("\nhero contrast: all floors clear")
