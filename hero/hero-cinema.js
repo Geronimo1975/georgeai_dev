@@ -790,7 +790,11 @@
       // Payloads. They start once the graph is wired and keep running after it
       // settles: the workflow is supposed to still be working when you stop
       // scrolling. This is the hero's one living element.
-      var flow = smoothstep(p, 0.5, 0.78);
+      /* Flow used to ride the same axis as node arrival, which forced a choice
+       * between a moving field and a scroll that still had something to reveal.
+       * Wires now carry traffic as soon as there is a wire to carry it on, so
+       * the resting progress is free to sit below the last node's arrival. */
+      var flow = smoothstep(p, 0.18, 0.42);
       if (flow > 0 && g >= 1 && t) {
         var phase = ((t * 0.00016) + e * 0.37) % 1;
         for (var tr = 0; tr < 3; tr++) {
@@ -1021,12 +1025,15 @@
     /* The graph gets the same opening courtesy the first text band does: it
      * assembles its first few nodes on load, so the hero never opens on an
      * empty right half waiting for a scroll that may not come. */
-    drawGraph(Math.max(shown, lk * 0.30), now);
+    /* 0.46 rests the field just past Airtable (t=0.40) and short of the dashed
+     * port cluster (t=0.48-0.56), so six of nine nodes are present at full flow
+     * and the sub-nodes stay the scroll's payoff. */
+    drawGraph(Math.max(shown, lk * 0.46), now);
 
     // The loop keeps running only while there is something to move: the ease
     // has not converged, the opening assembly is still playing, or payloads are
     // in flight on a stage that is actually on screen and visible.
-    var flowing = shown > 0.55 && !reduceMotion.matches;
+    var flowing = shown > 0.20 && !reduceMotion.matches;
     var alive = !converged || lk < 1 || flowing;
     if (alive && state.onScreen && !state.hidden && state.scrubOn) {
       rafId = requestAnimationFrame(tick);
