@@ -310,10 +310,15 @@ to:
 - [ ] **Step 4: Verify in the browser**
 
 ```bash
-./deploy.sh --no-content
+# Local only. `./deploy.sh --no-content` still rsyncs to the production VPS
+# (deploy.sh:709), so it is NOT the verification loop. These two copies are
+# exactly what apply_hero does for these assets, and site/index.html already
+# carries one <script src="/hero-cinema.js" defer>.
+cp hero/hero-cinema.js hero/hero-cinema.css site/
+cd site && python3 -m http.server 8765
 ```
 
-Then load the homepage at 1440x900 and confirm, WITHOUT scrolling:
+Open http://localhost:8765/ at 1440x900 and confirm, WITHOUT scrolling:
 
 - Six node cards are present: Webhook, HTTP Request, AI Agent, If, Gmail, Airtable.
 - The three dashed-port sub-nodes (OpenAI Chat, Postgres, Vector Store) are NOT present.
@@ -375,10 +380,15 @@ to:
 - [ ] **Step 2: Verify in the browser**
 
 ```bash
-./deploy.sh --no-content
+# Local only. `./deploy.sh --no-content` still rsyncs to the production VPS
+# (deploy.sh:709), so it is NOT the verification loop. These two copies are
+# exactly what apply_hero does for these assets, and site/index.html already
+# carries one <script src="/hero-cinema.js" defer>.
+cp hero/hero-cinema.js hero/hero-cinema.css site/
+cd site && python3 -m http.server 8765
 ```
 
-At 1440x900, without scrolling, confirm:
+Open http://localhost:8765/ at 1440x900, without scrolling, and confirm:
 
 - "See services" and "See pricing" are visible and inside the first viewport.
 - Both are clickable — `data-live` must be `1` (it flips at `kb > 0.5`; inspect the element).
@@ -408,13 +418,21 @@ after the opening assembly instead."
 
 - [ ] **Step 1: Confirm the layer is idempotent**
 
+The idempotence check cannot run locally: `deploy.sh` has no mode that applies
+the layers without rsyncing to the VPS. Instead, assert the invariant against
+the current tree, which the layer must preserve:
+
 ```bash
-./deploy.sh --no-content
-./deploy.sh --no-content
-grep -c 'hero-cinema.js' site/index.html
+grep -o '<script src="/hero-cinema.js" defer></script>' site/index.html | wc -l
 ```
 
-Expected: `1`. A `2` means the per-asset guard in `apply_hero` was defeated — do not deploy, fix the guard first. This repo has shipped a double-loaded `hero-motion.js` before for exactly this reason.
+Expected: `1`. A `2` means the per-asset guard in `apply_hero` was defeated —
+this repo has shipped a double-loaded `hero-motion.js` before for exactly this
+reason. Count the exact tag, not the bare filename: the injected hero comments
+name these files in prose, which is what defeated the original guard.
+
+Note for the human partner: the two-run idempotence check still has to happen,
+but it can only happen at deploy time.
 
 - [ ] **Step 2: Run the full local check**
 
@@ -428,13 +446,11 @@ Expected: exit 0.
 
 Screenshot the live hero at 1440x900 and put it beside the pre-change capture. The claim under review is "reads as running, not printed" — that is a visual claim and needs a visual artifact, not a green test.
 
-- [ ] **Step 4: Deploy**
+- [ ] **Step 4: STOP — deploying is not yours to decide**
 
-```bash
-./deploy.sh --no-content
-```
-
-Then confirm on https://georgeai.dev that the six-node resting state, the moving payloads, and both CTAs are present on landing.
+`./deploy.sh --no-content` publishes to https://georgeai.dev. Do not run it.
+Report that Tasks 1-4 are complete and locally verified, and hand the deploy
+decision to the human partner with the before/after captures from Step 3.
 
 ---
 
