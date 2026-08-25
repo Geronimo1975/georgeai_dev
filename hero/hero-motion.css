@@ -32,8 +32,8 @@
    * export's inline `flex:5 1 0` from winning it back on every re-render. */
   flex: 1 1 0 !important;
   transform-origin: center;
-  transition: transform 420ms var(--ga-ease-out), filter 300ms ease,
-    box-shadow 300ms ease !important;
+  transition: transform 280ms var(--ga-ease-out), filter 280ms ease,
+    box-shadow 280ms ease !important;
   will-change: transform;
 }
 
@@ -280,7 +280,7 @@
   opacity: 0;
   max-width: 820px;
   padding: 0 20px;
-  transition: opacity 300ms var(--ga-ease-out), transform 480ms var(--ga-ease-out);
+  transition: opacity 300ms var(--ga-ease-out), transform 300ms var(--ga-ease-out);
   transform: translateY(10px);
 }
 

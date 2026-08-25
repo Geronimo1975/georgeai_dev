@@ -400,6 +400,17 @@
         band.vis = vis;
         band.el.classList.toggle('gc__band--visible', vis);
       }
+      /* will-change is scoped to bands that are actually on screen. A split
+       * title is ~40 inline-block spans, so promoting all three bands for the
+       * whole session pins compositor memory for two bands that are not
+       * moving. The threshold is deliberately far below --visible's 0.55: the
+       * layer has to exist before the assembly starts, not halfway through
+       * it, or the promotion itself lands mid-animation. */
+      var warm = op > 0.004;
+      if (warm !== band.warm) {
+        band.warm = warm;
+        band.el.classList.toggle('gc__band--warm', warm);
+      }
     }
 
     var kb = clamp((p - 0.78) * 5, 0, 1);

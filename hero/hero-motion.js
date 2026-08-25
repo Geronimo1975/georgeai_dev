@@ -428,6 +428,19 @@
       requestAnimationFrame(function () {
         requestAnimationFrame(function () {
           hero.root.classList.add('ga-hero--ready');
+          /* Drop the entrance classes once the choreography has played. They
+           * carry `transition: ... 420ms ... !important`, which is right for a
+           * five-panel staggered arrival and wrong for every panel expand
+           * afterwards — and because the classes used to stay on the root for
+           * the life of the page, that 420ms silently governed every later
+           * click instead of the 280ms the panel rule asks for. Removing them
+           * is visually free: the entrance ends on opacity 1 / translateY(0),
+           * which is exactly what the base rules already say.
+           * 900ms clears the slowest chain (240ms stagger + 420ms panel, and
+           * 300ms delay + 380ms for the CTA). */
+          setTimeout(function () {
+            hero.root.classList.remove('ga-hero--enter', 'ga-hero--ready');
+          }, 900);
         });
       });
     }
