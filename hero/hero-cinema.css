@@ -267,8 +267,21 @@
   color: #141413;
 }
 
-.gc__btn:hover {
-  transform: translateY(-2px);
+/* Gated behind a fine pointer: a touch device fires hover on tap and latches
+ * the lift until the next tap elsewhere. hero-motion.css already gates the
+ * export's panels this way — this block was the one that did not. */
+@media (hover: hover) and (pointer: fine) {
+  .gc__btn:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* Press feedback. The export's CTAs answer a click with scale(0.97) over in
+ * hero-motion.css; these two sit on the same page and must answer the same
+ * way. Shorter than the hover so the press reads as immediate. */
+.gc__btn:active {
+  transform: scale(0.97);
+  transition-duration: 120ms;
 }
 
 .gc__btn:focus-visible {
