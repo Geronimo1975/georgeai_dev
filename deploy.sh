@@ -438,18 +438,42 @@ def at_body_end(markup):
     else:
         html = html + "\n" + markup + "\n"
 
+def script_once(src):
+    """Ensure exactly one <script src=SRC defer> at the end of the body.
+
+    Guarding on a marker in the <head> was wrong twice over. The head marker and
+    the body script are injected together but live in different places, so a
+    later layer that rewrites the head drops the marker while the script
+    survives — and the next deploy, seeing no marker, appends a SECOND copy.
+    That is how /hero-motion.js ended up loading twice in production, running
+    its whole discovery-and-observer pass a second time over the same DOM.
+
+    Guarding on the bare filename is wrong too: hero-lede.html and
+    hero-cinema.html both NAME these files in their comments, so once either
+    block is injected the guard sees the name in prose and skips the real tag
+    forever. Match the exact tag, and keep the FIRST copy rather than the last
+    so that hero-motion.js stays ahead of hero-cinema.js — both are deferred,
+    so document order is execution order, and the cinema mount expects the
+    motion layer's hooks to already exist.
+    """
+    global html
+    tag = "<script src=\"%s\" defer></script>" % src
+    first = html.find(tag)
+    if first < 0:
+        at_body_end(tag)
+        return
+    # self-healing: drop any extra copies a previous deploy already appended
+    head, tail = html[:first + len(tag)], html[first + len(tag):]
+    html = head + tail.replace(tag, "")
+
 if "hero:motion" not in html:
     in_head("<!-- hero:motion — see hero/hero-motion.css, never edit site/ -->"
             "<link rel=\"stylesheet\" href=\"/hero-motion.css\">")
-    at_body_end("<script src=\"/hero-motion.js\" defer></script>")
-
-# hero-cinema.js must run AFTER hero-motion.js: both defer, so load order is
-# execution order, and the cinema's mount pass expects the motion layer's hooks
-# to already exist.
 if "hero-cinema.css" not in html:
     in_head("<link rel=\"stylesheet\" href=\"/hero-cinema.css\">")
-if "hero-cinema.js" not in html:
-    at_body_end("<script src=\"/hero-cinema.js\" defer></script>")
+
+script_once("/hero-motion.js")
+script_once("/hero-cinema.js")
 
 open(p, "w", encoding="utf-8").write(html)
 PY
