@@ -10,8 +10,8 @@ The hero landing state reads as a brochure to a first-time visitor. Diagnosis
 came from a 1440x900 capture of production plus the source, not from taste:
 
 1. **Nothing moves at rest.** `tick()` sets the graph's resting progress to
-   `lk * 0.30` (hero-cinema.js:1000) while payload flow is gated on
-   `shown > 0.55` (hero-cinema.js:1006). After the 900ms load ramp the rAF loop
+   `lk * 0.30` (hero-cinema.js:1015) while payload flow is gated on
+   `shown > 0.55` (hero-cinema.js:1020). After the 900ms load ramp the rAF loop
    converges and stops. The visitor sees a still image of a workflow.
 2. **Sub-labels are below the contrast floor.** `colors.body` (#a8a29a) drawn at
    `k * (0.20 + 0.20 * n.z)` lands near alpha 0.33 on the #141413 ground, about
@@ -40,8 +40,8 @@ scroll by their `t` values and are meant to arrive later.
 ### 1. Resting state that runs
 
 The blocker is that payload flow and node arrival ride the same axis. Payload
-opacity is `smoothstep(p, 0.5, 0.78)` (hero-cinema.js:782) and the rAF keep-alive
-is `shown > 0.55` (hero-cinema.js:1009), while the last node arrives at `t = 0.56`.
+opacity is `smoothstep(p, 0.5, 0.78)` (hero-cinema.js:793) and the rAF keep-alive
+is `shown > 0.55` (hero-cinema.js:1020), while the last node arrives at `t = 0.56`.
 Any resting progress high enough to show movement also spends the entire graph,
 leaving the scroll with nothing to reveal. The two must be decoupled.
 
@@ -67,10 +67,19 @@ Measured against the #141413 ground, at the near-plane z of 0.66:
 
 | Element | Now | Change to | Effect |
 |---|---|---|---|
-| Sub-label | `body x (0.20 + 0.20z)` | `body x (0.42 + 0.20z)` | ~1.9:1 -> ~4.6:1 |
+| Sub-label | `body x (0.20 + 0.20z)` | `ink x (0.36 + 0.18z)` | 1.87:1 -> 4.55:1 |
 | Card surface | `ground`, then `ink x 0.05` | ground lightened ~4%, `ink x 0.055` | card becomes a plane |
 | Card border | `ink x (0.16 + 0.30z)` | `ink x (0.28 + 0.30z)` | contour reads |
 | Label | `ink x (0.34 + 0.34z)` | unchanged (~5.5:1) | already passing |
+
+The sub-label changes token, and that is the point. Reaching 4.5:1 with `body`
+(#a8a29a) requires alpha 0.74 at the z=0.66 plane, which pins the sub-line near
+opaque and erases its depth cue. `ink` (#f5f2ec) clears the same floor at 0.48,
+leaving room for a gradient. Hierarchy survives because the label stays brighter
+still (0.56-0.68 against the sub-line's 0.48-0.54).
+
+All ratios above are computed through sRGB relative luminance, not by scaling
+the alpha. A linear estimate overstates them by roughly 1.5x at these values.
 
 Depth is preserved: far-plane nodes stay dimmer than near-plane ones. The floor
 moves up; the gradient does not flatten.
