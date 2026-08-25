@@ -413,12 +413,10 @@
       }
     }
 
-    /* Floored by the load ramp, not by scroll alone. `p` here is the raw eased
-     * scroll progress, which is 0 on landing — the 0.46 resting floor that
-     * Task 3 introduced is applied to the graph only. Mirroring it here is what
-     * actually puts the buttons on the landing screen; without it they wait for
-     * a scroll that may never come. */
-    var kb = clamp((Math.max(p, loadK * 0.46) - 0.06) * 6, 0, 1);
+    /* Floored by REST_P via loadK, not by scroll alone. `p` here is raw eased
+     * scroll progress (0 on landing), so without mirroring the load ramp the
+     * buttons stay hidden until a scroll that may never come. */
+    var kb = clamp((Math.max(p, loadK * REST_P) - 0.06) * 6, 0, 1);
     if (Math.abs(kb - (state.cta._kb == null ? -1 : state.cta._kb)) > 0.008) {
       state.cta._kb = kb;
       state.cta.style.setProperty('--kb', kb.toFixed(3));
@@ -474,6 +472,15 @@
    * the site's own — nothing invented, and the orange accent stays reserved for
    * the trigger and the agent, which are the two nodes the eye should land on. */
   var HUES = { teal: '#5db8a6', amber: '#e8a55a' };
+
+  /* The hero's resting progress: where the field sits when nobody has
+   * scrolled. Past Airtable (t=0.40), short of the dashed port cluster
+   * (t=0.48-0.56), so six of nine nodes are present and the sub-nodes stay
+   * the scroll's payoff. The CTA reveal is floored by this same value, so
+   * retuning it moves both together — which is the point of naming it.
+   * Keep it above 0.143, below which the CTA stops clearing its kb > 0.5
+   * gate at landing. */
+  var REST_P = 0.46;
 
   /* x/y are normalised into the graph box. t is when the node joins during the
    * build. z is depth: the left of the field is the far plane, because that is
@@ -1030,10 +1037,8 @@
     /* The graph gets the same opening courtesy the first text band does: it
      * assembles its first few nodes on load, so the hero never opens on an
      * empty right half waiting for a scroll that may not come. */
-    /* 0.46 rests the field just past Airtable (t=0.40) and short of the dashed
-     * port cluster (t=0.48-0.56), so six of nine nodes are present at full flow
-     * and the sub-nodes stay the scroll's payoff. */
-    drawGraph(Math.max(shown, lk * 0.46), now);
+    /* The resting floor ensures six of nine nodes are visible before any scroll. */
+    drawGraph(Math.max(shown, lk * REST_P), now);
 
     // The loop keeps running only while there is something to move: the ease
     // has not converged, the opening assembly is still playing, or payloads are
