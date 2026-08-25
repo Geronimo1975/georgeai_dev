@@ -22,7 +22,7 @@ from datetime import date
 from pathlib import Path
 
 BASE = "https://georgeai.dev"
-OG_IMAGE = f"{BASE}/assets/SEO_AI.png"
+OG_IMAGE = f"{BASE}/assets/og-cover.jpg"
 EMAIL = "contact@georgeai.dev"
 PHONE = "+49 160 4155546"
 PHONE_HREF = "tel:+491604155546"
@@ -119,6 +119,9 @@ def page_shell(title, description, canonical, body, jsonld) -> str:
 <meta property="og:description" content="{esc(description)}">
 <meta property="og:url" content="{canonical}">
 <meta property="og:image" content="{OG_IMAGE}">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 {FONTS}
 <style>{CSS}</style>

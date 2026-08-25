@@ -35,7 +35,11 @@ SEO_DIR="$PROJECT_DIR/seo"
 # against it. Set GEORGEAI_TEMPLATE_DIR= (empty) to skip the mirror.
 TEMPLATE_DIR="${GEORGEAI_TEMPLATE_DIR-$PROJECT_DIR/frontend/template}"
 
-PROD_HOSTS=("georgeai.dev" "www.georgeai.dev")
+# Only the apex serves content. www is deliberately a permanent redirect to it
+# (deploy/docker-compose.yml, georgeai-www-redirect) — two hosts answering 200
+# with identical bytes is a duplicate origin, so the check below expects the 301.
+PROD_HOSTS=("georgeai.dev")
+PROD_REDIRECT_HOSTS=("www.georgeai.dev")
 
 # spaces in the remote path would break the remote shell commands and rsync below
 case "$REMOTE_DIR" in *" "*) printf 'GEORGEAI_REMOTE_DIR must not contain spaces\n' >&2; exit 1 ;; esac
@@ -78,6 +82,18 @@ apply_seo() {
     [ -f "$SEO_DIR/$f" ] && { cp "$SEO_DIR/$f" "$SITE_DIR/$f"; copied="$copied $f"; }
   done
   [ -n "$copied" ] && ok "seo files:$copied"
+
+  # Repo-owned static assets that must survive a re-export. Currently the OG /
+  # social preview card: the export ships assets/SEO_AI.png at 1.79 MB, which is
+  # over the size LinkedIn and WhatsApp will fetch, so shares rendered with no
+  # image at all. seo/assets/og-cover.jpg is the same artwork cropped to the
+  # 1200x630 the scrapers expect, at 137 KB. Copied (not rewritten in place)
+  # because site/assets/ is repopulated from the export on every deploy.
+  if [ -d "$SEO_DIR/assets" ]; then
+    mkdir -p "$SITE_DIR/assets"
+    cp -R "$SEO_DIR/assets"/. "$SITE_DIR/assets"/
+    ok "seo assets: $(ls "$SEO_DIR/assets" | tr '\n' ' ')"
+  fi
 
   if [ -f "$SITE_DIR/index.html" ] && [ -f "$SEO_DIR/head.html" ]; then
     if command -v python3 >/dev/null; then
@@ -757,7 +773,27 @@ check_url() {
     DEPLOY_FAIL=1
   fi
 }
+# www must permanently redirect to the apex, not serve 200 — a 200 here means the
+# Traefik www router lost its redirect middleware and the duplicate origin is back.
+check_redirect_to_apex() {
+  local url="$1" code loc
+  code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 12 "$url")" || code="000"
+  loc="$(curl -s -o /dev/null -w '%{redirect_url}' --max-time 12 "$url")" || loc=""
+  case "$code" in
+    301|308)
+      case "$loc" in
+        https://georgeai.dev/*|https://georgeai.dev) ok "$url → $code → $loc" ;;
+        *) warn "$url → $code but to '$loc', expected the apex"; DEPLOY_FAIL=1 ;;
+      esac
+      ;;
+    000) warn "$url → no response yet (DNS not pointing to this VPS?)" ;;
+    200) warn "$url → 200 (expected a redirect to the apex — duplicate origin is back)"; DEPLOY_FAIL=1 ;;
+    *)   warn "$url → $code (expected 301/308 to the apex)"; DEPLOY_FAIL=1 ;;
+  esac
+}
+
 for h in "${PROD_HOSTS[@]}"; do check_url "https://$h"; done
+for h in "${PROD_REDIRECT_HOSTS[@]}"; do check_redirect_to_apex "https://$h"; done
 
 # ---------------------------------------------------------------------------
 # done

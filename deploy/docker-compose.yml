@@ -39,21 +39,43 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=gethub_gethub-network"
 
-      # ---- shared service + https redirect middleware ----
+      # ---- shared service + redirect middlewares ----
       - "traefik.http.services.georgeai.loadbalancer.server.port=80"
       - "traefik.http.middlewares.georgeai-https-redirect.redirectscheme.scheme=https"
       - "traefik.http.middlewares.georgeai-https-redirect.redirectscheme.permanent=true"
+      # www -> apex. Both hosts used to answer 200 with byte-identical content,
+      # which is a duplicate origin: canonical tags mitigate it for Google but
+      # every other consumer (AI crawlers, link equity, analytics) sees two
+      # sites. $${1} is doubled so docker compose does not eat it as variable
+      # interpolation before Traefik ever sees the label.
+      - "traefik.http.middlewares.georgeai-www-redirect.redirectregex.regex=^https?://www\\.georgeai\\.dev/(.*)"
+      - "traefik.http.middlewares.georgeai-www-redirect.redirectregex.replacement=https://georgeai.dev/$${1}"
+      - "traefik.http.middlewares.georgeai-www-redirect.redirectregex.permanent=true"
 
-      # ---- production domain ----
-      - "traefik.http.routers.georgeai-http.rule=Host(`georgeai.dev`) || Host(`www.georgeai.dev`)"
+      # ---- production domain (apex) ----
+      - "traefik.http.routers.georgeai-http.rule=Host(`georgeai.dev`)"
       - "traefik.http.routers.georgeai-http.entrypoints=web"
       - "traefik.http.routers.georgeai-http.middlewares=georgeai-https-redirect"
       - "traefik.http.routers.georgeai-http.service=georgeai"
-      - "traefik.http.routers.georgeai.rule=Host(`georgeai.dev`) || Host(`www.georgeai.dev`)"
+      - "traefik.http.routers.georgeai.rule=Host(`georgeai.dev`)"
       - "traefik.http.routers.georgeai.entrypoints=websecure"
       - "traefik.http.routers.georgeai.tls=true"
       - "traefik.http.routers.georgeai.tls.certresolver=letsencrypt"
       - "traefik.http.routers.georgeai.service=georgeai"
+
+      # ---- www: kept routed (and kept on the cert) purely so it can 301 ----
+      # The http router redirects straight to the https apex in one hop rather
+      # than bouncing through georgeai-https-redirect first.
+      - "traefik.http.routers.georgeai-www-http.rule=Host(`www.georgeai.dev`)"
+      - "traefik.http.routers.georgeai-www-http.entrypoints=web"
+      - "traefik.http.routers.georgeai-www-http.middlewares=georgeai-www-redirect"
+      - "traefik.http.routers.georgeai-www-http.service=georgeai"
+      - "traefik.http.routers.georgeai-www.rule=Host(`www.georgeai.dev`)"
+      - "traefik.http.routers.georgeai-www.entrypoints=websecure"
+      - "traefik.http.routers.georgeai-www.tls=true"
+      - "traefik.http.routers.georgeai-www.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.georgeai-www.middlewares=georgeai-www-redirect"
+      - "traefik.http.routers.georgeai-www.service=georgeai"
 
 networks:
   gethub-network:
