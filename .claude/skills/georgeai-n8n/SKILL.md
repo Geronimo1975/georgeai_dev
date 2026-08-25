@@ -51,6 +51,13 @@ app.n8n-studio.com, STOP and confirm with George first.
 - `GET /api/v1/executions?workflowId=<id>` under-reports on this instance —
   it returned only 1 of 3 known runs. List without the filter and match on
   `workflowId` client-side instead.
+- **The site's CSP must allow this host.** `backend/assets/audit.js` POSTs the
+  free-visibility-audit lead form to
+  `https://app.n8n-studio.com/webhook/georgeai-free-audit`, so
+  `connect-src` in `deploy/nginx.conf` carries `https://app.n8n-studio.com` in
+  all three `location` blocks. If the webhook host ever moves, update the CSP in
+  the same change — the policy is currently Report-Only, so a mismatch will fail
+  silently now and kill the widget the day it is enforced.
 
 ## Conventions
 

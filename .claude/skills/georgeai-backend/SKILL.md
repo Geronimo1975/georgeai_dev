@@ -44,3 +44,25 @@ nc -z 127.0.0.1 5434 || {
   and regenerate every deploy. It must degrade gracefully when `/api/auth/*`
   is absent.
 - All config via `backend/.env` (django-environ); no secrets in source.
+
+## How it is deployed
+
+The backend is **live**, not hypothetical: `./deploy.sh` builds it and brings up
+the `georgeai-app` container alongside nginx, then runs
+`manage.py migrate --noinput` and fails the deploy if it errors.
+
+- `georgeai-app` is **not routed by Traefik**. Only `georgeai-web` (nginx) is
+  public; it proxies `/api/` to `georgeai-app:8000` over the shared network.
+  A broken backend deploy therefore cannot take the site down.
+- The `location /api/` block is declared **before** `location /` on purpose —
+  otherwise API calls fall through to `try_files` and get answered with an HTML
+  404, which is what made `auth.js` throw a `SyntaxError` when nothing served
+  `/api/` at all.
+- nginx sets `X-Forwarded-Proto https` on that proxy pass; Django's
+  `SECURE_PROXY_SSL_HEADER` reads it, which is what stops `SECURE_SSL_REDIRECT`
+  from bouncing every API call.
+- Runtime env for the container comes from `deploy/backend.env` on the VPS
+  (not `backend/.env`, which is local dev only).
+
+Health check used by the deploy: `/api/auth/me` must return JSON containing
+`authenticated`.
