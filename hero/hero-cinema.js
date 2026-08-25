@@ -413,11 +413,12 @@
       }
     }
 
-    /* The buttons used to arrive on band 3's tail. That reads well as
-     * choreography and badly as commerce: a visitor who does not scroll had
-     * nothing to act on. They now settle in just after the opening assembly
-     * and stay, which is the one thing the landing screen was missing. */
-    var kb = clamp((p - 0.06) * 6, 0, 1);
+    /* Floored by the load ramp, not by scroll alone. `p` here is the raw eased
+     * scroll progress, which is 0 on landing — the 0.46 resting floor that
+     * Task 3 introduced is applied to the graph only. Mirroring it here is what
+     * actually puts the buttons on the landing screen; without it they wait for
+     * a scroll that may never come. */
+    var kb = clamp((Math.max(p, loadK * 0.46) - 0.06) * 6, 0, 1);
     if (Math.abs(kb - (state.cta._kb == null ? -1 : state.cta._kb)) > 0.008) {
       state.cta._kb = kb;
       state.cta.style.setProperty('--kb', kb.toFixed(3));
