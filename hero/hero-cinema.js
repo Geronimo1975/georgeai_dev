@@ -413,7 +413,11 @@
       }
     }
 
-    var kb = clamp((p - 0.78) * 5, 0, 1);
+    /* The buttons used to arrive on band 3's tail. That reads well as
+     * choreography and badly as commerce: a visitor who does not scroll had
+     * nothing to act on. They now settle in just after the opening assembly
+     * and stay, which is the one thing the landing screen was missing. */
+    var kb = clamp((p - 0.06) * 6, 0, 1);
     if (Math.abs(kb - (state.cta._kb == null ? -1 : state.cta._kb)) > 0.008) {
       state.cta._kb = kb;
       state.cta.style.setProperty('--kb', kb.toFixed(3));
