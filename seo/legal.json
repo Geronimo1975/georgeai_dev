@@ -1,0 +1,55 @@
+{
+  "_note": "Source of truth for the Impressum identity block. site/legal-data.js comes from the design-tool export and is wiped on every deploy, so these values are re-applied by seo/apply_legal.py (deploy.sh: apply_legal). Never edit site/legal-data.js.",
+  "_blocked": "identity.street and identity.zip are REQUIRED. While either is empty the layer refuses to run and the export's [bracketed] placeholders stay visible — an honest placeholder beats an invented address. Selling to German buyers behind a placeholder Impressum is a § 5 DDG defect (Abmahnung risk), so fill these in before the Stripe go-live.",
+  "identity": {
+    "street": "Greuner Brook 1",
+    "zip": "21271",
+    "city": "Hanstedt",
+    "steuernummer": "50/108/03727"
+  },
+  "_vat_mode": "One of: 'vat_id' (you have a USt-IdNr. — fill vat.id), 'kleinunternehmer' (§ 19 UStG small-business rule, no VAT charged), or '' (layer refuses to run).",
+  "vat": {
+    "mode": "kleinunternehmer",
+    "id": ""
+  },
+  "_langs": "Per-language templates. {street} {zip} {city} {vat_id} are substituted. 'sub' replaces the imprint subtitle; 'provider' replaces imprint section 0; 'vat_id'/'kleinunternehmer' replace imprint section 2 depending on vat.mode. A language may override 'city' (Arabic does, to keep the city name in Arabic script).",
+  "langs": {
+    "en": {
+      "sub": "Information pursuant to § 5 DDG (German Digital Services Act)",
+      "provider": "George Sebastian Cucuiet\n{street}\n{zip} {city}, Germany",
+      "vat_id": "VAT identification number pursuant to § 27a German VAT Act: {vat_id}",
+      "kleinunternehmer": "Under § 19 of the German VAT Act (small-business rule) no VAT is charged, so no VAT identification number is issued.",
+      "steuernummer": "Tax number: {steuernummer}"
+    },
+    "de": {
+      "sub": "Angaben gemäß § 5 DDG",
+      "provider": "George Sebastian Cucuiet\n{street}\n{zip} {city}, Deutschland",
+      "vat_id": "Umsatzsteuer-Identifikationsnummer gemäß § 27a UStG: {vat_id}",
+      "kleinunternehmer": "Gemäß § 19 UStG (Kleinunternehmerregelung) wird keine Umsatzsteuer berechnet; eine Umsatzsteuer-Identifikationsnummer liegt daher nicht vor.",
+      "steuernummer": "Steuernummer: {steuernummer}"
+    },
+    "fr": {
+      "sub": "Informations sur l'éditeur (§ 5 DDG)",
+      "provider": "George Sebastian Cucuiet\n{street}\n{zip} {city}, Allemagne",
+      "vat_id": "Numéro d'identification TVA : {vat_id}",
+      "kleinunternehmer": "En application du § 19 de la loi allemande sur la TVA (régime des petites entreprises), aucune TVA n'est facturée et aucun numéro de TVA n'est attribué.",
+      "steuernummer": "Numéro fiscal : {steuernummer}"
+    },
+    "ro": {
+      "sub": "Informații despre operator (§ 5 DDG)",
+      "provider": "George Sebastian Cucuiet\n{street}\n{zip} {city}, Germania",
+      "vat_id": "Număr de identificare TVA: {vat_id}",
+      "kleinunternehmer": "Conform § 19 UStG (regimul întreprinderilor mici din Germania) nu se percepe TVA, prin urmare nu există un număr de identificare TVA.",
+      "steuernummer": "Număr fiscal: {steuernummer}"
+    },
+    "ar": {
+      "sub": "معلومات عن الجهة المسؤولة (§ 5 DDG)",
+      "provider": "George Sebastian Cucuiet\n{street}\n{zip} {city}، ألمانيا",
+      "vat_id": "رقم تعريف ضريبة القيمة المضافة: {vat_id}",
+      "kleinunternehmer": "بموجب المادة 19 من قانون ضريبة القيمة المضافة الألماني (نظام المنشآت الصغيرة) لا تُحتسب ضريبة قيمة مضافة، ولذلك لا يوجد رقم تعريف ضريبي.",
+      "city": "هانشتيت",
+      "steuernummer": "الرقم الضريبي: {steuernummer}"
+    }
+  },
+  "_steuernummer": "Optional. § 5 DDG requires the USt-IdNr., not the Steuernummer, so this line is a courtesy, not a legal duty. Set it to \"\" to drop it from all 5 languages."
+}
