@@ -14,9 +14,13 @@ from pathlib import Path
 
 SRC = Path(__file__).resolve().parent.parent / "hero" / "hero-cinema.js"
 
-GROUND = "#141413"
-INK = "#f5f2ec"
-BODY = "#a8a29a"
+# These mirror the `colors` fallback object in hero/hero-cinema.js, which in
+# turn mirrors the dark theme in brand/palette.json. All three move together:
+# a palette swap that updates only the site leaves this suite green while it
+# measures a colour nothing paints any more — which is worse than failing.
+GROUND = "#0a1b2d"
+INK = "#f2f6fa"
+BODY = "#b4c4d4"
 
 # The near-plane depth. Nodes sit between z=0.66 and z=1.0; the floor has to
 # hold at the dimmest of them, which is the 0.66 plane.
