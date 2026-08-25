@@ -81,7 +81,14 @@
   var idleId = null;
   var lastTick = 0;
 
-  var colors = { ink: '#f5f2ec', body: '#a8a29a', accent: '#ff8300', line: '#2a2724', ground: '#141413' };
+  /* Fallbacks only — readColors() samples the live theme off the export's root
+   * div a few lines down. They still matter twice: for the first frame before
+   * the export has painted, and because tests/test_hero_contrast.py composites
+   * against THESE values to prove the canvas text clears WCAG AA. Keep them in
+   * step with brand/palette.json (dark theme) and with that test's constants;
+   * all three move together or the test starts checking a colour the site no
+   * longer paints. */
+  var colors = { ink: '#f2f6fa', body: '#b4c4d4', accent: '#2fd4c1', line: '#17304a', ground: '#0a1b2d' };
 
   /* The export's theme colours live on its own root div, and which element that
    * is depends on the export: some builds wrap it in <x-dc>, this one nests it
@@ -1043,7 +1050,10 @@
     // The loop keeps running only while there is something to move: the ease
     // has not converged, the opening assembly is still playing, or payloads are
     // in flight on a stage that is actually on screen and visible.
-    var flowing = shown > 0.20 && !reduceMotion.matches;
+    /* The flowing predicate must see the same resting floor applied to the frame
+     * (Math.max(shown, lk * REST_P)), else the loop parks while the frame is still
+     * animated. This guards against independently simplified bounds. */
+    var flowing = Math.max(shown, lk * REST_P) > 0.20 && !reduceMotion.matches;
     var alive = !converged || lk < 1 || flowing;
     if (alive && state.onScreen && !state.hidden && state.scrubOn) {
       rafId = requestAnimationFrame(tick);
