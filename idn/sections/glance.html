@@ -1,0 +1,39 @@
+<!-- The "at a glance" proof band.
+
+     Repo-owned. Injected into index.html by idn/sections.py, between the hero
+     and the logo carousel — inside the export's `isHome` block (which opens at
+     the hero and closes after the CTA band), so it renders on the homepage only.
+
+     WHY THE NUMBERS ARE REAL
+     The reference register opens with a wall of headline figures. The export
+     already carries four TRUE ones — `statsList` = 8+ years / 40+ projects /
+     15+ technologies / 5 languages — defined in the page's own script and, until
+     now, rendered only on the About page. This band promotes them; it does not
+     invent any. Nothing here may be replaced with a fabricated figure: the site
+     takes real money, and an invented metric is false advertising, not styling.
+
+     BINDINGS
+     `statsList` lives in the single global render scope alongside goHome and
+     fontDisplay, so it resolves on every view, not just About. `about.glance` is
+     the section eyebrow; idn/sections.py inserts that key into all five language
+     tables, so this uses the export's native i18n rather than a JS shim.
+
+     DELIBERATELY NOT `{{ shopCols }}`
+     The About page's stats grid binds to shopCols, which the export never
+     defines — it renders empty, so that grid silently collapses to one column.
+     Copying the pattern would have inherited the bug. auto-fit/minmax does the
+     same job in pure CSS with nothing to resolve. Same reason the number size is
+     a clamp() rather than one of the export's JS-computed breakpoint values. -->
+<section style="background:var(--surface);border-top:1px solid var(--hairline);border-bottom:1px solid var(--hairline);padding:{{ sectionPadY }} {{ padX }}">
+  <div style="max-width:1180px;margin:0 auto">
+    <div style="text-align:center;font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted)">{{ about.glance }}</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:32px;margin-top:44px">
+      <sc-for list="{{ statsList }}" as="s" hint-placeholder-count="4">
+        <div style="text-align:center">
+          <div style="font-family:{{ fontDisplay }};font-weight:800;font-size:clamp(2.75rem,1.6rem+3.4vw,4.5rem);line-height:1;letter-spacing:-2px;color:var(--accent)">{{ s.n }}</div>
+          <div style="font-size:13px;line-height:1.45;letter-spacing:.5px;text-transform:uppercase;color:var(--body);margin-top:14px">{{ s.l }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,79 @@
+/* ---------------------------------------------------------------------------
+ * idn-type.css — corner geometry for the corporate B2B rebuild.
+ *
+ * Repo-owned, copied into site/ by deploy.sh:apply_idn() and linked from
+ * index.html. NEVER edit the copy in site/ — it is wiped on every deploy.
+ *
+ * THE RULE THIS ENCODES
+ *   Surfaces are square, controls are round. The reference register squares off
+ *   every card, panel and band to a near-sharp 2px, and then sets its calls to
+ *   action as fully round pills. The contrast between the two is the point: it
+ *   is what makes a button read as pressable on a page with no other rounding.
+ *
+ *   An earlier pass of this file flattened everything, buttons included. That
+ *   is a coherent look, but it is not this one, and it cost the CTAs their only
+ *   affordance.
+ *
+ * WHY CSS AND NOT A REWRITE OF THE EXPORT
+ *   The radii are inline `border-radius:Npx` literals on ~100 elements that the
+ *   design tool regenerates on every export, inside a subtree support.js
+ *   re-renders on every state change. A rewrite would have to run again after
+ *   every render. A stylesheet is reapplied by the engine for free, survives
+ *   re-renders and re-exports alike, and is reverted by deleting one file.
+ *
+ * WHY EACH VALUE IS ENUMERATED, not matched with a prefix
+ *   `[style*="border-radius:1"]` would catch 10/12/14/16/18 in one selector —
+ *   and would also catch a future `border-radius:100px`, silently squaring a
+ *   pill. Ten explicit selectors cannot drift that way.
+ *
+ * SCOPE
+ *   `#dc-root` only: the app root support.js creates. The pricing, service and
+ *   blog pages are separate documents without it, so nothing here reaches the
+ *   Stripe CTAs even though this file uses !important (which it must, to beat
+ *   an inline style attribute).
+ * ------------------------------------------------------------------------- */
+
+/* --- 1. Surfaces go square ------------------------------------------------
+ * Cards, panels, inputs, the closing CTA band (16px), media frames.
+ * 9999px and 50% are deliberately absent: those are the language pill, the
+ * theme toggle, the hamburger, the avatar and status dots, the icon discs —
+ * shapes whose meaning IS the round. Squaring them was the obvious way to make
+ * this layer look broken, so they are guarded by omission, not by an override.
+ */
+#dc-root [style*="border-radius:4px"],
+#dc-root [style*="border-radius:6px"],
+#dc-root [style*="border-radius:8px"],
+#dc-root [style*="border-radius:9px"],
+#dc-root [style*="border-radius:10px"],
+#dc-root [style*="border-radius:12px"],
+#dc-root [style*="border-radius:14px"],
+#dc-root [style*="border-radius:16px"],
+#dc-root [style*="border-radius:18px"],
+#dc-root [style*="border-radius:20px"] {
+  border-radius: 2px !important;
+}
+
+/* --- 2. Controls go round -------------------------------------------------
+ * The export gives every button the same signature: `cursor:pointer` together
+ * with `border-radius:8px`. That pair matches the 15 real buttons and nothing
+ * else — the CTA bands carry the accent fill too, but at 16px and without
+ * cursor:pointer, so they stay square under rule 1 above.
+ *
+ * Two attribute selectors also outrank rule 1's one, so this wins on
+ * specificity rather than on source order.
+ */
+#dc-root [style*="cursor:pointer"][style*="border-radius:8px"] {
+  border-radius: 9999px !important;
+}
+
+/* The repo-owned cinema hero styles itself through .gc__* classes rather than
+ * inline styles, so the selectors above never reach it. Match it by hand to
+ * keep one corner language across the fold. */
+#dc-root .gc__card,
+#dc-root .gc__band {
+  border-radius: 2px;
+}
+
+#dc-root .gc__btn {
+  border-radius: 9999px;
+}

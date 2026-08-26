@@ -54,6 +54,7 @@ BRAND_DIR="$PROJECT_DIR/brand"
 # committed on-brand SVG mockups. Survives re-exports.
 IMAGES_DIR="$PROJECT_DIR/images"
 HERO_DIR="$PROJECT_DIR/hero"
+IDN_DIR="$PROJECT_DIR/idn"
 
 # ---------------------------------------------------------------------------
 # frontend assets — JS kept out of the export (backend/assets/) so it survives
@@ -201,6 +202,27 @@ apply_copy() {
   else
     warn "content layer failed — deploy continues with the export's own copy"
   fi
+  return 0
+}
+
+# ---------------------------------------------------------------------------
+# legal layer — the export ships site/legal-data.js with [bracketed] Impressum
+# placeholders (street, ZIP, VAT) and cites the repealed § 5 TMG. site/ is wiped
+# on every deploy, so the real identity is re-applied here from seo/legal.json.
+# Runs on every deploy, including --no-content. Idempotent, all-or-nothing.
+# Edit seo/legal.json — never site/legal-data.js.
+# ---------------------------------------------------------------------------
+apply_legal() {
+  [ -d "$SEO_DIR" ] || return 0
+  [ -f "$SEO_DIR/apply_legal.py" ] || return 0
+  command -v python3 >/dev/null || { warn "python3 not found — skipped legal layer"; return 0; }
+
+  python3 "$SEO_DIR/apply_legal.py" "$SITE_DIR" "$SEO_DIR"
+  case $? in
+    0) ok "legal layer applied" ;;
+    2) warn "Impressum still has placeholders — fill seo/legal.json before taking real money" ;;
+    *) warn "legal layer failed — deploy continues with the export's own Impressum" ;;
+  esac
   return 0
 }
 
@@ -389,6 +411,59 @@ apply_pages() {
 # subtree, so the JS hooks it by structure) and re-applied on every deploy,
 # including --no-content. Idempotent per asset (hero:motion / hero-cinema markers).
 # ---------------------------------------------------------------------------
+# The corporate B2B layer: corner geometry now, homepage sections later.
+# Runs AFTER apply_brand, so the palette variables its CSS leans on already
+# exist, and BEFORE apply_hero, so the hero's structural probe
+# (div[style*="46px 46px"]) still meets the hero shape it expects.
+apply_idn() {
+  [ -d "$IDN_DIR" ] || { warn "idn/ not found — skipping corporate layer"; return 0; }
+
+  local f copied=""
+  for f in idn-type.css; do
+    [ -f "$IDN_DIR/$f" ] && { cp "$IDN_DIR/$f" "$SITE_DIR/$f"; copied="$copied $f"; }
+  done
+  [ -n "$copied" ] && ok "idn:$copied"
+
+  [ -f "$SITE_DIR/index.html" ] || return 0
+  command -v python3 >/dev/null || { warn "python3 missing — idn head links not injected"; return 0; }
+
+  python3 - "$SITE_DIR/index.html" <<'PY'
+import re, sys
+p = sys.argv[1]
+html = open(p, encoding="utf-8").read()
+orig = html
+
+def in_head(markup):
+    global html
+    if re.search(r"</head>", html, re.I):
+        html = re.sub(r"</head>", lambda m: markup + m.group(0), html, count=1, flags=re.I)
+    else:
+        html = markup + html
+
+# Guarded per asset, not per layer — the same lesson apply_hero() records: a
+# head rewritten by a later layer must be able to get this link back on its own.
+if "idn:type" not in html:
+    in_head('<!-- idn:type — see idn/idn-type.css, never edit site/ -->'
+            '<link rel="stylesheet" href="/idn-type.css">')
+
+if html != orig:
+    open(p, "w", encoding="utf-8").write(html)
+    print("idn: linked idn-type.css")
+else:
+    print("idn: index.html already current")
+PY
+
+  # Section surgery. This one DIES rather than warns: a missing anchor means the
+  # export was redesigned, and the choices are to stop, or to rsync a homepage
+  # that is silently missing a section. Stopping before the sync is the cheap
+  # failure — every other layer here warns because a warning still leaves a
+  # correct page, which is not true of this one.
+  if [ -f "$IDN_DIR/sections.py" ]; then
+    python3 "$IDN_DIR/sections.py" "$SITE_DIR/index.html" "$IDN_DIR" \
+      || die "idn sections failed — refusing to deploy a homepage with missing or misplaced blocks"
+  fi
+}
+
 apply_hero() {
   [ -d "$HERO_DIR" ] || { warn "hero/ not found — skipping hero motion layer"; return 0; }
 
@@ -666,7 +741,9 @@ PY
   apply_assets
   apply_seo
   apply_copy
+  apply_legal
   apply_brand
+  apply_idn
   apply_images
   apply_pages
   apply_prune
@@ -687,7 +764,9 @@ else
   apply_assets
   apply_seo
   apply_copy
+  apply_legal
   apply_brand
+  apply_idn
   apply_images
   apply_pages
   apply_prune

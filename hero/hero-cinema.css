@@ -121,8 +121,10 @@
 
 .gc__title,
 .gc .ga-lede__title {
-  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-weight: 500;
+  font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Heavy, not the mono's 500 — see the same note in hero-motion.css. This is
+   * the page's one full-viewport claim and the register sets it bold. */
+  font-weight: 700;
   /* Bigger than the rest of the site's headings on purpose. This is the one
    * full-viewport moment on the page, and at the page's normal 38px cap the
    * type read as a paragraph floating on a wide dark frame. 1440px -> 52px. */
@@ -311,7 +313,11 @@
   align-items: center;
   gap: 10px;
   opacity: var(--cue, 1);
-  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* The wide-tracked uppercase micro-label. Sans now, like everything else;
+   * the tracking below is what carries the "system label" reading, not the
+   * monospacing that used to. */
+  font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-weight: 600;
   font-size: 11px;
   letter-spacing: 0.18em;
   text-transform: uppercase;

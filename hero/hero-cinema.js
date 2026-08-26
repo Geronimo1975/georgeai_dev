@@ -104,6 +104,78 @@
     return '';
   }
 
+  /* WCAG contrast floor, computed at runtime from whatever colours readColors()
+   * actually samples. The alphas below are fixed by design, but the alpha a
+   * given foreground/background pair needs to clear AA depends on the theme,
+   * so the floor cannot be a second set of hardcoded constants — it has to be
+   * derived from the live colours or it will be wrong for some theme. */
+
+  /* Accepts '#rgb', '#rrggbb' and 'rgb()'/'rgba()' (what getComputedStyle
+   * returns for custom properties and what themeGround() returns for the
+   * sampled background). Returns null on anything else so a colour this
+   * cannot parse produces no lift rather than a wrong one. */
+  function parseColor(s) {
+    if (!s || typeof s !== 'string') return null;
+    s = s.trim();
+    var m = /^#([0-9a-f]{3})$/i.exec(s);
+    if (m) {
+      var h3 = m[1];
+      return [
+        parseInt(h3[0] + h3[0], 16),
+        parseInt(h3[1] + h3[1], 16),
+        parseInt(h3[2] + h3[2], 16)
+      ];
+    }
+    m = /^#([0-9a-f]{6})$/i.exec(s);
+    if (m) {
+      var h6 = m[1];
+      return [
+        parseInt(h6.slice(0, 2), 16),
+        parseInt(h6.slice(2, 4), 16),
+        parseInt(h6.slice(4, 6), 16)
+      ];
+    }
+    m = /^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i.exec(s);
+    if (m) return [parseFloat(m[1]), parseFloat(m[2]), parseFloat(m[3])];
+    return null;
+  }
+
+  /* WCAG 2.x relative luminance, sRGB gamma. */
+  function relLum(c) {
+    function chan(v) {
+      var x = v / 255;
+      return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+    }
+    return 0.2126 * chan(c[0]) + 0.7152 * chan(c[1]) + 0.0722 * chan(c[2]);
+  }
+
+  /* Composite fg over bg at alpha a the way canvas globalAlpha does (linear
+   * blend of sRGB channels), then return the WCAG ratio of that result
+   * against bg — i.e. the effective contrast the eye actually sees. */
+  function contrastAt(fg, bg, a) {
+    var comp = [
+      a * fg[0] + (1 - a) * bg[0],
+      a * fg[1] + (1 - a) * bg[1],
+      a * fg[2] + (1 - a) * bg[2]
+    ];
+    var l1 = relLum(comp), l2 = relLum(bg);
+    var hi = Math.max(l1, l2), lo = Math.min(l1, l2);
+    return (hi + 0.05) / (lo + 0.05);
+  }
+
+  /* Binary search for the smallest alpha that clears `target`. Returns 1 if
+   * even fully opaque fg cannot reach it — the caller then lifts as far as it
+   * can rather than throwing. */
+  function minAlphaFor(fg, bg, target) {
+    if (contrastAt(fg, bg, 1) < target) return 1;
+    var lo = 0, hi = 1, i;
+    for (i = 0; i < 24; i++) {
+      var mid = (lo + hi) / 2;
+      if (contrastAt(fg, bg, mid) >= target) hi = mid; else lo = mid;
+    }
+    return hi;
+  }
+
   function readColors() {
     var probe = state.section || document.body;
     var cs = getComputedStyle(probe);
@@ -126,6 +198,20 @@
         document.documentElement.style.setProperty('--gc-veil-soft', 'rgba(' + base + ', 0.45)');
       }
     }
+
+    /* Recompute the contrast lift for whatever colours were just sampled. Both
+     * text kinds are drawn in colors.ink today (see drawGraph); if either one
+     * changes fill, update the parsed foreground here to match. A colour that
+     * fails to parse yields null, and minAlphaFor is only called when both
+     * foreground and ground parsed, so a bad read always means "no lift"
+     * rather than a wrong one. */
+    var groundRGB = parseColor(colors.ground);
+    var subFg = parseColor(colors.ink);
+    var labelFg = parseColor(colors.ink);
+    var designedSub = 0.36 + 0.18 * MIN_Z;
+    var designedLabel = 0.34 + 0.34 * MIN_Z;
+    subLift = (subFg && groundRGB) ? Math.max(0, minAlphaFor(subFg, groundRGB, AA_RATIO) - designedSub) : 0;
+    labelLift = (labelFg && groundRGB) ? Math.max(0, minAlphaFor(labelFg, groundRGB, AA_RATIO) - designedLabel) : 0;
   }
 
   /* The theme switch animates the export root's background over 300ms, so the
@@ -488,6 +574,17 @@
    * gate at landing. */
   var REST_P = 0.46;
 
+  /* WCAG 2.x AA for normal text. tests/test_hero_contrast.py holds the design
+   * to this ratio; the lift below is computed against it at runtime rather
+   * than baked into a second set of alpha constants, because the ground is
+   * sampled live and can be anything. */
+  var AA_RATIO = 4.5;
+
+  /* Recomputed by readColors() on every call (init, resize, and the theme
+   * switch) and read by drawGraph. Zero until the first readColors() call. */
+  var subLift = 0;
+  var labelLift = 0;
+
   /* x/y are normalised into the graph box. t is when the node joins during the
    * build. z is depth: the left of the field is the far plane, because that is
    * the half the text lane sits over. */
@@ -513,6 +610,10 @@
     { x: 0.62, y: 0.68, t: 0.56, z: 0.7,  kind: 'sub', icon: 'code',  hue: 'ink',
       label: 'Vector Store', sub: 'Tool' }
   ];
+  /* The dimmest depth plane in NODES, derived rather than hardcoded so the
+   * lift stays correct if a node's z changes. Used as the "worst case" z for
+   * the contrast floor. */
+  var MIN_Z = NODES.reduce(function (m, n) { return Math.min(m, n.z); }, 1);
   /* d marks a port connection: drawn dashed and without an arrow, the way the
    * editor distinguishes what an agent USES from what it PASSES ON. */
   var EDGES = [
@@ -902,7 +1003,13 @@
       var fs = Math.max(9, Math.round(h * (isSub ? 0.34 : 0.26)));
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
-      ctx.globalAlpha = k * (0.34 + 0.34 * n.z);
+      /* labelLift/subLift are the runtime WCAG floor (see readColors()): the
+       * shortfall between the designed alpha at the dimmest plane and what
+       * this theme's actual ink-over-ground pair needs for AA, lifting the
+       * whole range rather than clamping so the depth gradient survives.
+       * Multiplied by k so a node still fades in from nothing during assembly
+       * instead of popping in already at the lifted floor. */
+      ctx.globalAlpha = Math.min(1, k * (0.34 + 0.34 * n.z) + labelLift * k);
       ctx.fillStyle = colors.ink;
       ctx.font = '600 ' + fs + 'px Inter, system-ui, sans-serif';
       ctx.fillText(n.label, pos.x, pos.y + h / 2 + fs * 0.55);
@@ -912,7 +1019,7 @@
        * The label above stays brighter still, so the hierarchy holds.
        * tests/test_hero_contrast.py recomputes this and fails if it slips. */
       if (n.sub) {
-        ctx.globalAlpha = k * (0.36 + 0.18 * n.z);
+        ctx.globalAlpha = Math.min(1, k * (0.36 + 0.18 * n.z) + subLift * k);
         ctx.fillStyle = colors.ink;
         ctx.font = Math.max(8, fs - 1) + 'px Inter, system-ui, sans-serif';
         ctx.fillText(n.sub, pos.x, pos.y + h / 2 + fs * 1.85);
