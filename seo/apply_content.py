@@ -537,6 +537,143 @@ def strip_babel_loader(js: str) -> str:
     return js
 
 
+# ---------------------------------------------------------------------------
+# stale and dead-end copy that survives a re-export. Three separate defects,
+# grouped because each is a handful of string swaps across the five language
+# blocks:
+#
+#   "Eleven ways"   — the copy says eleven, the data ships fifteen. Correcting
+#                     the numeral is the wrong fix: to someone who knew George
+#                     as Head of Infrastructure, a fifteen-item menu reads as a
+#                     freelancer who does anything. Drop the count entirely.
+#   "from Q3"       — undated availability that is stale on the day it is read.
+#                     Made absolute instead of moved forward, so it cannot rot
+#                     again. His actual availability window is his to set.
+#   the Sign up pill — the most prominent interactive element in the mobile
+#                     header, opening a modal whose submit can never fire, for
+#                     a /api/auth/* backend that nginx does not serve. On a
+#                     portfolio it is pure friction: a warm contact wants to
+#                     reply, not to create an account.
+# ---------------------------------------------------------------------------
+_SERVICES_SUB = (
+    ("Eleven ways I help teams move faster",
+     "How I help teams move faster"),
+    ("Elf Wege, wie ich Teams schneller mache",
+     "So mache ich Teams schneller"),
+    ("Onze façons d'aider les équipes à aller plus vite",
+     "Comment j'aide les équipes à aller plus vite"),
+    ("Unsprezece moduri prin care ajut echipele să avanseze mai repede",
+     "Cum ajut echipele să avanseze mai repede"),
+    ("إحدى عشرة طريقة أساعد بها الفرق على التحرّك أسرع",
+     "كيف أساعد الفرق على التحرّك أسرع"),
+)
+
+_AVAILABILITY = (
+    ("Available for new projects from Q3.", "Taking on new projects now."),
+    ("Verfügbar für neue Projekte ab Q3.", "Ich nehme aktuell neue Projekte an."),
+    ("Disponible pour de nouveaux projets dès le T3.", "Je prends de nouveaux projets en ce moment."),
+    ("Disponibil pentru proiecte noi din T3.", "Preiau proiecte noi acum."),
+    ("متاح لمشاريع جديدة من الربع الثالث.", "أقبل مشاريع جديدة الآن."),
+)
+
+_AUTH_PILL = re.compile(
+    r'\n\s*<span onClick="\{\{ openAuth \}\}"[^>]*>\{\{ authLabel \}\}</span>'
+)
+
+
+def fix_stale_copy(html: str) -> str:
+    for old, new in _SERVICES_SUB + _AVAILABILITY:
+        html = html.replace(old, new)
+
+    for stale in ("Eleven ways", "Elf Wege", "Onze façons", "Unsprezece moduri", "from Q3", "ab Q3"):
+        if stale in html:
+            raise PatchError("stale copy survived: %r" % stale)
+    return html
+
+
+def strip_auth_pill(html: str) -> str:
+    if "{{ authLabel }}" not in html:
+        return html
+    html, n = _AUTH_PILL.subn("", html, count=1)
+    if n != 1:
+        raise PatchError("could not locate the header Sign up pill")
+    return html
+
+
+# ---------------------------------------------------------------------------
+# Impressum — legal-data.js shipped unfilled placeholders in all five
+# languages, publicly, linked from the footer of every page:
+# "[Straße und Hausnummer]", "[PLZ] Hanstedt". The Impressum is the first page
+# a German professional checks to decide whether a business is real, and it is
+# also a § 5 TMG obligation. Values live in seo/impressum.json so a re-export
+# cannot revert them.
+#
+# The VAT section is deliberately REMOVED when no USt-IdNr. exists rather than
+# left as a placeholder. § 5 Abs. 1 Nr. 6 TMG requires it only "sofern
+# vorhanden", so omitting the line is correct and complete when there is none.
+# A Steuernummer is NOT a substitute: different identifier, not required by
+# § 5 TMG, and publishing one is widely advised against.
+# ---------------------------------------------------------------------------
+_ADDRESS_SLOTS = (
+    ("[Street and house number]", "[ZIP] Hanstedt"),
+    ("[Straße und Hausnummer]", "[PLZ] Hanstedt"),
+    ("[Rue et numéro]", "[Code postal] Hanstedt"),
+    ("[Strada și numărul]", "[Cod poștal] Hanstedt"),
+    ("[الشارع والرقم]", "[الرمز البريدي] هانشتيت"),
+)
+# whole { h: ..., p: ... } entries for the VAT section, one per language
+_VAT_ENTRY = re.compile(
+    r"\n\s*\{ h: \"[^\"]*\", p: \"[^\"]*\[(?:VAT ID, if applicable|USt-IdNr\., falls vorhanden|"
+    r"N° de TVA, le cas échéant|Cod TVA, dacă există|الرقم، إن وُجد)\][^\"]*\" \},"
+)
+_VAT_LABELS = {
+    "en": "VAT identification number pursuant to § 27a German VAT Act: %s",
+    "de": "Umsatzsteuer-Identifikationsnummer gemäß § 27a UStG: %s",
+    "fr": "Numéro d'identification TVA : %s",
+    "ro": "Număr de identificare TVA: %s",
+    "ar": "رقم تعريف ضريبة القيمة المضافة: %s",
+}
+
+
+def fix_impressum(js: str, data: dict) -> str:
+    street = data.get("street")
+    postal = data.get("postal_code")
+    if not street or not postal:
+        raise PatchError("seo/impressum.json needs both 'street' and 'postal_code'")
+
+    for street_slot, zip_slot in _ADDRESS_SLOTS:
+        js = js.replace(street_slot, street)
+        js = js.replace(zip_slot, "%s %s" % (postal, zip_slot.split("] ", 1)[1]))
+
+    vat_id = data.get("vat_id")
+    if vat_id:
+        if not re.fullmatch(r"DE\d{9}", vat_id):
+            raise PatchError(
+                "vat_id %r is not a German USt-IdNr. (DE followed by 9 digits). "
+                "A Steuernummer is a different identifier and must not go here." % vat_id
+            )
+        for lang, template in _VAT_LABELS.items():
+            js = js.replace(template % ("[%s]" % {
+                "en": "VAT ID, if applicable", "de": "USt-IdNr., falls vorhanden",
+                "fr": "N° de TVA, le cas échéant", "ro": "Cod TVA, dacă există",
+                "ar": "الرقم، إن وُجد"}[lang]), template % vat_id)
+    else:
+        js, n = _VAT_ENTRY.subn("", js)
+        if n == 0 and "falls vorhanden" in js:
+            raise PatchError("could not remove the empty VAT sections from the Impressum")
+
+    # only the placeholders this function owns — legal prose legitimately
+    # contains other bracketed text
+    known = [slot for pair in _ADDRESS_SLOTS for slot in pair] + [
+        "[VAT ID, if applicable]", "[USt-IdNr., falls vorhanden]",
+        "[N° de TVA, le cas échéant]", "[Cod TVA, dacă există]", "[الرقم، إن وُجد]",
+    ]
+    leftover = [k for k in known if k in js]
+    if leftover:
+        raise PatchError("unfilled Impressum placeholders remain: " + ", ".join(leftover[:5]))
+    return js
+
+
 def main(argv: list[str]) -> int:
     if len(argv) < 4:
         sys.stderr.write(__doc__)
@@ -545,6 +682,8 @@ def main(argv: list[str]) -> int:
 
     hero_p, testi_p = seo / "hero.json", seo / "testimonials.json"
     heroes = load(hero_p) if hero_p.exists() else {}
+    imp_p = seo / "impressum.json"
+    impressum = load(imp_p) if imp_p.exists() else None
     testis = load(testi_p) if testi_p.exists() else None
 
     writes: list[tuple[Path, str]] = []
@@ -565,9 +704,16 @@ def main(argv: list[str]) -> int:
             html = wire_cta_band(html)
             html = fix_lying_forms(html)
             html = strip_dead_hero_video(html)
+            html = fix_stale_copy(html)
+            html = strip_auth_pill(html)
             html = localize_third_party_assets(html, seo / "vendor" / "icons")
             html = localize_fonts(html, seo / "vendor" / "fonts.css", seo / "vendor" / "fonts")
             writes.append((page, html))
+
+        legal = site / "legal-data.js"
+        if impressum is not None and legal.exists():
+            writes.append((legal, fix_impressum(
+                legal.read_text(encoding="utf-8"), impressum)))
 
         support = site / "support.js"
         if support.exists():
