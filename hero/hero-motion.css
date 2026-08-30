@@ -280,13 +280,49 @@
   opacity: 0;
   max-width: 820px;
   padding: 0 20px;
-  transition: opacity 300ms var(--ga-ease-out), transform 300ms var(--ga-ease-out);
-  transform: translateY(10px);
 }
 
+/* The block itself is a visibility gate, not an animation: it is opacity 0 only
+ * so the un-relocated copy never flashes at the foot of the page, and it flips
+ * the instant the relocation lands. The motion belongs to the three parts
+ * inside it, which arrive in the order they are read — rule, headline, sub —
+ * instead of the whole block sliding up as one lump. The panels behind it start
+ * their own stagger one frame later (hero-motion.js sets .ga-hero--ready in a
+ * double rAF, placeLede in a single one), so the screen builds top-down. */
 .ga-lede--in {
   opacity: 1;
+}
+
+.ga-lede__title,
+.ga-lede__sub {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+/* The accent rule draws itself from the text's start edge rather than fading:
+ * it is a 2px bar, and 2px of opacity is invisible at any duration. */
+.ga-lede__title::before {
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.ga-lede--in .ga-lede__title {
+  opacity: 1;
   transform: none;
+  transition: opacity 420ms var(--ga-ease-out) 60ms,
+    transform 420ms var(--ga-ease-out) 60ms;
+}
+
+.ga-lede--in .ga-lede__title::before {
+  transform: none;
+  transition: transform 520ms var(--ga-ease-out);
+}
+
+.ga-lede--in .ga-lede__sub {
+  opacity: 1;
+  transform: none;
+  transition: opacity 380ms var(--ga-ease-out) 150ms,
+    transform 380ms var(--ga-ease-out) 150ms;
 }
 
 /* Relocated into the hero: the hero wrapper already pays 32px/56px padding. */
@@ -295,12 +331,29 @@
   margin: 0 0 32px;
 }
 
+/* No JS means no relocation and no --in class, so every gate above has to be
+ * open from the start — the copy is painted where it stands. */
 @media (scripting: none) {
-  .ga-lede { opacity: 1; transform: none; }
+  .ga-lede,
+  .ga-lede__title,
+  .ga-lede__sub { opacity: 1; transform: none; }
+  .ga-lede__title::before { transform: none; }
 }
 
+/* Reduced motion keeps the sequence — it is what tells you where to look first
+ * — and drops every position change, so nothing travels. */
 @media (prefers-reduced-motion: reduce) {
-  .ga-lede { transition: opacity 1ms linear; transform: none; }
+  .ga-lede__title,
+  .ga-lede__sub { transform: none; }
+  .ga-lede__title::before { transform: none; transition: none; }
+  .ga-lede--in .ga-lede__title {
+    transition: opacity 200ms ease 40ms;
+    transform: none;
+  }
+  .ga-lede--in .ga-lede__sub {
+    transition: opacity 200ms ease 100ms;
+    transform: none;
+  }
 }
 
 /* Display type is JetBrains Mono, not the export's Newsreader serif.
