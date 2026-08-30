@@ -29,7 +29,8 @@
         "Build, test and harden the flow",
         "Deploy, monitor and hand over"
       ],
-      "outcome": "Hours of manual work removed every week — reliably, around the clock."
+      "outcome": "Hours of manual work removed every week — reliably, around the clock.",
+      "seo_title": "n8n Workflow Automation for SMBs | GeorgeAI"
     },
     {
       "name": "AI Chatbot",
@@ -54,7 +55,8 @@
         "Design the conversation flow",
         "Embed, launch and refine"
       ],
-      "outcome": "Every visitor gets an instant, accurate answer."
+      "outcome": "Every visitor gets an instant, accurate answer.",
+      "seo_title": "AI Chatbot for Your Website — RAG-Trained | GeorgeAI"
     },
     {
       "name": "AI Phone Calls",
@@ -79,7 +81,8 @@
         "Connect your number and CRM",
         "Launch and continuously improve"
       ],
-      "outcome": "Every call answered — even outside office hours."
+      "outcome": "Every call answered — even outside office hours.",
+      "seo_title": "AI Phone Agents That Answer & Book 24/7 | GeorgeAI"
     },
     {
       "name": "SEO / AIO / GEO",
@@ -104,7 +107,8 @@
         "Fix technical and content gaps",
         "Automate content and track rankings"
       ],
-      "outcome": "More qualified traffic from Google and AI assistants."
+      "outcome": "More qualified traffic from Google and AI assistants.",
+      "seo_title": "SEO, AIO & GEO — Rank in Google and in AI Answers | GeorgeAI"
     },
     {
       "name": "Email Marketing",
@@ -129,7 +133,8 @@
         "Design segments and automations",
         "Launch, measure and optimise"
       ],
-      "outcome": "A self-running channel that nurtures leads into customers."
+      "outcome": "A self-running channel that nurtures leads into customers.",
+      "seo_title": "Email Marketing Automation & Deliverability | GeorgeAI"
     },
     {
       "name": "Lead Generation",
@@ -154,7 +159,8 @@
         "Build sourcing & enrichment flows",
         "Score, route and report"
       ],
-      "outcome": "A steady flow of qualified leads, on autopilot."
+      "outcome": "A steady flow of qualified leads, on autopilot.",
+      "seo_title": "Automated B2B Lead Generation & Enrichment | GeorgeAI"
     },
     {
       "name": "Python Programming",
@@ -179,7 +185,8 @@
         "Build and test iteratively",
         "Deploy with monitoring"
       ],
-      "outcome": "Reliable software tailored exactly to your process."
+      "outcome": "Reliable software tailored exactly to your process.",
+      "seo_title": "Python Development — Backends, APIs & Automation | GeorgeAI"
     },
     {
       "name": "Django",
@@ -204,7 +211,8 @@
         "Build app, APIs and admin",
         "Deploy, secure and scale"
       ],
-      "outcome": "A robust platform your business can grow on."
+      "outcome": "A robust platform your business can grow on.",
+      "seo_title": "Django Development — Web Platforms & Portals | GeorgeAI"
     },
     {
       "name": "Micro ERP",
@@ -229,7 +237,8 @@
         "Build the modules you need",
         "Roll out, train and support"
       ],
-      "outcome": "One system replacing a dozen spreadsheets."
+      "outcome": "One system replacing a dozen spreadsheets.",
+      "seo_title": "Custom Micro ERP — Inventory, Invoicing, Orders | GeorgeAI"
     },
     {
       "name": "CRM",
@@ -254,7 +263,8 @@
         "Build and migrate your data",
         "Integrate and automate"
       ],
-      "outcome": "A single source of truth for every relationship."
+      "outcome": "A single source of truth for every relationship.",
+      "seo_title": "Custom CRM Development on Django & n8n | GeorgeAI"
     },
     {
       "name": "Web Design",
@@ -279,7 +289,8 @@
         "Design and build responsively",
         "Launch, measure and iterate"
       ],
-      "outcome": "A site that works as hard as you do."
+      "outcome": "A site that works as hard as you do.",
+      "seo_title": "Web Design — Fast, Multilingual, SEO-Ready | GeorgeAI"
     },
     {
       "name": "RAG",
@@ -304,7 +315,8 @@
         "Build the embedding & retrieval pipeline",
         "Connect to chat and phone agents"
       ],
-      "outcome": "AI that answers from your facts, not its imagination."
+      "outcome": "AI that answers from your facts, not its imagination.",
+      "seo_title": "RAG Development — Ground Your AI in Your Docs | GeorgeAI"
     },
     {
       "name": "Web Design Optimization",
@@ -329,7 +341,8 @@
         "Redesign and optimise key pages",
         "Test, measure and iterate"
       ],
-      "outcome": "More leads from the same traffic."
+      "outcome": "More leads from the same traffic.",
+      "seo_title": "Website Conversion Optimization (CRO & Speed) | GeorgeAI"
     },
     {
       "name": "SaaS Projects",
@@ -354,7 +367,8 @@
         "Build core features and billing",
         "Launch, monitor and iterate"
       ],
-      "outcome": "A market-ready SaaS, built to grow."
+      "outcome": "A market-ready SaaS, built to grow.",
+      "seo_title": "SaaS Development — Auth, Billing, Dashboards | GeorgeAI"
     },
     {
       "name": "API Integration & Data Analytics",
@@ -379,7 +393,8 @@
         "Build and install the integrations",
         "Centralise data and build dashboards"
       ],
-      "outcome": "One connected system with analytics you can act on."
+      "outcome": "One connected system with analytics you can act on.",
+      "seo_title": "API Integration & Data Analytics Dashboards | GeorgeAI"
     }
   ],
   "configurator": {
