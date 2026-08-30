@@ -405,6 +405,29 @@ apply_pages() {
 
 
 # ---------------------------------------------------------------------------
+# image weight layer — the export ships its photography as full-size PNG (three
+# files alone were 5.7 MB of a 7.8 MB homepage at the 2026-08-26 audit).
+# images/optimize_assets.py re-encodes anything over 100 KB in site/assets/ to
+# WebP at display width and rewrites every reference to it. Originals are kept
+# so an un-rewritten reference still resolves. Runs after apply_media (which
+# owns the mp4s) and before apply_hero, on every deploy incl. --no-content.
+# Idempotent: the .webp is reused while it is newer than its source, and the
+# rewritten references have nothing left to match. Needs cwebp; without it the
+# script no-ops and the deploy continues with the original PNGs.
+# ---------------------------------------------------------------------------
+apply_image_opt() {
+  [ -f "$IMAGES_DIR/optimize_assets.py" ] || return 0
+  command -v python3 >/dev/null || { warn "python3 not found — skipped image optimisation"; return 0; }
+  local out
+  if out=$(python3 "$IMAGES_DIR/optimize_assets.py" "$SITE_DIR"); then
+    ok "${out#optimize_assets: }"
+  else
+    warn "image optimisation failed — deploy continues with original assets"
+  fi
+  return 0
+}
+
+# ---------------------------------------------------------------------------
 # hero motion layer — hero/hero-motion.{css,js} add autoplay, entrance
 # choreography, pointer parallax and the video backdrop to the homepage hero.
 # Kept out of the export (the export has no classes and re-renders the hero
@@ -748,6 +771,7 @@ PY
   apply_pages
   apply_prune
   apply_media
+  apply_image_opt
   apply_hero
   apply_widget
   # mirror the unpacked content (incl. the derived index.html) into the frontend
@@ -771,6 +795,7 @@ else
   apply_pages
   apply_prune
   apply_media
+  apply_image_opt
   apply_hero
   apply_widget
 fi
