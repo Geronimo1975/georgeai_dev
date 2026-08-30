@@ -1,13 +1,12 @@
 # Stripe Payment Links
 
-**Account:** get-hub Sandbox (`acct_1TIuuYEffkWmXH1r`) — **TEST MODE**.
-Test checkout card: `4242 4242 4242 4242`.
+**Account:** get-hub (`acct_1TIuuPRAac2j9d6w`) — **LIVE MODE** since 2026-08-30.
+Sandbox was `acct_1TIuuYEffkWmXH1r`; test card `4242 4242 4242 4242`.
 
-**Production currently sells through `mailto:`, not Stripe.** Commit `39e6f31`
-replaced all 7 buy hrefs with prefilled order mails so that no visitor could be
-sent into a sandbox checkout. The test links below still exist in Stripe; they
-are simply not linked from anywhere. Go-live re-wires the buttons — see the
-checklist at the bottom of this file.
+**The seven buy buttons now point at live Payment Links.** `scripts/stripe_golive.py
+--apply --write-html` created the live catalogue and rewrote the hrefs, replacing the
+`mailto:` order mails from `39e6f31`. The test links below still exist in the sandbox
+and are no longer linked from anywhere.
 
 ## Go-live: `scripts/stripe_golive.py`
 
@@ -29,30 +28,30 @@ carrying the slug in `metadata.data_product` is reused, not duplicated.
 
 | data-product | Payment Link |
 |---|---|
-| lead-pack-100 | https://buy.stripe.com/test_dRm5kD1hP0Hget1cpVdEs00 |
-| lead-pack-500 | https://buy.stripe.com/test_00waEX7Gd0Hg70zey3dEs01 |
-| visibility-audit | https://buy.stripe.com/test_fZu5kD3pX3Ts84D89FdEs02 |
-| phone-24-7 | https://buy.stripe.com/test_00w9ATd0xey6acLcpVdEs03 |
-| chatbot | https://buy.stripe.com/test_9B63cv5y5ahQ4Srey3dEs04 |
-| autopilot | https://buy.stripe.com/test_14AcN5gcJ0Hg5Wv4XtdEs05 |
-| prospects | https://buy.stripe.com/test_9B6fZh9Oley62Kj4XtdEs06 |
+| lead-pack-100 | https://buy.stripe.com/14AbJ365u63EcZE0fa7ss00 |
+| lead-pack-500 | https://buy.stripe.com/7sYfZj9hG8bM7Fke607ss01 |
+| visibility-audit | https://buy.stripe.com/eVqdRbbpO9fQgbQaTO7ss02 |
+| phone-24-7 | https://buy.stripe.com/5kQ00l8dC3Vw1gWaTO7ss03 |
+| chatbot | https://buy.stripe.com/cNi6oJeC02Rs6Bg1je7ss04 |
+| autopilot | https://buy.stripe.com/aFa8wRfG463Ef7M2ni7ss05 |
+| prospects | https://buy.stripe.com/3cI14p2Ti3Vw8Jo0fa7ss06 |
 
 All links: currency EUR, tax behavior exclusive, billing address collection **required**,
 phone number collection **on**. Each payment link and product carries
 `metadata.data_product = <slug>` so the n8n webhook (Task 6) can map a
 `checkout.session.completed` event back to the product.
 
-## Catalog (product / price IDs, test mode)
+## Catalog (product / price IDs, LIVE mode)
 
 | data-product | Product | Prices |
 |---|---|---|
-| lead-pack-100 | `prod_UoQn98E9ifNZd9` | `price_1TonwqEffkWmXH1rOvY4zFVJ` — €299 one-time |
-| lead-pack-500 | `prod_UoQoh1zTiS3Ghv` | `price_1TonwsEffkWmXH1rS6zkF0xL` — €990 one-time |
-| visibility-audit | `prod_UoQoe6TR042jjY` | `price_1TonwuEffkWmXH1rrktBIMbX` — €490 one-time |
-| phone-24-7 | `prod_UoQocGs4beo9rQ` | `price_1TonwyEffkWmXH1rYcA3Xv84` — €690/mo · `price_1TonwwEffkWmXH1rsrPYrqDp` — €990 setup |
-| chatbot | `prod_UoQoeY3J47m1AI` | `price_1Tonx2EffkWmXH1rtDmLFcWF` — €390/mo · `price_1Tonx0EffkWmXH1rzKmQvutG` — €1,900 setup |
-| autopilot | `prod_UoQodzPVUIdu9h` | `price_1Tonx7EffkWmXH1rLT2P9umh` — €750/mo · `price_1Tonx5EffkWmXH1rNxu3gQYp` — €2,500 setup |
-| prospects | `prod_UoQo52WQMgCxkk` | `price_1Tonx9EffkWmXH1rPZKfbLmw` — €990/mo |
+| lead-pack-100 | `prod_VAXOGf6KWivGJ7` | `price_1UACJGRAac2j9d6wzdiV3UEA` — €299 one-time |
+| lead-pack-500 | `prod_VAXOYoqD9roS6f` | `price_1UACJIRAac2j9d6wpFkHb4Xp` — €990 one-time |
+| visibility-audit | `prod_VAXOjCkUaVhkKh` | `price_1UACJKRAac2j9d6wJEBYVP9h` — €490 one-time |
+| phone-24-7 | `prod_VAXOpgaGBt2d0u` | `price_1UACJNRAac2j9d6wrB9vbeT2` — €690/mo · `price_1UACJNRAac2j9d6wOnYwxnAF` — €990 setup |
+| chatbot | `prod_VAXOokC1pT5VBQ` | `price_1UACJQRAac2j9d6wxD1VUFbI` — €390/mo · `price_1UACJQRAac2j9d6wephrtn6M` — €1,900 setup |
+| autopilot | `prod_VAXOCQ7KY1A4Dp` | `price_1UACJTRAac2j9d6wKgEGuZPq` — €750/mo · `price_1UACJURAac2j9d6w9dUDWRcs` — €2,500 setup |
+| prospects | `prod_VAXObI4hhmQtRG` | `price_1UACJWRAac2j9d6w4uwHZShD` — €990/mo |
 
 Setup + subscription products combine both prices in one payment link (the
 setup fee lands on the first invoice).
@@ -65,9 +64,9 @@ setup fee lands on the first invoice).
 ## n8n stripe-orders workflow
 
 - workflow `stripe-orders` (`Nx1WqOlQ1k3IWdgB`) on https://app.n8n-studio.com — ACTIVE, E2E-tested 2026-07-02 (real test purchase → all 4 nodes success); export in `docs/n8n-stripe-orders.json`. Old copy on n8n.rotocon.world (`hGndKGfKRk9tKIoG`) DEACTIVATED — wrong instance, see .claude/skills/georgeai-n8n.
-- webhook (production): `https://app.n8n-studio.com/webhook/stripe-orders` (POST) — Stripe endpoint `we_1TopbREffkWmXH1rTlxClClL` (sandbox, name georgeai-stripe-orders)
+- webhook (production): `https://app.n8n-studio.com/webhook/stripe-orders` (POST) — Stripe endpoint `we_1UACLTRAac2j9d6whC5N047r` (LIVE, checkout.session.completed); sandbox endpoint was `we_1TopbREffkWmXH1rTlxClClL`
 - flow: checkout.session.completed → **fetch-back session from Stripe API** (anti-forgery: forged webhook posts die on the fetch; all order data incl. the client email comes from Stripe, never from the raw POST) → (Brevo email to George) + (row in `orders` data table, status=New) + (Brevo onboarding email to client; lead packs get the ICP questionnaire)
-- credentials on app.n8n-studio.com: `Stripe account` (`OnWk28SXJXBAkCl0`, restricted test key) for the fetch-back; `Brevo SMTP` (`aK6Bete8OTRMNACY`, sender george.cucuiet@gmx.de) for both emails.
+- credentials on app.n8n-studio.com: `Stripe account` (`OnWk28SXJXBAkCl0`) for the fetch-back — **must hold a LIVE key now that the buttons are live; a test key makes every real checkout fail at the fetch-back**; `Brevo SMTP` (`aK6Bete8OTRMNACY`, sender george.cucuiet@gmx.de) for both emails.
 - go-live checklist, in order:
   1. ~~Impressum~~ **done** (2026-08-26) — `seo/legal.json` carries Greuner Brook 1,
      21271 Hanstedt and the § 19 UStG Kleinunternehmer note; `apply_legal` re-applies
