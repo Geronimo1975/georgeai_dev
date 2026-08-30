@@ -1,8 +1,31 @@
 # Stripe Payment Links
 
 **Account:** get-hub Sandbox (`acct_1TIuuYEffkWmXH1r`) — **TEST MODE**.
-Before real sales: recreate these in live mode (same catalog below), swap the URLs
-in `pages/pricing/index.html`, and redeploy. Test checkout card: `4242 4242 4242 4242`.
+Test checkout card: `4242 4242 4242 4242`.
+
+**Production currently sells through `mailto:`, not Stripe.** Commit `39e6f31`
+replaced all 7 buy hrefs with prefilled order mails so that no visitor could be
+sent into a sandbox checkout. The test links below still exist in Stripe; they
+are simply not linked from anywhere. Go-live re-wires the buttons — see the
+checklist at the bottom of this file.
+
+## Go-live: `scripts/stripe_golive.py`
+
+Do not rebuild the catalog by hand in the dashboard — a mistyped `690` for a
+`69000` is a real invoice. The script mirrors the catalog below into live mode
+(7 products, 10 prices, 7 payment links, each carrying
+`metadata.data_product`), idempotently, and can swap the hrefs in one pass:
+
+```bash
+python3 scripts/stripe_golive.py                        # dry run — prints the plan, writes nothing
+python3 scripts/stripe_golive.py --apply                # create in live mode
+python3 scripts/stripe_golive.py --apply --write-html   # + rewrite the 7 buy hrefs
+```
+
+It reads `STRIPE_LIVE_TOKEN` from the repo-root `.env` (a **restricted live**
+key with write access to Products, Prices, Payment Links), never prints it, and
+refuses to run against a `_test_` key. Re-running is safe: anything already
+carrying the slug in `metadata.data_product` is reused, not duplicated.
 
 | data-product | Payment Link |
 |---|---|
@@ -45,7 +68,24 @@ setup fee lands on the first invoice).
 - webhook (production): `https://app.n8n-studio.com/webhook/stripe-orders` (POST) — Stripe endpoint `we_1TopbREffkWmXH1rTlxClClL` (sandbox, name georgeai-stripe-orders)
 - flow: checkout.session.completed → **fetch-back session from Stripe API** (anti-forgery: forged webhook posts die on the fetch; all order data incl. the client email comes from Stripe, never from the raw POST) → (Brevo email to George) + (row in `orders` data table, status=New) + (Brevo onboarding email to client; lead packs get the ICP questionnaire)
 - credentials on app.n8n-studio.com: `Stripe account` (`OnWk28SXJXBAkCl0`, restricted test key) for the fetch-back; `Brevo SMTP` (`aK6Bete8OTRMNACY`, sender george.cucuiet@gmx.de) for both emails.
-- go-live checklist: recreate products/prices/payment links in live mode; swap the 7 hrefs in pages/pricing/index.html; redeploy; add a LIVE-mode webhook endpoint with the same URL; swap the n8n Stripe credential to a live restricted key. Optional: verify contact@georgeai.dev as Brevo sender for nicer branding.
+- go-live checklist, in order:
+  1. ~~Impressum~~ **done** (2026-08-26) — `seo/legal.json` carries Greuner Brook 1,
+     21271 Hanstedt and the § 19 UStG Kleinunternehmer note; `apply_legal` re-applies
+     it in all 5 languages on every deploy. Not yet deployed.
+     Because of § 19 the live prices are created with `tax_behavior: "inclusive"`:
+     no VAT is added, so €299 is charged as €299. The `/pricing/` page carries no
+     VAT qualifier next to the prices — worth adding a "§ 19 UStG — no VAT charged"
+     line for German buyers, but that is sales copy, not a blocker.
+  2. `python3 scripts/stripe_golive.py --apply --write-html` (needs `STRIPE_LIVE_TOKEN`).
+  3. Add a **LIVE-mode** webhook endpoint in Stripe with the same URL,
+     `https://app.n8n-studio.com/webhook/stripe-orders`, event `checkout.session.completed`.
+  4. Swap the n8n `Stripe account` credential (`OnWk28SXJXBAkCl0`) to a live restricted
+     key — the workflow's anti-forgery fetch-back cannot read a live session with a test key.
+  5. `./deploy.sh --no-content`, then
+     `GEORGEAI_STRIPE_MODE=live python3 tests/test_payments_pipeline.py`.
+  6. Set `GEORGEAI_STRIPE_MODE=live` in the crontab (`cron/README.md`).
+  7. One real low-value purchase end-to-end, then refund it.
+  - Optional: verify contact@georgeai.dev as Brevo sender for nicer branding.
 - known limitation (accepted for Phase 1): no dedup on session id — a Stripe webhook retry could create a duplicate order row/email. Add a rowNotExists check before insert if it ever happens in practice.
 
 
