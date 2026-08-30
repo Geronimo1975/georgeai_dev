@@ -39,11 +39,8 @@
       "Bash(ffmpeg:*)"
     ],
     "deny": [
-      "Read(./.env)",
       "Read(./backend/.env)",
       "Read(./deploy/backend.env)",
-      "Bash(cat .env:*)",
-      "Bash(cat ./.env:*)",
       "Bash(cat backend/.env:*)",
       "Bash(cat deploy/backend.env:*)",
       "Bash(rm -rf:*)"
