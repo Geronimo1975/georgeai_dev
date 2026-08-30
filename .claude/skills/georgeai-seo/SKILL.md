@@ -13,6 +13,7 @@ it is wiped and regenerated.
 |------|------------|
 | `seo/head.html` | title / meta / OG / JSON-LD block, injected before `</head>` (marker `seo:head`); deploy also sets `lang="en"` on `<html>` |
 | `seo/generate_service_pages.py` | generates the `/services/` hub + one static page per service (data: `georgeai_services.json`), the `/blog/` hub from the HTML fragments in `blog/`, and regenerates `sitemap.xml` with every URL |
+| `seo/legal.json` + `seo/apply_legal.py` | the Impressum identity block (street / ZIP / VAT). The export ships `[bracketed]` placeholders and cites the repealed § 5 TMG; this re-applies the real data in all 5 languages on every deploy. Refuses to run (exit 2) while the JSON is unfilled, leaving the honest placeholders rather than inventing an address |
 | `seo/apply_content.py` | re-applies `seo/hero.json` + `seo/testimonials.json` over the copy the export hard-codes (a re-export silently reverts positioning work) |
 | `seo/inject_widget.py` | injects the lead-capture widget across all generated + static pages; runs last in the deploy |
 | `seo/assets/` | repo-owned static assets copied into `site/assets/`. Currently `og-cover.jpg`, the 1200×630 / 137 KB social card |
