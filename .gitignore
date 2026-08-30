@@ -261,5 +261,27 @@ CLAUDE.local.md
 
 # stray working files at repo root
 /10k-websites-skill.zip
-/gc-0.png
-/hero-desktop.png
+
+# Loose images dropped at the repo root: screenshots, reference shots, memes,
+# personal photos. Every image the site actually uses lives in a subdirectory
+# (Media/, images/mock/, seo/assets/, hero/assets/, backend/), so nothing here
+# is a real asset — root is only ever a scratch area. These patterns are
+# root-anchored (leading /) on purpose: they must not reach those subdirs.
+#
+# This is a privacy guard as much as a tidiness one. `git add <path>` in this
+# repo has been observed staging unrelated root files alongside the ones named,
+# which is how a personal photo ends up one `git commit` away from a public
+# repository.
+#
+# To commit a root-level image deliberately: git add -f <file>
+/*.png
+/*.jpg
+/*.jpeg
+/*.gif
+/*.webp
+/*.avif
+/*.svg
+/*.bmp
+/*.heic
+/*.tif
+/*.tiff
