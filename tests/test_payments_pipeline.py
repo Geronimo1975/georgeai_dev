@@ -73,7 +73,8 @@ def _load_env() -> dict:
             if line and not line.startswith("#") and "=" in line:
                 k, _, v = line.partition("=")
                 env[k.strip()] = v.strip()
-    env.update({k: v for k, v in os.environ.items() if k in ("STRIPE_TOKEN", "N8N_API_KEY")})
+    env.update({k: v for k, v in os.environ.items()
+                if k in ("STRIPE_TOKEN", "STRIPE_LIVE_TOKEN", "STRIPE_SECRET", "N8N_API_KEY")})
     return env
 
 
@@ -94,8 +95,19 @@ def _http(url: str, headers: dict | None = None, data: bytes | None = None,
 
 
 def _stripe(path: str) -> dict:
-    token = ENV.get("STRIPE_TOKEN")
-    assert token, "STRIPE_TOKEN missing from .env"
+    # The token has to match the mode being asserted. A test key can only ever
+    # see test-mode objects, so with STRIPE_TOKEN hardcoded here every live-mode
+    # run read the old sandbox links and reported livemode=False — which reads
+    # as "the site is selling through test links" when the real cause is the
+    # credential the suite authenticated with. Setting GEORGEAI_STRIPE_MODE=live,
+    # the one step the go-live checklist gives, could therefore never pass.
+    if EXPECTED_STRIPE_MODE == "live":
+        token = ENV.get("STRIPE_LIVE_TOKEN") or ENV.get("STRIPE_SECRET")
+        assert token, ("live mode expects STRIPE_LIVE_TOKEN (or STRIPE_SECRET) "
+                       "in .env — a test key cannot read live objects")
+    else:
+        token = ENV.get("STRIPE_TOKEN")
+        assert token, "STRIPE_TOKEN missing from .env"
     status, body = _http(f"https://api.stripe.com{path}",
                          headers={"Authorization": f"Bearer {token}"})
     assert status == 200, f"Stripe API {path} -> HTTP {status}: {body[:200]}"
