@@ -8,9 +8,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import sys
 from dataclasses import dataclass, field
+from datetime import date
 from pathlib import Path
+
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 ROOT = Path(__file__).resolve().parent
 LANGS = ("de", "en")
@@ -52,6 +56,115 @@ class Page:
     pair: str | None = None
     draft: bool = False
     site: dict = field(default_factory=dict)
+
+
+@dataclass
+class BuildReport:
+    pages: dict[str, int]
+    drafts: dict[str, int]
+
+
+def _env(root: Path) -> Environment:
+    env = Environment(loader=FileSystemLoader(str(root / "templates")),
+                      autoescape=select_autoescape(["html"]), trim_blocks=True, lstrip_blocks=True)
+    return env
+
+
+def _nav(site: dict, lang: str) -> list[dict]:
+    labels = site["ui"][lang]["nav"]
+    order = ("services", "work", "about", "blog", "contact")
+    return [{"key": k, "label": labels[k], "href": page_path(lang, k)} for k in order]
+
+
+def render_page(env: Environment, page: Page, pages: list[Page]) -> str:
+    site = page.site
+    alternates = [{"hreflang": page.lang, "href": DOMAIN + page.path}]
+    if page.pair:
+        other = "en" if page.lang == "de" else "de"
+        alternates.append({"hreflang": other, "href": DOMAIN + page.pair})
+    de_url = page.path if page.lang == "de" else page.pair
+    alternates.append({"hreflang": "x-default", "href": DOMAIN + (de_url or page.path)})
+    tpl = env.get_template(page.template)
+    return tpl.render(
+        page=page, site=site, ui=site["ui"][page.lang], c=page.content, lang=page.lang,
+        path=page.path, canonical=DOMAIN + page.path, pair=page.pair, alternates=alternates,
+        nav=_nav(site, page.lang), url=lambda key, slug=None: page_path(page.lang, key, slug),
+        other_lang=("en" if page.lang == "de" else "de"),
+    )
+
+
+def write_sitemap(pages: list[Page], out: Path) -> None:
+    today = date.today().isoformat()
+    lines = ['<?xml version="1.0" encoding="UTF-8"?>',
+             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">']
+    for p in sorted(pages, key=lambda p: p.path):
+        if p.draft:
+            continue
+        lines.append("  <url>")
+        lines.append(f"    <loc>{DOMAIN}{p.path}</loc>")
+        lines.append(f"    <lastmod>{today}</lastmod>")
+        lines.append(f'    <xhtml:link rel="alternate" hreflang="{p.lang}" href="{DOMAIN}{p.path}"/>')
+        if p.pair:
+            other = "en" if p.lang == "de" else "de"
+            lines.append(f'    <xhtml:link rel="alternate" hreflang="{other}" href="{DOMAIN}{p.pair}"/>')
+        lines.append("  </url>")
+    lines.append("</urlset>")
+    (out / "sitemap.xml").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def write_robots(out: Path) -> None:
+    (out / "robots.txt").write_text(
+        "User-agent: *\nAllow: /\n\nSitemap: https://georgeai.dev/sitemap.xml\n", encoding="utf-8")
+
+
+def write_llms(pages: list[Page], out: Path) -> None:
+    lines = ["# GeorgeAI", "",
+             "> George Cucuiet, AI automation engineer in Hanstedt, Germany. AI voice agents and website "
+             "assistants for owner-run trades, clinics and service firms. 8+ years, 40+ projects, five languages, "
+             "pilot live in about two weeks.", ""]
+    for lang in LANGS:
+        lines.append(f"## Pages ({lang})")
+        for p in sorted((p for p in pages if p.lang == lang and not p.draft), key=lambda p: p.path):
+            title = _get(p.content, "meta.title") or p.key
+            lines.append(f"- [{title}]({DOMAIN}{p.path})")
+        lines.append("")
+    (out / "llms.txt").write_text("\n".join(lines), encoding="utf-8")
+
+
+def copy_assets(root: Path, out: Path) -> None:
+    src = root / "assets"
+    dst = out / "assets"
+    if dst.exists():
+        shutil.rmtree(dst)
+    if src.exists():
+        shutil.copytree(src, dst)
+    auth = root / "backend" / "assets" / "auth.js"
+    if auth.exists():
+        shutil.copy2(auth, out / "auth.js")
+    for name in ("favicon.svg", "favicon.ico", "favicon-32.png", "apple-touch-icon.png", "logo-mark.png", "logo-512.png"):
+        f = root / "assets" / "img" / name
+        if f.exists():
+            shutil.copy2(f, out / name)
+
+
+def build(out: Path) -> BuildReport:
+    site = load_site(ROOT)
+    langs = {lang: load_lang(ROOT, lang) for lang in LANGS}
+    pages = inventory(site, langs)
+    env = _env(ROOT)
+    out.mkdir(parents=True, exist_ok=True)
+    for p in pages:
+        target = out / p.path.strip("/") / "index.html"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(render_page(env, p, pages), encoding="utf-8")
+    copy_assets(ROOT, out)
+    write_sitemap(pages, out)
+    write_robots(out)
+    write_llms(pages, out)
+    return BuildReport(
+        pages={lang: sum(1 for p in pages if p.lang == lang) for lang in LANGS},
+        drafts={lang: sum(1 for p in pages if p.lang == lang and p.draft) for lang in LANGS},
+    )
 
 
 def _get(d: dict, dotted: str):
@@ -117,16 +230,12 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--out", default=str(ROOT / "site"))
     args = ap.parse_args(argv)
     try:
-        site = load_site(ROOT)
-        langs = {lang: load_lang(ROOT, lang) for lang in LANGS}
-        pages = inventory(site, langs)
+        report = build(Path(args.out))
     except ContentError as exc:
         sys.stderr.write(f"build: {exc}\n")
         return 1
     for lang in LANGS:
-        n = sum(1 for p in pages if p.lang == lang)
-        d = sum(1 for p in pages if p.lang == lang and p.draft)
-        sys.stderr.write(f"build: {lang}: {n} pages, {d} draft\n")
+        sys.stderr.write(f"build: {lang}: {report.pages[lang]} pages, {report.drafts[lang]} draft\n")
     return 0
 
 

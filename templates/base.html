@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ c.meta.title }}</title>
+<meta name="description" content="{{ c.meta.description }}">
+<link rel="canonical" href="{{ canonical }}">
+{% for a in alternates %}
+<link rel="alternate" hreflang="{{ a.hreflang }}" href="{{ a.href }}">
+{% endfor %}
+<link rel="stylesheet" href="/assets/fonts.css">
+<link rel="stylesheet" href="/assets/site.css">
+{% block head %}{% endblock %}
+</head>
+<body>
+{% block body %}{% endblock %}
+</body>
+</html>
