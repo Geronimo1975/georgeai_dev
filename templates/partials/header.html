@@ -31,7 +31,7 @@
       </ul>
     </nav>
     <a class="brand" href="{{ url('home') }}" aria-label="{{ site.brand }}">
-      <img src="/logo-mark.png" alt="" width="22" height="22">
+      <img class="brand__mark brand__mark--ink" src="/logo-mark-ink.png" alt="" width="22" height="22"><img class="brand__mark brand__mark--neon" src="/logo-mark.png" alt="" width="22" height="22">
       <span class="brand__word">{{ site.brand }}</span>
     </a>
     <div class="hdr__cta">
@@ -40,11 +40,13 @@
     </div>
   </div>
   <div class="hdr__menu wrap" id="site-menu" hidden>
-    <ul>
-      {% for item in nav %}
-      <li><a href="{{ item.href }}">{{ item.label }}</a></li>
-      {% endfor %}
-    </ul>
+    <nav aria-label="{{ ui.menu }}">
+      <ul>
+        {% for item in nav %}
+        <li><a href="{{ item.href }}">{{ item.label }}</a></li>
+        {% endfor %}
+      </ul>
+    </nav>
     <a class="btn btn--primary btn--block" href="{{ url('configurator') }}">{{ ui.nav.configurator }}</a>
     <a class="btn btn--secondary btn--block" href="{{ url('contact') }}">{{ ui.cta }}</a>
   </div>

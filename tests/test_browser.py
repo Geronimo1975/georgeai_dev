@@ -19,8 +19,9 @@ class SiteHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         if self.path.startswith("/api/"):
-            body = b'{"detail": "unauthenticated"}'
-            self.send_response(401)
+            # mirrors backend/accounts/views.py:MeView for an anonymous visitor
+            body = b'{"authenticated": false}'
+            self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()

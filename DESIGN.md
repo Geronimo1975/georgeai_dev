@@ -72,7 +72,7 @@ Sections present on the homepage (`isHome`), top to bottom — see the earlier l
 1. **Header** — sticky, blurred `--navBg`, language switcher pill, theme toggle, auth pill, hamburger menu (mobile), "Configurator" CTA (`--accentBtn`) + secondary "Contact" button.
 2. **Hero — Showcase** — full-bleed animated grid/beam background (beams neon), interactive service-flag panels; the active panel carries a real "Read the case study" link to `/work/<slug>/`. Eyebrow + H1 + sub + two CTAs.
 3. **Logo Carousel** — passive marquee, no interactive elements by design.
-4. **How It Works** — 4-up card grid, no CTA (informational only).
+4. **How It Works** — numbered ruled strip (no cards), no CTA (informational only).
 5. **Selected Work** — "View all →" links to `/work/`, each project card to its own `/work/<slug>/` page. Both were dead in the export (styled clickable, no handler); `seo/apply_content.py:wire_work_links()` wires them on every deploy.
 6. **Services** — 2-up category cards, "See all services" (`onClick`) + per-item `onOpen` handlers.
 7. **Testimonials** — carousel with dot + prev/next controls (`onClick`, UI-only, not navigational).

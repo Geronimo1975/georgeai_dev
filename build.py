@@ -14,7 +14,8 @@ from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 
-from jinja2 import Environment, FileSystemLoader, select_autoescape
+from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
+from jinja2.exceptions import UndefinedError
 
 ROOT = Path(__file__).resolve().parent
 LANGS = ("de", "en")
@@ -69,7 +70,7 @@ class BuildReport:
 
 
 def _env(root: Path) -> Environment:
-    env = Environment(loader=FileSystemLoader(str(root / "templates")),
+    env = Environment(loader=FileSystemLoader(str(root / "templates")), undefined=StrictUndefined,
                       autoescape=select_autoescape(["html"]), trim_blocks=True, lstrip_blocks=True)
     return env
 
@@ -175,7 +176,8 @@ def copy_assets(root: Path, out: Path) -> None:
     auth = root / "backend" / "assets" / "auth.js"
     if auth.exists():
         shutil.copy2(auth, out / "auth.js")
-    for name in ("favicon.svg", "favicon.ico", "favicon-32.png", "apple-touch-icon.png", "logo-mark.png", "logo-512.png"):
+    for name in ("favicon.svg", "favicon.ico", "favicon-32.png", "apple-touch-icon.png", "logo-mark.png", "logo-mark-ink.png",
+                 "logo-512.png"):
         f = root / "assets" / "img" / name
         if f.exists():
             shutil.copy2(f, out / name)
@@ -190,7 +192,11 @@ def build(out: Path) -> BuildReport:
     for p in pages:
         target = out / p.path.strip("/") / "index.html"
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(render_page(env, p, pages), encoding="utf-8")
+        try:
+            html = render_page(env, p, pages)
+        except UndefinedError as exc:
+            raise ContentError(f"{p.lang}/{p.key}: {exc}") from exc
+        target.write_text(html, encoding="utf-8")
     copy_assets(ROOT, out)
     write_sitemap(pages, out)
     write_robots(out)

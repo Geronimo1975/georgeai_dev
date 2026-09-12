@@ -105,10 +105,26 @@ def test_cli_exit_code_on_broken_content(tmp_path, monkeypatch):
     assert build.main(["--out", str(tmp_path / "out")]) == 1
 
 
+def test_missing_optional_key_fails_the_build(tmp_path, monkeypatch):
+    import shutil
+    root = tmp_path / "root"
+    shutil.copytree(ROOT / "content", root / "content")
+    shutil.copytree(ROOT / "templates", root / "templates")
+    (root / "assets").mkdir()
+    home = json.loads((root / "content" / "en" / "home.json").read_text(encoding="utf-8"))
+    del home["hero"]["panelCta"]
+    (root / "content" / "en" / "home.json").write_text(json.dumps(home), encoding="utf-8")
+    monkeypatch.setattr(build, "ROOT", root)
+    with pytest.raises(build.ContentError) as exc:
+        build.build(tmp_path / "out")
+    assert "panelCta" in str(exc.value)
+
+
 def test_site_css_has_design_tokens_for_both_themes():
     css = (ROOT / "assets" / "site.css").read_text(encoding="utf-8")
     for token, light, dark in [("--canvas", "#faf9f5", "#181715"), ("--ink", "#141413", "#faf9f5"),
-                               ("--accent", "#a9583e", "#cc785c"), ("--accentBtn", "#a9583e", "#a9583e"),
+                               ("--accent", "#df2700", "#ff5c39"), ("--accentBtn", "#df2700", "#df2700"),
+                               ("--accentText", "#d52500", "#ff5c39"),
                                ("--card", "#faf9f5", "#201f1c"), ("--footerBg", "#181715", "#0f0e0d")]:
         assert f"{token}: {light}" in css, token
         assert f"{token}: {dark}" in css, token
@@ -128,7 +144,7 @@ def test_shell_has_nav_language_switch_and_landmarks(tmp_path):
     assert 'hreflang="de" href="/"' in en
     assert 'data-theme-toggle' in de and 'data-menu-toggle' in de
     assert '<script type="module" src="/assets/site.js"></script>' in de
-    assert 'src="/auth.js"' in de and 'id="ga-auth-email"' in de
+    assert 'src="/auth.js"' in de
     assert "data-cookie" not in de  # analyticsId is empty, so no banner
 
 

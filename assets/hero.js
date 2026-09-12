@@ -4,14 +4,14 @@ export function hero() {
   const panels = Array.from(root.querySelectorAll("[data-panel]"));
   const buttons = panels.map((p) => p.querySelector(".panel__hit"));
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let idx = 0, timer = null;
+  let idx = 0, timer = null, manual = false; // a manual choice stops the rotation for good
   const activate = (i) => {
     idx = i;
     panels.forEach((p, j) => { p.classList.toggle("is-active", j === i); buttons[j].setAttribute("aria-pressed", String(j === i)); });
   };
-  const start = () => { if (reduced || timer) return; timer = setInterval(() => activate((idx + 1) % panels.length), 6000); };
+  const start = () => { if (reduced || manual || timer) return; timer = setInterval(() => activate((idx + 1) % panels.length), 6000); };
   const stop = () => { clearInterval(timer); timer = null; };
-  buttons.forEach((b, i) => b.addEventListener("click", () => { activate(i); stop(); }));
+  buttons.forEach((b, i) => b.addEventListener("click", () => { activate(i); manual = true; stop(); }));
   root.addEventListener("pointerenter", stop);
   root.addEventListener("pointerleave", start);
   root.addEventListener("focusin", stop);

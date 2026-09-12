@@ -51,13 +51,13 @@
     </div>
     <ul class="svcs__grid">
       {% for s in c.services['items'] %}
-      <li class="svc-card{% if s.featured %} svc-card--featured{% endif %}">
+      <li class="svc-card{% if s.get('featured') %} svc-card--featured{% endif %}">
         <span class="eyebrow">{{ s.tag }}</span>
         <h3>{{ s.name }}</h3>
         <p class="svc-card__desc">{{ s.desc }}</p>
         <div class="svc-card__foot">
           <span class="svc-card__price">{{ c.services.priceLabel }}</span>
-          <a class="btn btn--small {{ 'btn--cream' if s.featured else 'btn--primary' }}" href="{{ url('service', s.slug) }}">{{ s.cta }}</a>
+          <a class="btn btn--small {{ 'btn--cream' if s.get('featured') else 'btn--primary' }}" href="{{ url('service', s.slug) }}">{{ s.cta }}</a>
         </div>
       </li>
       {% endfor %}
