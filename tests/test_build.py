@@ -103,3 +103,15 @@ def test_cli_exit_code_on_broken_content(tmp_path, monkeypatch):
     (bad / "content" / "de" / "home.json").write_text("{}", encoding="utf-8")
     monkeypatch.setattr(build, "ROOT", bad)
     assert build.main(["--out", str(tmp_path / "out")]) == 1
+
+
+def test_site_css_has_design_tokens_for_both_themes():
+    css = (ROOT / "assets" / "site.css").read_text(encoding="utf-8")
+    for token, light, dark in [("--canvas", "#faf9f5", "#181715"), ("--ink", "#141413", "#faf9f5"),
+                               ("--accent", "#a9583e", "#cc785c"), ("--accentBtn", "#a9583e", "#a9583e"),
+                               ("--card", "#faf9f5", "#201f1c"), ("--footerBg", "#181715", "#0f0e0d")]:
+        assert f"{token}: {light}" in css, token
+        assert f"{token}: {dark}" in css, token
+    assert 'html[data-theme="dark"]' in css
+    assert "prefers-color-scheme: dark" in css
+    assert "prefers-reduced-motion" in css
