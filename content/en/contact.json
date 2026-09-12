@@ -1,0 +1,29 @@
+{
+  "meta": {"title": "Contact | Book a free 30-minute call with George", "description": "Book a free 30-minute call or send a message. AI voice agent and website assistant pilots for trades, clinics and service firms in Germany. Reply usually within two days."},
+  "eyebrow": "Contact", "title": "Let's talk about your project.",
+  "lead": "Book a free 30-minute call or send a message. I usually reply within two days.",
+  "infoTitle": "Direct", "phoneL": "Phone", "emailL": "Email", "locationL": "Location", "hoursL": "Hours", "hours": "Mon–Fri, 9:00–18:00 CET",
+  "personal": "You reach me directly, not a sales team. Calls in German, English, French, Romanian or Arabic.",
+  "nextTitle": "What happens next",
+  "steps": [
+    {"t": "A 30-minute call", "d": "We look at where enquiries slip through: evenings, Saturdays, the phone ringing while you're on a job."},
+    {"t": "A short written proposal", "d": "Scope, price and what the pilot covers. Usually within two days."},
+    {"t": "Pilot live in about two weeks", "d": "On your own number and website, answering in your callers' language."}
+  ],
+  "form": {
+    "title": "Book a call", "serviceL": "What is it about?", "servicePh": "Select a service",
+    "services": ["n8n Workflows", "SEO · AIO · GEO", "Django Data Analytics", "AI Chatbots & Phone AI", "Something else"],
+    "dateL": "Pick a day", "timeL": "Pick a time (CET)", "slots": ["09:00", "10:30", "12:00", "14:00", "15:30", "17:00"],
+    "nameL": "Your name", "emailL": "Your email", "msgL": "A line about your project", "optional": "optional",
+    "submit": "Request this slot",
+    "hint": "Opens your email app with the request prefilled. Nothing is sent until you press Send.",
+    "missing": "Still needed:", "fieldDay": "a day", "fieldTime": "a time", "fieldName": "your name", "fieldEmail": "a valid email",
+    "locale": "en-GB"
+  },
+  "done": {
+    "title": "One more step: press Send.",
+    "msg": "Your email app should have opened with the request below. If it didn't, copy the text and send it to contact@georgeai.dev, or send it on WhatsApp.",
+    "copy": "Copy request", "copied": "Copied", "openMail": "Open email again", "edit": "Change something"
+  },
+  "mail": {"subject": "Booking request", "greeting": "Hi George,", "slot": "Requested slot:", "service": "Service:", "name": "Name:", "email": "Email:", "sign": "Thanks,"}
+}

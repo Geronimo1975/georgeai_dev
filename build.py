@@ -39,7 +39,8 @@ REQUIRED = {
              "hero.panels", "how.eyebrow", "how.title", "how.sub", "how.cards", "work.title", "work.all", "work.items",
              "services.eyebrow", "services.title", "services.lead", "services.all", "services.items",
              "faq.eyebrow", "faq.title", "faq.items", "cta.title", "cta.sub", "cta.btn"],
-    "contact": ["meta.title", "meta.description", "eyebrow", "title", "lead"],
+    "contact": ["meta.title", "meta.description", "eyebrow", "title", "lead", "infoTitle", "phoneL", "emailL",
+                "locationL", "hoursL", "hours", "personal", "nextTitle", "steps", "form", "done", "mail"],
 }
 TEMPLATES = {"home": "pages/home.html", "contact": "pages/contact.html"}
 
@@ -101,6 +102,12 @@ def jsonld_faq(items: list[dict]) -> str:
     return json.dumps(data, ensure_ascii=False, indent=1)
 
 
+def jsonld_contact(page: Page) -> str:
+    data = {"@context": "https://schema.org", "@type": "ContactPage", "url": DOMAIN + page.path,
+            "name": _get(page.content, "meta.title"), "about": {"@id": f"{DOMAIN}/#person"}}
+    return json.dumps(data, ensure_ascii=False, indent=1)
+
+
 def render_page(env: Environment, page: Page, pages: list[Page]) -> str:
     site = page.site
     alternates = [{"hreflang": page.lang, "href": DOMAIN + page.path}]
@@ -116,7 +123,7 @@ def render_page(env: Environment, page: Page, pages: list[Page]) -> str:
         nav=_nav(site, page.lang), url=lambda key, slug=None: page_path(page.lang, key, slug),
         other_lang=("en" if page.lang == "de" else "de"),
         jsonld_site=jsonld_site(site, page.lang), build_year=date.today().year,
-        jsonld_faq=jsonld_faq,
+        jsonld_faq=jsonld_faq, jsonld_contact=jsonld_contact,
     )
 
 

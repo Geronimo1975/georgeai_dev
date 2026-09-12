@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block body_class %}page-contact{% endblock %}
+{% block jsonld %}<script type="application/ld+json">
+{{ jsonld_contact(page) | safe }}
+</script>{% endblock %}
+{% block content %}
+<section class="contact wrap">
+  <span class="eyebrow">{{ c.eyebrow }}</span>
+  <h1 class="contact__title">{{ c.title }}</h1>
+  <p class="lead contact__lead">{{ c.lead }}</p>
+
+  <div class="contact__grid">
+    <div class="contact__info">
+      <div class="direct">
+        <span class="eyebrow eyebrow--muted">{{ c.infoTitle }}</span>
+        <a class="direct__item" href="{{ site.phoneHref }}"><span class="direct__label">{{ c.phoneL }}</span><span class="direct__value">{{ site.phone }}</span></a>
+        <a class="direct__item" href="mailto:{{ site.email }}"><span class="direct__label">{{ c.emailL }}</span><span class="direct__value">{{ site.email }}</span></a>
+        <div class="direct__item"><span class="direct__label">{{ c.locationL }}</span><span class="direct__value">{{ site.location[lang] }}</span></div>
+        <div class="direct__item"><span class="direct__label">{{ c.hoursL }}</span><span class="direct__value">{{ c.hours }}</span></div>
+        <a class="direct__wa" href="{{ site.whatsapp }}" target="_blank" rel="noopener"><span class="mark" aria-hidden="true"></span>WhatsApp</a>
+      </div>
+      <div class="next">
+        <span class="eyebrow eyebrow--muted">{{ c.nextTitle }}</span>
+        <ol class="steps">
+          {% for s in c.steps %}
+          <li class="step">
+            <span class="step__n">{{ '%02d' % loop.index }}</span>
+            <span><span class="step__t">{{ s.t }}</span><span class="step__d">{{ s.d }}</span></span>
+          </li>
+          {% endfor %}
+        </ol>
+        <p class="next__personal">{{ c.personal }}</p>
+      </div>
+    </div>
+
+    <div class="card contact__card">
+      <form class="booking" data-booking novalidate
+            data-locale="{{ c.form.locale }}" data-missing="{{ c.form.missing }}"
+            data-field-day="{{ c.form.fieldDay }}" data-field-time="{{ c.form.fieldTime }}"
+            data-field-name="{{ c.form.fieldName }}" data-field-email="{{ c.form.fieldEmail }}"
+            data-copy="{{ c.done['copy'] }}" data-copied="{{ c.done.copied }}"
+            data-mail-subject="{{ c.mail.subject }}" data-mail-greeting="{{ c.mail.greeting }}" data-mail-slot="{{ c.mail.slot }}"
+            data-mail-service="{{ c.mail.service }}" data-mail-name="{{ c.mail.name }}" data-mail-email="{{ c.mail.email }}" data-mail-sign="{{ c.mail.sign }}"
+            data-email="{{ site.email }}" data-whatsapp="{{ site.whatsapp }}">
+        <h2 class="booking__title">{{ c.form.title }}</h2>
+
+        <label class="label" for="ga-ct-service">{{ c.form.serviceL }}</label>
+        <select class="field" id="ga-ct-service" name="service">
+          <option value="">{{ c.form.servicePh }}</option>
+          {% for s in c.form.services %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+        </select>
+
+        <div class="group" role="group" aria-labelledby="ga-ct-dayL">
+          <span class="label" id="ga-ct-dayL">{{ c.form.dateL }}</span>
+          <div class="chips" data-booking-days></div>
+        </div>
+        <div class="group" role="group" aria-labelledby="ga-ct-timeL">
+          <span class="label" id="ga-ct-timeL">{{ c.form.timeL }}</span>
+          <div class="chips" data-booking-slots>
+            {% for t in c.form.slots %}<button class="chip chip--slot" type="button" aria-pressed="false" data-slot="{{ t }}">{{ t }}</button>{% endfor %}
+          </div>
+        </div>
+
+        <div class="booking__fields">
+          <div><label class="label" for="ga-ct-name">{{ c.form.nameL }}</label><input class="field" id="ga-ct-name" name="name" type="text" autocomplete="name"></div>
+          <div><label class="label" for="ga-ct-email">{{ c.form.emailL }}</label><input class="field" id="ga-ct-email" name="email" type="email" autocomplete="email" inputmode="email"></div>
+        </div>
+        <label class="label" for="ga-ct-msg">{{ c.form.msgL }} <span class="label__opt">({{ c.form.optional }})</span></label>
+        <textarea class="field field--area" id="ga-ct-msg" name="message" rows="3"></textarea>
+
+        <button class="btn btn--primary btn--block" type="submit">{{ c.form.submit }}</button>
+        <p class="booking__error" role="alert" data-booking-error hidden></p>
+        <p class="booking__hint">{{ c.form.hint }}</p>
+      </form>
+
+      <div class="booking__done" data-booking-done hidden>
+        <img src="/logo-mark.png" alt="" width="28" height="28">
+        <h2 class="booking__title" tabindex="-1">{{ c.done.title }}</h2>
+        <p class="booking__summary" data-booking-summary></p>
+        <p class="booking__hint">{{ c.done.msg }}</p>
+        <pre class="booking__body" data-booking-body></pre>
+        <div class="booking__actions">
+          <button class="btn btn--secondary btn--small" type="button" data-booking-copy>{{ c.done['copy'] }}</button>
+          <a class="btn btn--secondary btn--small" href="mailto:{{ site.email }}" data-booking-mail>{{ c.done.openMail }}</a>
+          <a class="btn btn--secondary btn--small" href="{{ site.whatsapp }}" target="_blank" rel="noopener" data-booking-wa><span class="mark" aria-hidden="true"></span>WhatsApp</a>
+        </div>
+        <button class="linklike" type="button" data-booking-edit>{{ c.done.edit }}</button>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

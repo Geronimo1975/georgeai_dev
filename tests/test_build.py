@@ -145,3 +145,18 @@ def test_home_sections_render(tmp_path):
     de = (out / "index.html").read_text(encoding="utf-8")
     assert "So funktioniert es" in de and 'href="/kontakt/"' in de
     assert '"@type": "FAQPage"' in de
+
+
+def test_contact_pages_render_with_form_and_steps(tmp_path):
+    out, _ = _build(tmp_path)
+    de = (out / "kontakt" / "index.html").read_text(encoding="utf-8")
+    en = (out / "en" / "contact" / "index.html").read_text(encoding="utf-8")
+    for html in (de, en):
+        assert "<form" in html and "data-booking" in html
+        assert 'for="ga-ct-name"' in html and 'id="ga-ct-name"' in html
+        assert "<textarea" in html and 'id="ga-ct-msg"' in html
+        assert 'data-booking-days' in html and 'data-booking-slots' in html
+        assert html.count('class="step"') == 3
+        assert '"@type": "ContactPage"' in html
+    assert "Termin buchen" in de and "Book a call" in en
+    assert 'href="/en/contact/"' in de and 'href="/kontakt/"' in en

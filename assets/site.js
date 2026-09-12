@@ -1,4 +1,5 @@
 import { hero } from "./hero.js";
+import { booking } from "./booking.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -47,3 +48,4 @@ theme();
 menu();
 cookie();
 hero();
+booking();
