@@ -1,4 +1,58 @@
 {
   "meta": {"title": "GeorgeAI | AI voice agent and website assistant for trades, clinics and service firms", "description": "The enquiry you miss on a Saturday still ends up in your calendar. AI voice agent and website assistant for owner-run trades, clinics and service firms in Germany. Pilot live in about two weeks."},
-  "hero": {"eyebrow": "For owner-run trades, clinics and service firms in Germany", "title": "The enquiry you miss on a Saturday still ends up in your calendar.", "sub": "An AI voice agent picks up the phone and an assistant answers on your website, day or night, in the caller's own language: every enquiry qualified and booked in. 8+ years, 40+ projects delivered, five languages. Your pilot goes live in about two weeks.", "cta1": "See the services", "cta2": "Ask about a pilot"}
+  "hero": {
+    "eyebrow": "For owner-run trades, clinics and service firms in Germany",
+    "title": "The enquiry you miss on a Saturday still ends up in your calendar.",
+    "sub": "An AI voice agent picks up the phone and an assistant answers on your website, day or night, in the caller's own language: every enquiry qualified and booked in. 8+ years, 40+ projects delivered, five languages. Your pilot goes live in about two weeks.",
+    "cta1": "See the services", "cta2": "Ask about a pilot",
+    "panelsTitle": "Selected projects, up close", "panelCta": "Read the case study",
+    "panels": [
+      {"name": "AI SEO Automation System", "cat": "Flagship project", "img": "SEO_AI.png", "slug": "ai-seo-automation-system", "desc": "An AI-driven SEO engine on OpenAI and n8n: keyword research, content generation and workflow automation that cut manual SEO work and scaled output."},
+      {"name": "Medical AI Agent", "cat": "AI · RAG", "img": "medical_ai.png", "slug": "medical-ai-agent", "desc": "An OpenAI + Python + RAG assistant for medical data processing and query automation."},
+      {"name": "Smart Facility Automation", "cat": "IoT · BMS", "img": "concept_smart_home.png", "slug": "smart-facility-automation", "desc": "n8n, OpenAI (RAG) and Python for smart-building monitoring and operational control."},
+      {"name": "Containerized Infrastructure", "cat": "Infra · Cloud", "img": "clouddienste.jpg", "slug": "containerized-infrastructure", "desc": "Scalable infrastructure with Docker, PostgreSQL, Redis and Nginx, built for high availability."},
+      {"name": "Full-stack Web Platform", "cat": "Django · AI", "img": "full_stack.png", "slug": "full-stack-web-platform", "desc": "A scalable Django platform with WordPress integration, AI services and API automations."}
+    ]
+  },
+  "how": {
+    "eyebrow": "How it works", "title": "From bottleneck to running system, in weeks, not months.",
+    "sub": "A simple, proven path from your first call to a system that quietly does the work every day.",
+    "cards": [
+      {"tag": "01 · Discover", "title": "We map the bottleneck", "desc": "A short call to find the repetitive, costly work, and the fastest place to automate it."},
+      {"tag": "02 · Build", "title": "I build and harden it", "desc": "Custom n8n + Python with error handling, tested against your real data until it is reliable."},
+      {"tag": "03 · Connect", "title": "It plugs into your stack", "desc": "CRM, email, sheets, WhatsApp, phone: your tools, talking to each other automatically."},
+      {"tag": "04 · Run", "title": "It runs, you watch it work", "desc": "Deployed, monitored and handed over, with dashboards so you always see what it is doing."}
+    ]
+  },
+  "work": {
+    "title": "Selected work", "all": "All projects",
+    "items": [
+      {"name": "Medical AI Agent", "tags": "AI · RAG", "slug": "medical-ai-agent", "desc": "An OpenAI + Python + RAG assistant for medical data processing and query automation."},
+      {"name": "Smart Facility Automation", "tags": "IoT · BMS", "slug": "smart-facility-automation", "desc": "n8n, OpenAI (RAG) and Python for smart-building monitoring and operational control."},
+      {"name": "Containerized Infrastructure", "tags": "Infra · Cloud", "slug": "containerized-infrastructure", "desc": "Scalable infrastructure with Docker, PostgreSQL, Redis and Nginx, built for high availability."},
+      {"name": "Full-stack Web Platform", "tags": "Django · AI", "slug": "full-stack-web-platform", "desc": "A scalable Django platform with WordPress integration, AI services and API automations."}
+    ]
+  },
+  "services": {
+    "eyebrow": "Services", "title": "What I build for you", "lead": "Four areas, one goal: the enquiry gets answered, qualified and booked, whether you are on a job, in surgery or asleep.", "all": "All services",
+    "priceLabel": "Price on request",
+    "items": [
+      {"tag": "Automation", "name": "n8n Workflows", "slug": "automation", "cta": "Get a quote", "desc": "Automated n8n workflows that connect your tools and remove manual, repetitive work, built with OpenAI and Python."},
+      {"tag": "Optimization", "name": "SEO · AIO · GEO", "slug": "seo-aio-geo", "cta": "Get a quote", "desc": "SEO, AI Optimization (AIO) and Generative Engine Optimization (GEO) for your existing site, or a new one I build for you."},
+      {"tag": "Data", "name": "Django Data Analytics", "slug": "django", "cta": "Get a quote", "desc": "Python backend and data-analytics dashboards in Django, turning your data into decisions."},
+      {"tag": "Conversation", "name": "AI Chatbots & Phone AI", "slug": "ai-phone-calls", "cta": "Book a call", "featured": true, "desc": "Website chatbots and AI phone agents with a custom voice, plus social-media integration: conversations that convert."}
+    ]
+  },
+  "faq": {
+    "eyebrow": "FAQ", "title": "Questions & answers",
+    "items": [
+      {"q": "How long does a typical project take?", "a": "Most automations and AI agents ship in 2 to 6 weeks, depending on scope. A focused pilot can be live in about two weeks. You get a clear timeline after the first call."},
+      {"q": "Do you work with my existing website and tools?", "a": "Yes. I connect to what you already use: WordPress, your CRM, email platform, sheets, WhatsApp and more. If you do not have a site yet, I can build that too."},
+      {"q": "What does it cost?", "a": "Pricing depends on scope, so it is quoted per project. Use the configurator to outline what you need and I will send a tailored quote, usually within two days. No surprise fees."},
+      {"q": "Will the automations keep running without you?", "a": "Yes. Everything is deployed, monitored and documented, and handed over to you. Optional ongoing support and maintenance are available if you would like me to keep an eye on it."},
+      {"q": "Is my data safe?", "a": "Your data stays in your own tools and infrastructure wherever possible. I follow GDPR practices and can work within your security requirements."},
+      {"q": "Which languages and regions do you serve?", "a": "I work remotely across Europe and the Middle East, in English, German, French, Romanian and Arabic."}
+    ]
+  },
+  "cta": {"title": "Have a process worth automating?", "sub": "Taking on new projects now. Tell me what is slowing you down and I will reply within two days.", "btn": "Start a project"}
 }

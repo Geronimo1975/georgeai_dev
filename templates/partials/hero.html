@@ -1,0 +1,37 @@
+<section class="hero">
+  <div class="hero__bg" aria-hidden="true">
+    <span class="hero__aurora hero__aurora--a"></span>
+    <span class="hero__aurora hero__aurora--b"></span>
+    <span class="hero__glow"></span>
+    <span class="hero__grid"></span>
+    {% for i in range(7) %}<span class="hero__beam hero__beam--{{ i }}"></span>{% endfor %}
+  </div>
+  <div class="hero__inner wrap">
+    <div class="hero__copy">
+      <span class="eyebrow hero__eyebrow">{{ c.hero.eyebrow }}</span>
+      <h1>{{ c.hero.title }}</h1>
+      <p class="lead hero__sub">{{ c.hero.sub }}</p>
+      <div class="hero__ctas">
+        <a class="btn btn--primary" href="{{ url('services') }}">{{ c.hero.cta1 }}</a>
+        <a class="btn btn--secondary" href="{{ url('contact') }}">{{ c.hero.cta2 }}</a>
+      </div>
+    </div>
+    <div class="hero__panels" data-hero-panels aria-label="{{ c.hero.panelsTitle }}">
+      {% for p in c.hero.panels %}
+      <div class="panel" data-panel>
+        <button class="panel__hit" type="button" aria-pressed="{{ 'true' if loop.first else 'false' }}" aria-label="{{ p.name }}">
+          <img class="panel__img" src="/assets/img/{{ p.img }}" alt="" loading="{{ 'eager' if loop.first else 'lazy' }}">
+          <span class="panel__scrim" aria-hidden="true"></span>
+          <span class="panel__label" aria-hidden="true">{{ p.name }}</span>
+        </button>
+        <div class="panel__body">
+          <span class="eyebrow">{{ '%02d' % loop.index }} · {{ p.cat }}</span>
+          <h3 class="panel__title">{{ p.name }}</h3>
+          <p class="panel__desc">{{ p.desc }}</p>
+          <a class="btn btn--cream btn--small" href="{{ url('project', p.slug) }}">{{ c.hero.panelCta }}</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>

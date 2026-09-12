@@ -35,7 +35,10 @@ PREFIX = {"de": "/", "en": "/en/"}
 
 # required keys per page file, dotted paths
 REQUIRED = {
-    "home": ["meta.title", "meta.description", "hero.eyebrow", "hero.title", "hero.sub", "hero.cta1", "hero.cta2"],
+    "home": ["meta.title", "meta.description", "hero.eyebrow", "hero.title", "hero.sub", "hero.cta1", "hero.cta2",
+             "hero.panels", "how.eyebrow", "how.title", "how.sub", "how.cards", "work.title", "work.all", "work.items",
+             "services.eyebrow", "services.title", "services.lead", "services.all", "services.items",
+             "faq.eyebrow", "faq.title", "faq.items", "cta.title", "cta.sub", "cta.btn"],
     "contact": ["meta.title", "meta.description", "eyebrow", "title", "lead"],
 }
 TEMPLATES = {"home": "pages/home.html", "contact": "pages/contact.html"}
@@ -91,6 +94,13 @@ def jsonld_site(site: dict, lang: str) -> str:
     return json.dumps(data, ensure_ascii=False, indent=1)
 
 
+def jsonld_faq(items: list[dict]) -> str:
+    data = {"@context": "https://schema.org", "@type": "FAQPage",
+            "mainEntity": [{"@type": "Question", "name": it["q"],
+                            "acceptedAnswer": {"@type": "Answer", "text": it["a"]}} for it in items]}
+    return json.dumps(data, ensure_ascii=False, indent=1)
+
+
 def render_page(env: Environment, page: Page, pages: list[Page]) -> str:
     site = page.site
     alternates = [{"hreflang": page.lang, "href": DOMAIN + page.path}]
@@ -106,6 +116,7 @@ def render_page(env: Environment, page: Page, pages: list[Page]) -> str:
         nav=_nav(site, page.lang), url=lambda key, slug=None: page_path(page.lang, key, slug),
         other_lang=("en" if page.lang == "de" else "de"),
         jsonld_site=jsonld_site(site, page.lang), build_year=date.today().year,
+        jsonld_faq=jsonld_faq,
     )
 
 

@@ -1,0 +1,16 @@
+<section class="section wrap faq">
+  <div class="faq__grid">
+    <div>
+      <span class="eyebrow">{{ faq.eyebrow }}</span>
+      <h2 class="faq__title">{{ faq.title }}</h2>
+    </div>
+    <div class="faq__list">
+      {% for it in faq['items'] %}
+      <details class="faq__item"{% if loop.first %} open{% endif %}>
+        <summary>{{ it.q }}</summary>
+        <p>{{ it.a }}</p>
+      </details>
+      {% endfor %}
+    </div>
+  </div>
+</section>

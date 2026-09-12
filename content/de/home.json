@@ -1,4 +1,58 @@
 {
   "meta": {"title": "GeorgeAI | KI-Telefonagent und Website-Assistent für Handwerk, Praxen und Dienstleister", "description": "Der Anruf, den Sie samstags verpassen, steht montags in Ihrem Kalender. KI-Telefonagent und Website-Assistent für Handwerk, Praxen und Dienstleister in Deutschland. Pilot in rund zwei Wochen."},
-  "hero": {"eyebrow": "Für Handwerk, Praxen und Dienstleister im Mittelstand", "title": "Der Anruf, den Sie samstags verpassen, steht montags in Ihrem Kalender.", "sub": "Ein KI-Assistent geht ans Telefon und antwortet auf Ihrer Website, Tag und Nacht, in der Sprache des Kunden: Anliegen notiert, Termin gebucht. 8+ Jahre Erfahrung, 40+ Projekte, fünf Sprachen. Nach rund zwei Wochen läuft Ihr Pilotprojekt.", "cta1": "Leistungen ansehen", "cta2": "Pilotprojekt anfragen"}
+  "hero": {
+    "eyebrow": "Für Handwerk, Praxen und Dienstleister im Mittelstand",
+    "title": "Der Anruf, den Sie samstags verpassen, steht montags in Ihrem Kalender.",
+    "sub": "Ein KI-Assistent geht ans Telefon und antwortet auf Ihrer Website, Tag und Nacht, in der Sprache des Kunden: Anliegen notiert, Termin gebucht. 8+ Jahre Erfahrung, 40+ Projekte, fünf Sprachen. Nach rund zwei Wochen läuft Ihr Pilotprojekt.",
+    "cta1": "Leistungen ansehen", "cta2": "Pilotprojekt anfragen",
+    "panelsTitle": "Ausgewählte Projekte aus der Nähe", "panelCta": "Case Study lesen",
+    "panels": [
+      {"name": "AI SEO Automation System", "cat": "Leuchtturm-Projekt", "img": "SEO_AI.png", "slug": "ai-seo-automation-system", "desc": "Eine KI-gestützte SEO-Engine auf OpenAI und n8n: Keyword-Recherche, Content-Erstellung und Workflow-Automatisierung, die manuelle SEO-Arbeit reduziert und den Output skaliert."},
+      {"name": "Medical AI Agent", "cat": "KI · RAG", "img": "medical_ai.png", "slug": "medical-ai-agent", "desc": "OpenAI- + Python- + RAG-Assistent für die Verarbeitung medizinischer Daten und Abfrage-Automatisierung."},
+      {"name": "Smart Facility Automation", "cat": "IoT · GLT", "img": "concept_smart_home.png", "slug": "smart-facility-automation", "desc": "n8n, OpenAI (RAG) und Python für Smart-Building-Monitoring und Betriebssteuerung."},
+      {"name": "Containerized Infrastructure", "cat": "Infra · Cloud", "img": "clouddienste.jpg", "slug": "containerized-infrastructure", "desc": "Skalierbare Infrastruktur mit Docker, PostgreSQL, Redis und Nginx, für hohe Verfügbarkeit gebaut."},
+      {"name": "Full-stack Web Platform", "cat": "Django · KI", "img": "full_stack.png", "slug": "full-stack-web-platform", "desc": "Eine skalierbare Django-Plattform mit WordPress-Integration, KI-Diensten und API-Automatisierungen."}
+    ]
+  },
+  "how": {
+    "eyebrow": "So funktioniert es", "title": "Vom Engpass zum laufenden System, in Wochen, nicht Monaten.",
+    "sub": "Ein einfacher, bewährter Weg vom ersten Gespräch bis zum System, das täglich leise die Arbeit erledigt.",
+    "cards": [
+      {"tag": "01 · Analyse", "title": "Wir kartieren den Engpass", "desc": "Ein kurzes Gespräch, um die repetitive, teure Arbeit zu finden, und den schnellsten Ansatzpunkt."},
+      {"tag": "02 · Aufbau", "title": "Ich baue und härte es ab", "desc": "Individuelles n8n + Python mit Fehlerbehandlung, an Ihren echten Daten getestet, bis es zuverlässig läuft."},
+      {"tag": "03 · Verbinden", "title": "Es klinkt sich in Ihren Stack ein", "desc": "CRM, E-Mail, Tabellen, WhatsApp, Telefon: Ihre Tools, die automatisch miteinander reden."},
+      {"tag": "04 · Betrieb", "title": "Es läuft, Sie sehen ihm zu", "desc": "Deployt, überwacht und übergeben, mit Dashboards, damit Sie immer sehen, was es tut."}
+    ]
+  },
+  "work": {
+    "title": "Ausgewählte Arbeiten", "all": "Alle Projekte",
+    "items": [
+      {"name": "Medical AI Agent", "tags": "KI · RAG", "slug": "medical-ai-agent", "desc": "OpenAI- + Python- + RAG-Assistent für die Verarbeitung medizinischer Daten und Abfrage-Automatisierung."},
+      {"name": "Smart Facility Automation", "tags": "IoT · GLT", "slug": "smart-facility-automation", "desc": "n8n, OpenAI (RAG) und Python für Smart-Building-Monitoring und Betriebssteuerung."},
+      {"name": "Containerized Infrastructure", "tags": "Infra · Cloud", "slug": "containerized-infrastructure", "desc": "Skalierbare Infrastruktur mit Docker, PostgreSQL, Redis und Nginx, für hohe Verfügbarkeit gebaut."},
+      {"name": "Full-stack Web Platform", "tags": "Django · KI", "slug": "full-stack-web-platform", "desc": "Eine skalierbare Django-Plattform mit WordPress-Integration, KI-Diensten und API-Automatisierungen."}
+    ]
+  },
+  "services": {
+    "eyebrow": "Leistungen", "title": "Was ich für Sie baue", "lead": "Vier Bereiche, ein Ziel: Die Anfrage wird beantwortet, qualifiziert und gebucht, ob Sie auf der Baustelle, in der Sprechstunde oder im Feierabend sind.", "all": "Alle Leistungen",
+    "priceLabel": "Preis auf Anfrage",
+    "items": [
+      {"tag": "Automatisierung", "name": "n8n-Workflows", "slug": "automation", "cta": "Angebot anfragen", "desc": "Automatisierte n8n-Workflows, die Ihre Tools verbinden und manuelle, sich wiederholende Arbeit eliminieren, mit OpenAI und Python."},
+      {"tag": "Optimierung", "name": "SEO · AIO · GEO", "slug": "seo-aio-geo", "cta": "Angebot anfragen", "desc": "SEO, AI Optimization (AIO) und Generative Engine Optimization (GEO) für Ihre bestehende Website, oder eine neue, die ich baue."},
+      {"tag": "Daten", "name": "Django-Datenanalyse", "slug": "django", "cta": "Angebot anfragen", "desc": "Python-Backend und Datenanalyse-Dashboards in Django: aus Ihren Daten werden Entscheidungen."},
+      {"tag": "Gespräch", "name": "KI-Chatbots & Phone AI", "slug": "ai-phone-calls", "cta": "Gespräch buchen", "featured": true, "desc": "Website-Chatbots und KI-Telefonagenten mit eigener Stimme, plus Social-Media-Integration: Gespräche, die konvertieren."}
+    ]
+  },
+  "faq": {
+    "eyebrow": "FAQ", "title": "Fragen & Antworten",
+    "items": [
+      {"q": "Wie lange dauert ein typisches Projekt?", "a": "Die meisten Automationen und KI-Agenten sind in 2 bis 6 Wochen einsatzbereit, je nach Umfang. Ein fokussierter Pilot läuft nach rund zwei Wochen. Nach dem ersten Gespräch erhalten Sie einen klaren Zeitplan."},
+      {"q": "Arbeiten Sie mit meiner bestehenden Website und meinen Tools?", "a": "Ja. Ich verbinde mich mit dem, was Sie bereits nutzen: WordPress, Ihr CRM, E-Mail-Plattform, Tabellen, WhatsApp und mehr. Falls Sie noch keine Website haben, baue ich auch die."},
+      {"q": "Was kostet es?", "a": "Der Preis hängt vom Umfang ab und wird pro Projekt kalkuliert. Nutzen Sie den Konfigurator, und ich sende ein individuelles Angebot, meist innerhalb von zwei Tagen. Keine versteckten Kosten."},
+      {"q": "Laufen die Automationen ohne Sie weiter?", "a": "Ja. Alles wird deployt, überwacht, dokumentiert und übergeben. Optionaler laufender Support und Wartung sind verfügbar, wenn ich ein Auge darauf behalten soll."},
+      {"q": "Sind meine Daten sicher?", "a": "Ihre Daten bleiben nach Möglichkeit in Ihren eigenen Tools und Ihrer Infrastruktur. Ich arbeite DSGVO-konform und innerhalb Ihrer Sicherheitsanforderungen."},
+      {"q": "Welche Sprachen und Regionen bedienen Sie?", "a": "Ich arbeite remote in Europa und im Nahen Osten, auf Englisch, Deutsch, Französisch, Rumänisch und Arabisch."}
+    ]
+  },
+  "cta": {"title": "Einen Prozess, der Automatisierung verdient?", "sub": "Ich nehme aktuell neue Projekte an. Sagen Sie mir, was Sie ausbremst, Antwort in zwei Tagen.", "btn": "Projekt starten"}
 }

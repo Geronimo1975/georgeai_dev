@@ -130,3 +130,18 @@ def test_shell_has_nav_language_switch_and_landmarks(tmp_path):
     assert '<script type="module" src="/assets/site.js"></script>' in de
     assert 'src="/auth.js"' in de and 'id="ga-auth-email"' in de
     assert "data-cookie" not in de  # analyticsId is empty, so no banner
+
+
+def test_home_sections_render(tmp_path):
+    out, _ = _build(tmp_path)
+    en = (out / "en" / "index.html").read_text(encoding="utf-8")
+    assert en.count('class="panel"') == 5 and 'aria-pressed="true"' in en
+    assert "How it works" in en and en.count('class="how__card"') == 4
+    assert "Selected work" in en and en.count('class="work-card"') == 4
+    assert en.count('<li class="svc-card') == 4
+    assert "<details" in en and en.count("<details") == 6
+    assert 'class="cta-band"' in en
+    assert 'href="/en/contact/"' in en and 'href="/en/services/"' in en
+    de = (out / "index.html").read_text(encoding="utf-8")
+    assert "So funktioniert es" in de and 'href="/kontakt/"' in de
+    assert '"@type": "FAQPage"' in de

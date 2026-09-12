@@ -1,4 +1,70 @@
 {% extends "base.html" %}
+{% block body_class %}page-home{% endblock %}
+{% block jsonld %}<script type="application/ld+json">
+{{ jsonld_faq(c.faq['items']) | safe }}
+</script>{% endblock %}
 {% block content %}
-<h1>{{ c.hero.title }}</h1>
+{% include "partials/hero.html" %}
+
+<section class="section wrap how">
+  <div class="how__head">
+    <span class="eyebrow">{{ c.how.eyebrow }}</span>
+    <h2>{{ c.how.title }}</h2>
+    <p class="lead">{{ c.how.sub }}</p>
+  </div>
+  <ol class="how__grid">
+    {% for card in c.how.cards %}
+    <li class="how__card">
+      <span class="eyebrow eyebrow--muted">{{ card.tag }}</span>
+      <h3>{{ card.title }}</h3>
+      <p>{{ card.desc }}</p>
+    </li>
+    {% endfor %}
+  </ol>
+</section>
+
+<section class="section wrap work">
+  <div class="row-head">
+    <h2>{{ c.work.title }}</h2>
+    <a class="row-head__link" href="{{ url('work') }}">{{ c.work.all }} &rarr;</a>
+  </div>
+  <ul class="work__grid">
+    {% for w in c.work['items'] %}
+    <li><a class="work-card" href="{{ url('project', w.slug) }}">
+      <span class="eyebrow eyebrow--muted">{{ w.tags }}</span>
+      <h3>{{ w.name }}</h3>
+      <p>{{ w.desc }}</p>
+    </a></li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="section section--band svcs">
+  <div class="wrap">
+    <div class="row-head">
+      <div>
+        <span class="eyebrow">{{ c.services.eyebrow }}</span>
+        <h2>{{ c.services.title }}</h2>
+        <p class="lead">{{ c.services.lead }}</p>
+      </div>
+      <a class="row-head__link" href="{{ url('services') }}">{{ c.services.all }} &rarr;</a>
+    </div>
+    <ul class="svcs__grid">
+      {% for s in c.services['items'] %}
+      <li class="svc-card{% if s.featured %} svc-card--featured{% endif %}">
+        <span class="eyebrow">{{ s.tag }}</span>
+        <h3>{{ s.name }}</h3>
+        <p class="svc-card__desc">{{ s.desc }}</p>
+        <div class="svc-card__foot">
+          <span class="svc-card__price">{{ c.services.priceLabel }}</span>
+          <a class="btn btn--small {{ 'btn--cream' if s.featured else 'btn--primary' }}" href="{{ url('service', s.slug) }}">{{ s.cta }}</a>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+
+{% with faq = c.faq %}{% include "partials/faq.html" %}{% endwith %}
+{% with cta = dict(c.cta, href=url('contact')) %}{% include "partials/cta-band.html" %}{% endwith %}
 {% endblock %}
