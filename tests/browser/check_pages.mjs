@@ -18,7 +18,13 @@ for (const theme of ["light", "dark"]) {
     for (const path of pages) {
       const page = await ctx.newPage();
       const errors = [];
-      page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
+      // /api/ resource errors are backend status (401/404), not page defects; a JS exception from auth.js still fails via pageerror.
+      page.on("console", (m) => {
+        if (m.type() !== "error") return;
+        const url = (m.location() && m.location().url) || "";
+        if (url.includes("/api/") && m.text().startsWith("Failed to load resource")) return; // backend status endpoint, handled by auth.js
+        errors.push(m.text());
+      });
       page.on("pageerror", (e) => errors.push(e.message));
       const resp = await page.goto(base + path, { waitUntil: "networkidle" });
       const tag = `${path} ${theme} ${width}px`;

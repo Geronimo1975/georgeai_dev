@@ -104,6 +104,7 @@ button { font: inherit; color: inherit; }
 .hdr__burger { display: none; justify-self: start; }
 .burger { width: 16px; height: 2px; background: var(--ink); box-shadow: 0 -5px 0 var(--ink), 0 5px 0 var(--ink); }
 .hdr__menu { padding-block: 6px 22px; border-top: 1px solid var(--hairline); display: grid; gap: 10px; }
+.hdr__menu[hidden] { display: none; }
 .hdr__menu ul { list-style: none; margin: 0 0 6px; padding: 0; }
 .hdr__menu li a { display: block; padding: 13px 0; font-size: 16px; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--hairline); }
 @media (max-width: 859px) {
@@ -255,7 +256,7 @@ button { font: inherit; color: inherit; }
 .contact__card { padding: 32px; }
 .booking__title { font-size: 26px; letter-spacing: -.4px; margin-bottom: 22px; }
 .label { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
-.label__opt { text-transform: none; letter-spacing: 0; font-family: var(--sans); opacity: .8; }
+.label__opt { text-transform: none; letter-spacing: 0; font-family: var(--sans); }
 .field { width: 100%; padding: 13px 14px; border-radius: var(--r-btn); border: 1px solid var(--cardBorder); background: var(--surface); color: var(--ink); font: inherit; font-size: 15px; line-height: 1.4; margin-bottom: 22px; }
 .field--area { resize: vertical; min-height: 84px; margin-bottom: 18px; }
 .field::placeholder { color: var(--muted); }
