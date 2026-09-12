@@ -10,13 +10,35 @@ import build
 
 ROOT = Path(__file__).resolve().parents[1]
 
+SITE_DIR = None
+
+
+class SiteHandler(http.server.SimpleHTTPRequestHandler):
+    def __init__(self, *a, **k):
+        super().__init__(*a, directory=str(SITE_DIR), **k)
+
+    def do_GET(self):
+        if self.path.startswith("/api/"):
+            body = b'{"detail": "unauthenticated"}'
+            self.send_response(401)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+        super().do_GET()
+
+    def log_message(self, *a):
+        pass
+
 
 @pytest.mark.browser
 def test_browser_suite(tmp_path):
+    global SITE_DIR
     out = tmp_path / "site"
     build.build(out)
-    handler = lambda *a, **k: http.server.SimpleHTTPRequestHandler(*a, directory=str(out), **k)
-    with socketserver.TCPServer(("127.0.0.1", 0), handler) as srv:
+    SITE_DIR = out
+    with socketserver.TCPServer(("127.0.0.1", 0), SiteHandler) as srv:
         port = srv.server_address[1]
         t = threading.Thread(target=srv.serve_forever, daemon=True)
         t.start()
