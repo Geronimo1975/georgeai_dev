@@ -293,6 +293,55 @@
   opacity: 1;
 }
 
+/* The announcement pill. It is the only route from the hero to /pricing/, the
+ * page where money changes hands, so it is a real link with a 44px target and
+ * not a decorative badge. Deliberately NOT accent-filled: the hero already has
+ * two accent CTAs below it, and a third would spend the one colour the design
+ * keeps scarce. Border and muted text; the accent shows up only on hover, on
+ * the arrow, which is the affordance that says "this goes somewhere". */
+.ga-lede__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 16px;
+  margin: 0 0 20px;
+  border: 1px solid var(--cardBorder, rgba(128, 128, 128, 0.35));
+  border-radius: 999px;
+  font-size: 13px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--body, inherit);
+  text-decoration: none;
+  transition: border-color 160ms ease, color 160ms ease;
+}
+
+/* The arrow is the only part that travels, and only 3px: enough to read as
+ * "forward", short enough not to compete with the headline arriving above it. */
+.ga-lede__pill-arrow {
+  display: inline-block;
+  color: var(--accent, currentColor);
+  transition: transform 160ms var(--ga-ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ga-lede__pill:hover {
+    border-color: var(--accent, currentColor);
+    color: var(--ink, inherit);
+  }
+  .ga-lede__pill:hover .ga-lede__pill-arrow { transform: translateX(3px); }
+}
+
+/* RTL: the arrow points the way the text runs. */
+[dir="rtl"] .ga-lede__pill-arrow { transform: scaleX(-1); }
+@media (hover: hover) and (pointer: fine) {
+  [dir="rtl"] .ga-lede__pill:hover .ga-lede__pill-arrow {
+    transform: scaleX(-1) translateX(3px);
+  }
+}
+
+.ga-lede__pill,
 .ga-lede__title,
 .ga-lede__sub {
   opacity: 0;
@@ -304,6 +353,13 @@
 .ga-lede__title::before {
   transform: scaleX(0);
   transform-origin: left center;
+}
+
+.ga-lede--in .ga-lede__pill {
+  opacity: 1;
+  transform: none;
+  transition: opacity 380ms var(--ga-ease-out),
+    transform 380ms var(--ga-ease-out);
 }
 
 .ga-lede--in .ga-lede__title {
@@ -335,6 +391,7 @@
  * open from the start — the copy is painted where it stands. */
 @media (scripting: none) {
   .ga-lede,
+  .ga-lede__pill,
   .ga-lede__title,
   .ga-lede__sub { opacity: 1; transform: none; }
   .ga-lede__title::before { transform: none; }
@@ -343,8 +400,14 @@
 /* Reduced motion keeps the sequence — it is what tells you where to look first
  * — and drops every position change, so nothing travels. */
 @media (prefers-reduced-motion: reduce) {
+  .ga-lede__pill,
   .ga-lede__title,
   .ga-lede__sub { transform: none; }
+  .ga-lede--in .ga-lede__pill { transition: opacity 200ms ease; transform: none; }
+  .ga-lede__pill-arrow,
+  .ga-lede__pill:hover .ga-lede__pill-arrow { transition: none; transform: none; }
+  [dir="rtl"] .ga-lede__pill-arrow,
+  [dir="rtl"] .ga-lede__pill:hover .ga-lede__pill-arrow { transform: scaleX(-1); }
   .ga-lede__title::before { transform: none; transition: none; }
   .ga-lede--in .ga-lede__title {
     transition: opacity 200ms ease 40ms;

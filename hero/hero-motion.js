@@ -171,7 +171,12 @@
     var subEl = lede.querySelector('.ga-lede__sub');
     if (!titleEl || !subEl) return;
     if (!ledeBase) {
-      ledeBase = { title: titleEl.innerHTML, sub: subEl.innerHTML };
+      var basePill = lede.querySelector('.ga-lede__pill-text');
+      ledeBase = {
+        title: titleEl.innerHTML,
+        sub: subEl.innerHTML,
+        pill: basePill ? basePill.innerHTML : null
+      };
     }
     var all;
     try { all = JSON.parse(raw); } catch (e) { return; }
@@ -181,6 +186,11 @@
     lede.setAttribute('data-lang', lang);
     titleEl.innerHTML = copy.title;
     subEl.innerHTML = copy.sub;
+    /* The pill is optional: an older injected lede has no such element,
+     * and ledeBase carries no pill key, so an untranslated language must
+     * leave the English text standing rather than blank the link. */
+    var pillEl = lede.querySelector('.ga-lede__pill-text');
+    if (pillEl && copy.pill) pillEl.innerHTML = copy.pill;
     lede.dir = lang === 'ar' ? 'rtl' : 'ltr';
   }
 
