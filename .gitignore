@@ -285,3 +285,6 @@ CLAUDE.local.md
 /*.heic
 /*.tif
 /*.tiff
+
+# Browser test suite (Task 7): project-local Playwright install
+tests/browser/node_modules/
