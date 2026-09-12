@@ -16,7 +16,7 @@
         <a class="btn btn--secondary" href="{{ url('contact') }}">{{ c.hero.cta2 }}</a>
       </div>
     </div>
-    <div class="hero__panels" data-hero-panels aria-label="{{ c.hero.panelsTitle }}">
+    <div class="hero__panels" data-hero-panels role="group" aria-label="{{ c.hero.panelsTitle }}">
       {% for p in c.hero.panels %}
       <div class="panel" data-panel>
         <button class="panel__hit" type="button" aria-pressed="{{ 'true' if loop.first else 'false' }}" aria-label="{{ p.name }}">
@@ -26,7 +26,7 @@
         </button>
         <div class="panel__body">
           <span class="eyebrow">{{ '%02d' % loop.index }} · {{ p.cat }}</span>
-          <h3 class="panel__title">{{ p.name }}</h3>
+          <p class="panel__title">{{ p.name }}</p>
           <p class="panel__desc">{{ p.desc }}</p>
           <a class="btn btn--cream btn--small" href="{{ url('project', p.slug) }}">{{ c.hero.panelCta }}</a>
         </div>

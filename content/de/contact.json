@@ -1,7 +1,7 @@
 {
   "meta": {"title": "Kontakt | Kostenloses 30-Minuten-Gespräch mit George buchen", "description": "Buchen Sie ein kostenloses 30-Minuten-Gespräch oder schreiben Sie mir. KI-Telefonagent und Website-Assistent als Pilotprojekt für Handwerk, Praxen und Dienstleister. Antwort meist innerhalb von zwei Tagen."},
   "eyebrow": "Kontakt", "title": "Sprechen wir über Ihr Projekt.",
-  "lead": "Buchen Sie einen kostenlosen 30-Minuten-Call oder schreiben Sie mir. Ich antworte meist innerhalb von zwei Tagen.",
+  "lead": "Buchen Sie ein kostenloses 30-Minuten-Gespräch oder schreiben Sie mir. Ich antworte meist innerhalb von zwei Tagen.",
   "infoTitle": "Direkt", "phoneL": "Telefon", "emailL": "E-Mail", "locationL": "Standort", "hoursL": "Zeiten", "hours": "Mo–Fr, 9:00–18:00 Uhr",
   "personal": "Sie erreichen mich direkt, kein Vertriebsteam. Gespräche auf Deutsch, Englisch, Französisch, Rumänisch oder Arabisch.",
   "nextTitle": "So geht es weiter",
@@ -13,7 +13,7 @@
   "form": {
     "title": "Termin buchen", "serviceL": "Worum geht es?", "servicePh": "Leistung wählen",
     "services": ["n8n-Workflows", "SEO · AIO · GEO", "Django-Datenanalyse", "KI-Chatbots & Phone AI", "Etwas anderes"],
-    "dateL": "Tag wählen", "timeL": "Uhrzeit wählen (MEZ)", "slots": ["09:00", "10:30", "12:00", "14:00", "15:30", "17:00"],
+    "dateL": "Tag wählen", "timeL": "Uhrzeit wählen (Berliner Zeit)", "slots": ["09:00", "10:30", "12:00", "14:00", "15:30", "17:00"],
     "nameL": "Ihr Name", "emailL": "Ihre E-Mail", "msgL": "Eine Zeile zu Ihrem Projekt", "optional": "optional",
     "submit": "Diesen Termin anfragen",
     "hint": "Öffnet Ihr E-Mail-Programm mit der fertigen Anfrage. Gesendet wird erst, wenn Sie auf Senden klicken.",

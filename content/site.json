@@ -9,7 +9,7 @@
   "location": {"de": "Hanstedt, Deutschland", "en": "Hanstedt, Germany"},
   "socials": [
     {"name": "GitHub", "href": "https://github.com/Geronimo1975", "icon": "github-8e8b82.svg"},
-    {"name": "LinkedIn", "href": "https://www.linkedin.com/in/george-cucuiet/", "icon": "linkedin.svg"},
+    {"name": "LinkedIn", "href": "https://www.linkedin.com/in/george-sebastian-c-212b7455", "icon": "linkedin.svg"},
     {"name": "WhatsApp", "href": "https://wa.me/491604155546", "icon": "whatsapp-8e8b82.svg"}
   ],
   "analyticsId": "",
@@ -20,7 +20,7 @@
       "menu": "Menü", "close": "Schließen", "skip": "Zum Inhalt springen",
       "theme": {"light": "Helles Design", "dark": "Dunkles Design"},
       "lang": {"label": "Sprache", "de": "Deutsch", "en": "English"},
-      "footer": {"tag": "KI-Automatisierung, Python-Backend und Infrastruktur. Hanstedt, Deutschland, remote tätig.", "services": "Leistungen", "site": "Seite", "elsewhere": "Anderswo", "rights": "Alle Rechte vorbehalten."},
+      "footer": {"tag": "KI-Telefonagent und Website-Assistent für Handwerk, Praxen und Dienstleister. Hanstedt, Deutschland, remote tätig.", "services": "Leistungen", "site": "Seite", "elsewhere": "Anderswo", "rights": "Alle Rechte vorbehalten."},
       "legal": {"imprint": "Impressum", "privacy": "Datenschutz", "terms": "AGB", "cookies": "Cookie-Richtlinie"},
       "cookie": {"title": "Ihre Privatsphäre", "text": "Ich nutze essenzielle Cookies für den Betrieb und optionale Analyse-Cookies zur Verbesserung. Sie entscheiden.", "essential": "Nur essenzielle", "all": "Alle akzeptieren", "policy": "Cookie-Richtlinie"}
     },
@@ -30,7 +30,7 @@
       "menu": "Menu", "close": "Close", "skip": "Skip to content",
       "theme": {"light": "Light theme", "dark": "Dark theme"},
       "lang": {"label": "Language", "de": "Deutsch", "en": "English"},
-      "footer": {"tag": "AI automation, Python backend and infrastructure. Hanstedt, Germany, working remotely.", "services": "Services", "site": "Site", "elsewhere": "Elsewhere", "rights": "All rights reserved."},
+      "footer": {"tag": "AI voice agent and website assistant for owner-run trades, clinics and service firms. Hanstedt, Germany, working remotely.", "services": "Services", "site": "Site", "elsewhere": "Elsewhere", "rights": "All rights reserved."},
       "legal": {"imprint": "Imprint", "privacy": "Privacy", "terms": "Terms", "cookies": "Cookie policy"},
       "cookie": {"title": "Your privacy", "text": "I use essential cookies to run this site and optional analytics cookies to improve it. You choose.", "essential": "Essential only", "all": "Accept all", "policy": "Cookie policy"}
     }

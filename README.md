@@ -67,3 +67,11 @@ Until the `georgeai.dev` A record is changed (currently parked at `2.57.91.91`),
 |---------|---------|-------|
 | `GEORGEAI_SSH_HOST` | `macbook-air` | ssh alias → `root@85.215.69.83` |
 | `GEORGEAI_REMOTE_DIR` | `/opt/georgeai` | project dir on the VPS |
+
+## Building the site (new generator)
+
+    python3 -m pip install -r requirements-site.txt
+    python3 build.py              # content/ + templates/ -> site/
+    python3 -m pytest             # everything; add -m 'not browser' to skip the Playwright suite
+
+Content lives in `content/` (JSON per page and language, `site.json` for shared data). Templates in `templates/`, styles in `assets/site.css`, behaviour in `assets/site.js`. `site/` is generated and gitignored. German pages marked `"_status": "draft"` are counted at the end of every build.
