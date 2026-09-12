@@ -300,21 +300,29 @@ components:
 
 > **Production override — read before using `colors.primary`.**
 > The frontmatter above describes the palette **as the design-tool export ships
-> it** (Anthropic's coral `#cc785c`). That coral fails WCAG AA where it carries
-> meaning, so `brand/apply_brand.py` rewrites it at deploy time — the LIVE site
-> never renders it as a functional colour:
+> it** (Anthropic's coral `#cc785c` on a warm cream canvas). The LIVE site
+> renders none of it: `brand/apply_brand.py` replaces the whole palette at
+> deploy time from **`brand/palette.json`**, which is the single source of
+> truth for every live colour and for the type family.
 >
-> | Role | Live value | Contrast |
+> | Role | Dark (default) | Light |
 > |---|---|---|
-> | `--accent` (dark theme) | `#ff8300` | 7.25:1 on dark canvas |
-> | `--accent` (light theme) | `#c2410c` | 4.92:1 on cream |
-> | `--accentBtn` (both themes) | `#ff8300`, label `#141413` | 7.46:1 |
+> | `--canvas` | `#02060a` | `#f4f4f4` |
+> | `--ink` | `#ffffff` (20.33:1) | `#02060a` (18.48:1) |
+> | `--accent` | `#fb5e31` (6.53:1) | `#b23c0a` (5.39:1) |
+> | `--accentBtn` | `#fb5e31`, label `#02060a` (6.53:1) | same |
 >
-> Decorative coral (spike glyphs, hero streaks, CTA bands) is intentionally left
-> alone. `on-primary: #ffffff` is therefore **not** the live button label —
-> buttons use ink `#141413`. Every "coral" reference below should be read as
-> "the accent role", not as the literal hex. To change accents, edit
-> `brand/apply_brand.py` — never this file, and never `site/`.
+> Two traps, both already paid for once: a **white** label on the accent is
+> 3.11:1 and fails — the label is near-black in both themes. And light-theme
+> `#c2410c` passes on white but fails at 4.23:1 on `--surface` `#e8e8e8`, which
+> is why light uses `#b23c0a`.
+>
+> Typography is likewise overridden: the export's serif display + sans body are
+> both rewritten to **Plus Jakarta Sans** (single family, variable woff2
+> vendored in `seo/vendor/fonts/`); the Arabic arm stays Amiri / Noto Sans
+> Arabic. Every "coral", "cream" and "serif" reference below should be read as
+> a *role*, not as the live value. To change any of it, edit
+> `brand/palette.json` — never this file, and never `site/`.
 
 
 ## Overview
