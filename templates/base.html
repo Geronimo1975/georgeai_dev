@@ -9,11 +9,36 @@
 {% for a in alternates %}
 <link rel="alternate" hreflang="{{ a.hreflang }}" href="{{ a.href }}">
 {% endfor %}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{{ site.brand }}">
+<meta property="og:title" content="{{ c.meta.title }}">
+<meta property="og:description" content="{{ c.meta.description }}">
+<meta property="og:url" content="{{ canonical }}">
+<meta property="og:image" content="{{ site.domain }}/logo-512.png">
+<meta property="og:locale" content="{{ 'de_DE' if lang == 'de' else 'en_GB' }}">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="stylesheet" href="/assets/fonts.css">
 <link rel="stylesheet" href="/assets/site.css">
+<script src="/assets/theme-boot.js"></script>
+<script type="application/ld+json">
+{{ jsonld_site | safe }}
+</script>
+{% block jsonld %}{% endblock %}
 {% block head %}{% endblock %}
 </head>
-<body>
-{% block body %}{% endblock %}
+<body class="{% block body_class %}{% endblock %}">
+<a class="skip-link" href="#main">{{ ui.skip }}</a>
+{% include "partials/header.html" %}
+<main id="main">
+{% block content %}{% endblock %}
+</main>
+{% include "partials/footer.html" %}
+{% if site.analyticsId %}{% include "partials/cookie.html" %}{% endif %}
+{% include "partials/auth-modal.html" %}
+<script type="module" src="/assets/site.js"></script>
+<script src="/auth.js" defer></script>
 </body>
 </html>

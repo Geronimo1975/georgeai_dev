@@ -1,0 +1,34 @@
+<footer class="ftr">
+  <div class="ftr__grid wrap">
+    <div class="ftr__brand">
+      <a class="brand brand--light" href="{{ url('home') }}"><img src="/logo-mark.png" alt="" width="22" height="22"><span class="brand__word">{{ site.brand }}</span></a>
+      <p class="ftr__tag">{{ ui.footer.tag }}</p>
+      <ul class="ftr__social" aria-label="Social">
+        {% for s in site.socials %}
+        <li><a href="{{ s.href }}" rel="me noopener" target="_blank" aria-label="{{ s.name }}"><img src="/assets/icons/{{ s.icon }}" alt="" width="18" height="18"></a></li>
+        {% endfor %}
+      </ul>
+    </div>
+    <nav class="ftr__col" aria-label="{{ ui.footer.site }}">
+      <span class="ftr__head">{{ ui.footer.site }}</span>
+      <ul>
+        {% for item in nav %}<li><a href="{{ item.href }}">{{ item.label }}</a></li>{% endfor %}
+        <li><a href="{{ url('configurator') }}">{{ ui.nav.configurator }}</a></li>
+        <li><a href="{{ url('pricing') }}">{{ ui.nav.pricing }}</a></li>
+      </ul>
+    </nav>
+    <div class="ftr__col">
+      <span class="ftr__head">{{ ui.footer.elsewhere }}</span>
+      <ul>
+        {% for s in site.socials %}<li><a href="{{ s.href }}" rel="me noopener" target="_blank">{{ s.name }}</a></li>{% endfor %}
+        <li><a href="mailto:{{ site.email }}">{{ site.email }}</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="ftr__legal wrap">
+    <span>© {{ build_year }} {{ site.brand }} · {{ ui.footer.rights }}</span>
+    <ul>
+      {% for k in ['imprint', 'privacy', 'terms', 'cookies'] %}<li><a href="{{ url(k) }}">{{ ui.legal[k] }}</a></li>{% endfor %}
+    </ul>
+  </div>
+</footer>

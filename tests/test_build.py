@@ -115,3 +115,18 @@ def test_site_css_has_design_tokens_for_both_themes():
     assert 'html[data-theme="dark"]' in css
     assert "prefers-color-scheme: dark" in css
     assert "prefers-reduced-motion" in css
+
+
+def test_shell_has_nav_language_switch_and_landmarks(tmp_path):
+    out, _ = _build(tmp_path)
+    de = (out / "index.html").read_text(encoding="utf-8")
+    en = (out / "en" / "index.html").read_text(encoding="utf-8")
+    assert '<a class="skip-link" href="#main">' in de
+    assert "<header" in de and "<footer" in de and '<main id="main"' in de
+    assert 'href="/kontakt/"' in de and 'href="/en/contact/"' in en
+    assert 'hreflang="en" href="/en/"' in de          # language switch to the pair
+    assert 'hreflang="de" href="/"' in en
+    assert 'data-theme-toggle' in de and 'data-menu-toggle' in de
+    assert '<script type="module" src="/assets/site.js"></script>' in de
+    assert 'src="/auth.js"' in de and 'id="ga-auth-email"' in de
+    assert "data-cookie" not in de  # analyticsId is empty, so no banner

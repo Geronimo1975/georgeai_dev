@@ -1,0 +1,51 @@
+<header class="hdr">
+  <div class="hdr__util wrap">
+    <div class="hdr__contact">
+      <a href="{{ site.phoneHref }}"><span class="dot" aria-hidden="true"></span>{{ site.phone }}</a>
+      <span class="hdr__sep" aria-hidden="true">/</span>
+      <a href="mailto:{{ site.email }}">{{ site.email }}</a>
+    </div>
+    <ul class="hdr__social" aria-label="Social">
+      {% for s in site.socials %}
+      <li><a href="{{ s.href }}" rel="me noopener" target="_blank" aria-label="{{ s.name }}"><img src="/assets/icons/{{ s.icon }}" alt="" width="18" height="18"></a></li>
+      {% endfor %}
+    </ul>
+    <div class="hdr__tools">
+      {% if pair %}
+      <a class="pill" hreflang="{{ other_lang }}" href="{{ pair }}" lang="{{ other_lang }}" aria-label="{{ ui.lang.label }}: {{ ui.lang[other_lang] }}">{{ other_lang | upper }}</a>
+      {% endif %}
+      <button class="icon-btn" type="button" data-theme-toggle aria-label="{{ ui.theme.dark }}" data-label-light="{{ ui.theme.light }}" data-label-dark="{{ ui.theme.dark }}">
+        <span class="icon-btn__glyph" aria-hidden="true"></span>
+      </button>
+    </div>
+  </div>
+  <div class="hdr__main wrap">
+    <button class="icon-btn hdr__burger" type="button" data-menu-toggle aria-controls="site-menu" aria-expanded="false" aria-label="{{ ui.menu }}">
+      <span class="burger" aria-hidden="true"></span>
+    </button>
+    <nav class="hdr__nav" aria-label="Main">
+      <ul>
+        {% for item in nav %}
+        <li><a href="{{ item.href }}"{% if item.href == path %} aria-current="page"{% endif %}>{{ item.label }}</a></li>
+        {% endfor %}
+      </ul>
+    </nav>
+    <a class="brand" href="{{ url('home') }}" aria-label="{{ site.brand }}">
+      <img src="/logo-mark.png" alt="" width="22" height="22">
+      <span class="brand__word">{{ site.brand }}</span>
+    </a>
+    <div class="hdr__cta">
+      <a class="btn btn--primary btn--small" href="{{ url('configurator') }}">{{ ui.nav.configurator }}</a>
+      <a class="btn btn--secondary btn--small" href="{{ url('contact') }}">{{ ui.cta }}</a>
+    </div>
+  </div>
+  <div class="hdr__menu wrap" id="site-menu" hidden>
+    <ul>
+      {% for item in nav %}
+      <li><a href="{{ item.href }}">{{ item.label }}</a></li>
+      {% endfor %}
+    </ul>
+    <a class="btn btn--primary btn--block" href="{{ url('configurator') }}">{{ ui.nav.configurator }}</a>
+    <a class="btn btn--secondary btn--block" href="{{ url('contact') }}">{{ ui.cta }}</a>
+  </div>
+</header>

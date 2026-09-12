@@ -76,6 +76,21 @@ def _nav(site: dict, lang: str) -> list[dict]:
     return [{"key": k, "label": labels[k], "href": page_path(lang, k)} for k in order]
 
 
+def jsonld_site(site: dict, lang: str) -> str:
+    data = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {"@type": "Organization", "@id": f"{DOMAIN}/#org", "name": site["brand"], "url": DOMAIN + "/",
+             "logo": f"{DOMAIN}/logo-512.png", "email": site["email"], "telephone": site["phone"].replace(" ", ""),
+             "sameAs": [s["href"] for s in site["socials"]],
+             "address": {"@type": "PostalAddress", "addressLocality": "Hanstedt", "addressCountry": "DE"}},
+            {"@type": "Person", "@id": f"{DOMAIN}/#person", "name": site["person"], "url": DOMAIN + "/",
+             "worksFor": {"@id": f"{DOMAIN}/#org"}, "knowsLanguage": ["de", "en", "fr", "ro", "ar"]},
+        ],
+    }
+    return json.dumps(data, ensure_ascii=False, indent=1)
+
+
 def render_page(env: Environment, page: Page, pages: list[Page]) -> str:
     site = page.site
     alternates = [{"hreflang": page.lang, "href": DOMAIN + page.path}]
@@ -90,6 +105,7 @@ def render_page(env: Environment, page: Page, pages: list[Page]) -> str:
         path=page.path, canonical=DOMAIN + page.path, pair=page.pair, alternates=alternates,
         nav=_nav(site, page.lang), url=lambda key, slug=None: page_path(page.lang, key, slug),
         other_lang=("en" if page.lang == "de" else "de"),
+        jsonld_site=jsonld_site(site, page.lang), build_year=date.today().year,
     )
 
 

@@ -1,0 +1,8 @@
+<div class="cookie" data-cookie hidden role="region" aria-label="{{ ui.cookie.title }}">
+  <p class="cookie__title">{{ ui.cookie.title }}</p>
+  <p class="cookie__text">{{ ui.cookie.text }} <a href="{{ url('cookies') }}">{{ ui.cookie.policy }}</a></p>
+  <div class="cookie__actions">
+    <button class="btn btn--secondary btn--small" type="button" data-cookie-essential>{{ ui.cookie.essential }}</button>
+    <button class="btn btn--primary btn--small" type="button" data-cookie-accept>{{ ui.cookie.all }}</button>
+  </div>
+</div>
