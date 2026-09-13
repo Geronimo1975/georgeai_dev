@@ -495,6 +495,29 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
 [data-lang="de"] .b2 h2,[data-lang="de"] .b4 h2{font-size:clamp(1.8rem,4vw,3.9rem)}
 [data-lang="de"] .settle h2{font-size:clamp(2.2rem,5.2vw,5.4rem)}
 
+/* Arabic: RTL mirror, Arabic faces from /assets/fonts.css, no letter-spacing tricks */
+[lang="ar"] body,[lang="ar"] h1,[lang="ar"] h2,[lang="ar"] h3,[lang="ar"] .btn{font-family:'Noto Sans Arabic','Plus Jakarta Sans',system-ui,sans-serif;letter-spacing:0}
+[lang="ar"] .mono,[lang="ar"] .kicker,[lang="ar"] .trust{letter-spacing:0}
+[lang="ar"] h1,[lang="ar"] h2{line-height:1.15}
+[lang="ar"] .b1,[lang="ar"] .b2,[lang="ar"] .b3,[lang="ar"] .b4{align-items:flex-end;text-align:right}
+[lang="ar"] .static-copy{align-items:flex-end;text-align:right}
+[lang="ar"] .marquee .track{animation-direction:reverse}
+[lang="ar"] .tb-social{margin-left:0;margin-right:auto}
+[lang="ar"] .nav nav{margin-left:0;margin-right:auto}
+[lang="ar"] .burger{margin-left:0;margin-right:auto}
+[lang="ar"] .svc-group>.mono{float:left}
+[lang="ar"] .svc-group li a:hover{padding-left:0;padding-right:8px}
+[lang="ar"] .svc-group li a i{transform:scaleX(-1)}
+[lang="ar"] .legal-tabs .lang{margin-left:0;margin-right:auto}
+[lang="ar"] .page-head::before{left:auto;right:var(--pad)}
+[lang="ar"] .sand{display:none}
+[lang="ar"] .ops-copy{order:0}
+[lang="ar"] .globe{right:auto;left:-6%}
+[lang="ar"] .holo::before{left:auto;right:10px}
+[lang="ar"] .holo::after{right:auto;left:8px}
+[lang="ar"] .settle h2,[lang="ar"] .b5 h2{font-size:clamp(2rem,5vw,5rem)}
+[lang="ar"] .b1 h1{font-size:clamp(2.2rem,5.6vw,5.2rem)}
+
 /* ============ MULTI-PAGE ADDITIONS ============ */
 .nav nav a[aria-current="page"]{color:var(--ink)}
 .nav nav a[aria-current="page"]::after{right:0;background:var(--emerald)}

@@ -82,7 +82,8 @@
     words.forEach((w, wi) => {
       const ws = document.createElement('span'); ws.className = 'w';
       ws.style.setProperty('--th', (wi / words.length * 0.55).toFixed(3));
-      [...w].forEach(ch => {
+      // Arabic glyphs join across letters: one span per word keeps the shaping intact
+      (document.documentElement.lang === 'ar' ? [w] : [...w]).forEach(ch => {
         const cs = document.createElement('span'); cs.className = 'c'; cs.textContent = ch;
         cs.style.setProperty('--th', fx === 'grid' ? (ci / total * 0.5 + r() * 0.06).toFixed(3) : (r() * 0.55).toFixed(3));
         cs.style.setProperty('--jx', ((r() - 0.5) * (fx === 'scatter' ? 160 : 60)).toFixed(1) + 'px');
