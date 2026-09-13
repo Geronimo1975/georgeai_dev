@@ -117,7 +117,7 @@
   // The video is opt-in: set data-src on #video once assets/hero-scrub.mp4 exists (Higgsfield chain).
   // Without it the still journey carries the hero and no request is made.
   const VIDEO_URL = (video && video.dataset.src) || '';
-  const VIDEO_BYTES = 8267206;
+  const VIDEO_BYTES = 16694491;
   let videoOK = false;
 
   function heroProgress() {
