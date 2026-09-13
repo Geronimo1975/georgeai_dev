@@ -518,6 +518,54 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
 [lang="ar"] .settle h2,[lang="ar"] .b5 h2{font-size:clamp(2rem,5vw,5rem)}
 [lang="ar"] .b1 h1{font-size:clamp(2.2rem,5.6vw,5.2rem)}
 
+/* ============ CONFIGURATOR + ACCOUNT ============ */
+.cfg-wrap{padding:0 var(--pad) var(--sec);max-width:1400px;margin:0 auto}
+.cfg{display:grid;grid-template-columns:1.4fr .8fr;gap:clamp(24px,4vw,56px);align-items:start}
+.cfg-steps{display:grid;gap:56px}
+.cfg-step h2{font-size:clamp(1.6rem,3vw,2.4rem);margin-bottom:22px}
+.cfg-group{border:1px solid var(--card-border);border-radius:16px;padding:14px 18px 8px;margin:0 0 14px;background:var(--card)}
+.cfg-group legend{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--emerald);padding:0 8px}
+.chk{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"i n" "i s";column-gap:12px;align-items:center;padding:10px 4px;border-top:1px solid var(--hairline);cursor:pointer;color:var(--ink)}
+.cfg-group .chk:first-of-type{border-top:0}
+.chk input{grid-area:i;width:20px;height:20px;accent-color:var(--accent);cursor:pointer}
+.chk span,.chk b{grid-area:n;font-weight:600}
+.chk small{grid-area:s;color:var(--muted);font-size:.85rem}
+.chk:has(input:checked){color:var(--ink)}
+.chk:has(input:checked) span,.chk:has(input:checked) b{color:var(--accent)}
+.cfg-scales,.cfg-addons{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.cfg-addons{grid-template-columns:repeat(2,1fr)}
+.cfg-scales .chk,.cfg-addons .chk{border:1px solid var(--card-border);border-radius:14px;padding:14px 16px;background:var(--card);transition:border-color .25s}
+.cfg-scales .chk:has(input:checked),.cfg-addons .chk:has(input:checked){border-color:var(--accent)}
+.cfg-you{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cfg-you label,.acct-form label{display:flex;flex-direction:column;gap:6px;font-size:.85rem;color:var(--muted);font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase}
+.cfg-you .wide{grid-column:1/-1}
+.cfg-you input,.cfg-you textarea,.acct-form input:not([type="checkbox"]){min-height:46px;padding:10px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--card-border);color:var(--ink);font:inherit;font-size:1rem;letter-spacing:0;text-transform:none}
+.cfg-you textarea{resize:vertical}
+.cfg-you input:focus,.cfg-you textarea:focus,.acct-form input:focus{outline:2px solid var(--emerald);outline-offset:2px;border-color:transparent}
+.cfg-sum{position:sticky;top:124px;background:var(--card);border:1px solid var(--card-border);border-radius:20px;padding:26px;display:flex;flex-direction:column;gap:14px}
+.sum-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:12px 0;border-top:1px solid var(--hairline)}
+.sum-row b{font-size:1.4rem;color:var(--ink);letter-spacing:-.02em}
+#cfg-cx[data-level="low"]{color:var(--emerald)}#cfg-cx[data-level="medium"]{color:var(--ink)}#cfg-cx[data-level="high"]{color:var(--accent)}
+.sum-count{color:var(--muted)}
+.sum-list{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.sum-list li{font-size:.8rem;padding:5px 10px;border-radius:999px;border:1px solid var(--emerald-deep);color:var(--body)}
+.cfg-sum .btn[disabled]{opacity:.45;cursor:not-allowed;transform:none}
+@media (max-width:960px){.cfg{grid-template-columns:1fr}.cfg-sum{position:static}.cfg-scales{grid-template-columns:1fr}.cfg-you{grid-template-columns:1fr}}
+@media (max-width:600px){.cfg-addons{grid-template-columns:1fr}}
+
+.acct{padding:0 var(--pad) var(--sec);max-width:520px;margin:0 auto}
+.acct-card{background:var(--card);border:1px solid var(--card-border);border-radius:20px;padding:28px}
+.acct-tabs{display:flex;gap:6px;background:var(--surface);border-radius:999px;padding:4px;margin-bottom:22px}
+.acct-tabs button{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-weight:600;padding:10px;border-radius:999px;cursor:pointer;transition:background .2s,color .2s}
+.acct-tabs button[aria-selected="true"]{background:var(--canvas);color:var(--ink)}
+.acct-form{display:grid;gap:14px}
+.acct-form .row{flex-direction:row;align-items:center;gap:10px;text-transform:none;letter-spacing:0;font-family:var(--display);font-size:.95rem;color:var(--body)}
+.acct-form .row input{width:18px;height:18px;accent-color:var(--accent)}
+.acct-form .btn{margin-top:6px}
+.acct-msg{padding:10px 14px;border-radius:12px;background:rgba(25,195,154,.1);border:1px solid var(--emerald-deep);color:var(--body);margin-bottom:14px;font-size:.95rem}
+.acct-msg.bad{background:rgba(251,94,49,.1);border-color:rgba(251,94,49,.5)}
+.acct-in{display:grid;gap:16px}
+
 /* ============ MULTI-PAGE ADDITIONS ============ */
 .nav nav a[aria-current="page"]{color:var(--ink)}
 .nav nav a[aria-current="page"]::after{right:0;background:var(--emerald)}
