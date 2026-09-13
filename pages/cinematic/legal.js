@@ -9,8 +9,8 @@
   const langs = Object.keys(L.docs);
   const pick = () => {
     const q = new URLSearchParams(location.search).get('lang');
-    const b = (navigator.language || 'en').slice(0, 2);
-    return langs.includes(q) ? q : langs.includes(b) ? b : 'en';
+    const d = sel && sel.dataset.default, b = (navigator.language || 'en').slice(0, 2);
+    return langs.includes(q) ? q : langs.includes(d) ? d : langs.includes(b) ? b : 'en';
   };
   const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
   const para = t => esc(t).split('\n').map(l => l.trim()).filter(Boolean).join('<br>');
