@@ -99,7 +99,7 @@
 
   /* ---------- hero ---------- */
   const hero = $('#hero'), stage = $('#stage'), video = $('#video'), ring = $('.ring'), poster = $('.poster');
-  const portrait = $('.portrait'), beamA = $('.beam-a'), beamB = $('.beam-b'), glowEl = $('.hourglass-glow'), holos = $('.holos');
+  const portrait = $('.portrait') || $('.still'), beamA = $('.beam-a'), beamB = $('.beam-b'), glowEl = $('.hourglass-glow'), holos = $('.holos');
   if (window.mountGlobe) mountGlobe($('#hero-globe'), { speed: .00008 });
   // holo panels follow the pointer by depth (fine pointers only)
   if (holos && !coarse.matches && !rmq.matches) {
@@ -117,7 +117,7 @@
   // The video is opt-in: set data-src on #video once assets/hero-scrub.mp4 exists (Higgsfield chain).
   // Without it the still journey carries the hero and no request is made.
   const VIDEO_URL = (video && video.dataset.src) || '';
-  const VIDEO_BYTES = 12000000;
+  const VIDEO_BYTES = 8267206;
   let videoOK = false;
 
   function heroProgress() {
@@ -149,13 +149,13 @@
     if (!portrait) return;
     const q = Math.round(p * 400) / 400;
     if (q === lastSJ) return; lastSJ = q;
-    const s = 1 + q * 0.28, tx = -q * 14, ty = q * 4;
+    const s = 1 + q * 0.22, tx = -q * 6, ty = q * 2;
     portrait.style.transform = `translate3d(${tx}vw,${ty}vh,0) scale(${s})`;
     portrait.style.opacity = q < 0.72 ? 1 : 1 - (q - 0.72) / 0.28;
-    beamA.style.transform = `rotate(${-14 + q * 30}deg) translate3d(${q * 20}%,0,0)`;
-    beamB.style.transform = `translate3d(${-q * 25}%,${-q * 30}%,0) scale(${1 + q * 1.2})`;
-    beamB.style.opacity = 0.55 + q * 0.45;
-    glowEl.style.transform = `translate3d(${q * 40}vw,${-q * 30}vh,0) scale(${1 + q * 3})`;
+    if (beamA) beamA.style.transform = `rotate(${-14 + q * 30}deg) translate3d(${q * 20}%,0,0)`;
+    if (beamB) beamB.style.transform = `translate3d(${-q * 25}%,${-q * 30}%,0) scale(${1 + q * 1.2})`;
+    if (beamB) beamB.style.opacity = 0.55 + q * 0.45;
+    if (glowEl) glowEl.style.transform = `translate3d(${q * 40}vw,${-q * 30}vh,0) scale(${1 + q * 3})`;
     if (holos) { const f = clamp(1 - q / 0.22, 0, 1); holos.style.opacity = f; holos.style.transform = `translate3d(0,${-(1 - f) * 12}vh,0) scale(${1 + (1 - f) * .15})`; }
   }
 

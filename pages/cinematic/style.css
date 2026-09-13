@@ -106,10 +106,11 @@ p{margin:0}
 .band>*{position:relative;z-index:1}
 .band.on{pointer-events:auto}
 .b1,.b2,.b3,.b4{align-items:flex-start;padding-left:max(var(--pad),40vw)}
+.b1::before{background:radial-gradient(ellipse 74% 66% at 68% 52%,rgba(2,6,10,.8) 0%,rgba(2,6,10,.55) 46%,rgba(2,6,10,0) 78%)}
 .b1 h1,.b2 h2,.b3 h2,.b4 h2{max-width:14ch}
 .b5{--sx:50%;align-items:center;text-align:center}
 .b5 h2{font-size:clamp(3rem,9vw,9.5rem)}
-.b5::before{background:radial-gradient(ellipse 30% 60% at 22% 50%,rgba(2,6,10,.6),transparent 70%),radial-gradient(ellipse 30% 60% at 78% 50%,rgba(2,6,10,.6),transparent 70%)}
+.b5::before{background:radial-gradient(ellipse 70% 70% at 50% 50%,rgba(2,6,10,.8) 0%,rgba(2,6,10,.55) 45%,rgba(2,6,10,0) 76%)}
 .settle{--sx:50%;align-items:center;text-align:center;justify-content:flex-start;padding-top:18vh}
 .settle::before{background:radial-gradient(ellipse 80% 55% at 50% 30%,rgba(2,6,10,.7),rgba(2,6,10,0) 76%)}
 .settle h2{max-width:16ch;font-size:clamp(2.4rem,6vw,6.5rem)}
@@ -307,9 +308,10 @@ section{position:relative;z-index:3}
   .static-copy{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;position:absolute;inset:0;padding:0 var(--pad) 7vh;text-shadow:var(--tshadow);z-index:2}
   .static-copy h1{font-size:clamp(2.4rem,11vw,5rem);max-width:12ch}
   .static-copy .lede{margin:18px 0 26px;max-width:36ch}
-  .stage .portrait{width:min(96vw,62vh);left:auto;right:-14%;bottom:auto;top:7vh}
+  .still img{object-position:30% 30%}
+  .still::after{background:linear-gradient(180deg,rgba(2,6,10,.2),rgba(2,6,10,.3) 35%,rgba(2,6,10,.94))}
   .holo{display:none}
-  .holo.h1{display:flex;left:4%;top:12vh;animation-delay:.6s,0s}
+  .stage .holo.h1{display:flex;left:auto;right:4%;top:10vh;animation-delay:.6s,0s}
   .hero-globe{display:none}
   .hourglass-glow{left:auto;right:18%;top:50vh;bottom:auto}
   .scrim{background:linear-gradient(180deg,rgba(2,6,10,.2),rgba(2,6,10,.35) 40%,rgba(2,6,10,.92))}
@@ -382,6 +384,15 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
 .b1 .lede{--ks:clamp(0,(var(--k,0) - .55)*3,1);opacity:var(--ks);transform:translateY(calc((1 - var(--ks))*10px))}
 @media (max-width:1100px){.holo.h2,.holo.h4{display:none}}
 @media (prefers-reduced-motion:reduce){.boot{display:none}.holo{opacity:1;transform:none}}
+
+/* the AI still as the hero plate */
+.still{position:absolute;inset:0;will-change:transform;transform-origin:35% 50%}
+.still img{width:100%;height:100%;object-fit:cover;object-position:22% 50%}
+.still::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(2,6,10,0) 40%,rgba(2,6,10,.55) 75%,rgba(2,6,10,.85)),linear-gradient(180deg,rgba(2,6,10,.35),transparent 30%,transparent 70%,rgba(2,6,10,.6))}
+.stage .holo.h1{left:auto;right:6%;top:12%;animation-delay:1.7s,0s}
+.stage .holo.h5{left:auto;right:8%;top:76%;animation-delay:2.3s,-3s}
+.stage .holo.h6{left:auto;right:30%;top:80%;animation-delay:2.0s,-5s}
+@media (max-width:1100px){.stage .holo.h6{display:none}}
 
 /* ============ MULTI-PAGE ADDITIONS ============ */
 .nav nav a[aria-current="page"]{color:var(--ink)}

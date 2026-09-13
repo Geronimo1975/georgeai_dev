@@ -2,7 +2,7 @@
 
 Cinematic scroll-storytelling agency site for **GeorgeAI** (georgeai.dev).
 Part 1 is the creative brief. Part 2 is the implementation spec for Claude Code.
-Status: APPROVED 2026-09-12. Site built at `pages/cinematic/` with the designed still hero (no Higgsfield credits yet). Video chain pending: once credits exist, generate per §5/§6, place `assets/hero-scrub.mp4`, and add `data-src="assets/hero-scrub.mp4"` to `#video` in index.html.
+Status: LIVE 2026-09-13. Seven pages at georgeai.dev/cinematic/. Hero video generated 2026-09-13: start frame Nano Banana Pro (2 cr), three 10 s segments Kling 3.0 Standard (15 cr each, Kling Pro needs the Plus plan), single-encode concat crf 22, 30 s, 8.3 MB. Raws in `review/` (gitignored). Legibility audited on the footage: every band's plateau clears 4.3:1 or better.
 
 Identity reference for every Higgsfield generation:
 `Media/553517285_24478507705111025_4371849374889154092_n.jpg`
