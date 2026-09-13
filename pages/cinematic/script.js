@@ -41,7 +41,7 @@
     if (!el) return;
     e.preventDefault();
     closeSheet();
-    if (lenis) lenis.scrollTo(el, { offset: -72 }); else el.scrollIntoView({ behavior: rmq.matches ? 'auto' : 'smooth' });
+    if (lenis) lenis.scrollTo(el, { offset: -110 }); else el.scrollIntoView({ behavior: rmq.matches ? 'auto' : 'smooth' });
   });
 
   /* ---------- nav ---------- */
