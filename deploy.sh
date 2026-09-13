@@ -891,7 +891,8 @@ DEPLOY_FAIL=0
 check_url() {
   local url="$1" code
   # curl prints "000" on connect failure; capture it without a spurious extra echo
-  code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 12 "$url")" || code="000"
+  # -L: the apex 301s to /cinematic/ (deploy/nginx.conf); the check follows it
+  code="$(curl -sL -o /dev/null -w '%{http_code}' --max-time 12 "$url")" || code="000"
   if [ "$code" = "200" ]; then
     ok "$url → 200"
   elif [ "$code" = "000" ]; then
