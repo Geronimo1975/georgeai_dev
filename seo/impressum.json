@@ -1,0 +1,7 @@
+{
+  "_comment": "Impressum values, kept out of the design-tool export so a re-export cannot revert them. deploy.sh -> seo/apply_content.py fills them into site/legal-data.js on every deploy. § 5 TMG requires a VAT identification number only 'sofern vorhanden' — so vat_id stays null until a real USt-IdNr. exists, and the whole VAT section is removed from the Impressum rather than shown as a placeholder. Do NOT put a Steuernummer here: it is not required by § 5 TMG, publishing it is widely advised against, and it is not the same thing as a USt-IdNr. (which is DE + 9 digits).",
+  "street": "Greuner Brook 1",
+  "postal_code": "21271",
+  "vat_id": null,
+  "small_business_note": false
+}
