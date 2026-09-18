@@ -253,3 +253,7 @@ cron/logs/
 # export, seo/, pages/, backend/assets/ or deploy.sh.
 site/
 frontend/template/
+
+# local agent tooling
+.claude/worktrees/
+.codex/
