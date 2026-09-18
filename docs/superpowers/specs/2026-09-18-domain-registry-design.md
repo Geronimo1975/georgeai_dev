@@ -122,9 +122,10 @@ Dependency: `pyyaml`, declared in a new root `requirements.txt`.
 | drop | — |
 
 `profm24.de` becomes `drop` (or is deleted) once the pending transfer is
-cancelled in hPanel. Expected first report: the four `redirect` domains and
-the three VPS-404 `hold` domains show drift until sub-project 1 lands — that
-is the point.
+cancelled in hPanel. Expected first report: the four `redirect` domains show
+drift (they are parked, not redirecting) until sub-project 1 lands — that is
+the point. The `hold` domains that 404 on the VPS or sit on the parking page
+are *not* drift: `hold` only flags a real site being served.
 
 `email` seeded from current MX: hostinger for cleosdeco.com, cleosdeco.de,
 georgeai.de, georgeai.dev, gti-europe.de, n8n-studio.com, prmedex.com;
