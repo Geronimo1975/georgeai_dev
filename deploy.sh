@@ -69,7 +69,8 @@ apply_seo() {
   [ -d "$SEO_DIR" ] || { warn "seo/ not found — skipping SEO layer"; return 0; }
 
   local f copied=""
-  for f in robots.txt sitemap.xml llms.txt favicon.svg responsive.css; do
+  for f in robots.txt sitemap.xml llms.txt favicon.svg responsive.css \
+           favicon.ico favicon-32.png apple-touch-icon.png logo-mark.png logo-mark-ink.png logo-512.png; do
     [ -f "$SEO_DIR/$f" ] && { cp "$SEO_DIR/$f" "$SITE_DIR/$f"; copied="$copied $f"; }
   done
   [ -n "$copied" ] && ok "seo files:$copied"
@@ -234,9 +235,10 @@ apply_prune() {
   [ -n "$removed" ] && ok "pruned from web root:$removed"
 
   # surface anything new the next export drops in, without deleting it
-  local known=" index.html GeorgeAI.dc.html assets services blog pricing about \
+  local known=" index.html GeorgeAI.dc.html assets services blog pricing about work \
 auth.js audit.js support.js services-data.js legal-data.js responsive.css \
-robots.txt sitemap.xml llms.txt favicon.svg "
+robots.txt sitemap.xml llms.txt favicon.svg \
+favicon.ico favicon-32.png apple-touch-icon.png logo-mark.png logo-mark-ink.png logo-512.png "
   local entry unexpected=""
   for entry in "$SITE_DIR"/* "$SITE_DIR"/.[!.]*; do
     [ -e "$entry" ] || continue
@@ -469,8 +471,26 @@ ok "content ready: ./site ($(du -sh "$SITE_DIR" | cut -f1))"
 # 3. sync project to the VPS
 # ---------------------------------------------------------------------------
 step "Syncing to VPS"
-ssh -o BatchMode=yes -o ConnectTimeout=10 "$SSH_HOST" "mkdir -p \"$REMOTE_DIR/site\" \"$REMOTE_DIR/deploy\"" \
-  || die "cannot reach $SSH_HOST over ssh"
+# The VPS sshd runs MaxStartups 10:30:100 and is under constant brute-force
+# scanning, so its unauthenticated-connection queue is regularly full and sshd
+# drops NEW connections at random — ours included. That is a dropped TCP
+# session after accept, so ssh's own ConnectionAttempts (which only retries the
+# connect) does not cover it; retry the whole invocation instead.
+#
+# Everything after this reuses the same connection when the ssh client is
+# configured with ControlMaster (see the macmini block in ~/.ssh/config), so
+# only this first one has to win the race.
+ssh_attempts=5
+for attempt in $(seq 1 "$ssh_attempts"); do
+  if ssh -o BatchMode=yes -o ConnectTimeout=15 "$SSH_HOST" \
+       "mkdir -p \"$REMOTE_DIR/site\" \"$REMOTE_DIR/deploy\"" 2>/dev/null; then
+    [ "$attempt" -gt 1 ] && ok "ssh connected on attempt $attempt"
+    break
+  fi
+  [ "$attempt" -eq "$ssh_attempts" ] && die "cannot reach $SSH_HOST over ssh after $ssh_attempts attempts"
+  warn "ssh dropped by the remote (MaxStartups) — retry $attempt/$ssh_attempts"
+  sleep $((attempt * 3))
+done
 
 rsync -az --delete -e ssh "$SITE_DIR"/ "$SSH_HOST:$REMOTE_DIR/site/"
 ok "site/ synced"

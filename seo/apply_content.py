@@ -23,6 +23,9 @@ import shutil
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import contact_page  # noqa: E402
+
 HERO_FIELDS = ("eyebrow", "title", "sub", "cta1", "cta2")
 LANGS = ("en", "de", "fr", "ro", "ar")
 
@@ -601,6 +604,161 @@ def strip_auth_pill(html: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Portfolio links — the export ships the "Selected work" section as a dead end:
+# the "view all" label and every project card are styled to look clickable
+# (cursor:pointer, a trailing arrow) but carry no handler and no href at all,
+# so a click does nothing. The hero showcase panels are the same story one
+# level up: the T() table even defines t.featured.cta ("Read the case study")
+# but no variant ever renders it.
+#
+# seo/generate_service_pages.py now builds a real page per project from
+# georgeai_work.json (/work/<slug>/), so both surfaces get wired to it here —
+# in the content layer, because site/ is regenerated from the export.
+#
+# Slugs mirror slugify() in generate_service_pages.py; WORK_SLUGS is ordered
+# as the export's own `works` array, and PANEL_SLUGS as its `flagData` array.
+# ---------------------------------------------------------------------------
+WORK_SLUGS = (
+    "medical-ai-agent",
+    "smart-facility-automation",
+    "containerized-infrastructure",
+    "full-stack-web-platform",
+)
+PANEL_SLUGS = ("ai-seo-automation-system",) + WORK_SLUGS
+
+_WORK_ALL = (
+    '<span style="font-size:14px;font-weight:500;color:var(--accent);'
+    'cursor:pointer;white-space:nowrap">{{ t.workAll }} &rarr;</span>'
+).replace("&rarr;", "→")
+_WORK_ALL_LINK = (
+    '<a href="/work/" style="font-size:14px;font-weight:500;color:var(--accent);'
+    'text-decoration:none;cursor:pointer;white-space:nowrap">{{ t.workAll }} →</a>'
+)
+_WORK_CARD_OPEN = '<div style="cursor:pointer">\n          {{ w.thumb }}'
+_WORK_CARD_LINK = (
+    '<a href="{{ w.href }}" style="display:block;cursor:pointer;color:inherit;'
+    'text-decoration:none">\n          {{ w.thumb }}'
+)
+_WORKS_MAP = re.compile(
+    r'(const works = \[[^\]]*\]\.map\(\(name, i\) => \(\{)'
+)
+_PANEL_DESC = (
+    '<p style="font-size:15px;line-height:1.55;color:rgba(255,255,255,.9);'
+    'margin-top:8px;max-width:460px">{{ s.desc }}</p>'
+)
+_PANEL_LINK = (
+    '\n              <a href="{{ s.href }}" style="display:inline-block;margin-top:14px;'
+    'font-size:13px;font-weight:500;color:#fff;text-decoration:underline;'
+    'text-underline-offset:3px;position:relative;z-index:1">{{ s.cta }} →</a>'
+)
+
+
+def wire_work_links(html: str) -> str:
+    """Point the Selected Work grid and the hero panels at /work/<slug>/."""
+    if "{{ w.href }}" in html and "{{ s.href }}" in html:
+        return html
+
+    # --- Selected Work grid -------------------------------------------------
+    if "{{ w.href }}" not in html:
+        if _WORK_ALL not in html:
+            raise PatchError("no dead 'view all' label in the Selected Work header")
+        html = html.replace(_WORK_ALL, _WORK_ALL_LINK, 1)
+
+        if _WORK_CARD_OPEN not in html:
+            raise PatchError("no dead project card wrapper in the Selected Work grid")
+        start = html.index(_WORK_CARD_OPEN)
+        html = html.replace(_WORK_CARD_OPEN, _WORK_CARD_LINK, 1)
+        # close the same element: its </div> is the one right before </sc-for>
+        end = html.index("</sc-for>", start)
+        tail = html.rindex("</div>", start, end)
+        html = html[:tail] + "</a>" + html[tail + len("</div>"):]
+
+        m = _WORKS_MAP.search(html)
+        if not m:
+            raise PatchError("no 'const works = [...].map(' to add hrefs to")
+        slugs = ", ".join('"%s"' % s for s in WORK_SLUGS)
+        html = (
+            html[: m.start()]
+            + "const workSlugs = [%s];\n    " % slugs
+            + m.group(1)
+            + "\n      href: `/work/${workSlugs[i]}/`,"
+            + html[m.end():]
+        )
+
+    # --- hero showcase panels ----------------------------------------------
+    if "{{ s.href }}" not in html:
+        if _PANEL_DESC not in html:
+            raise PatchError("no hero panel description to anchor the case-study link to")
+        html = html.replace(_PANEL_DESC, _PANEL_DESC + _PANEL_LINK, 1)
+
+        anchor = '...s, active, num: String(i + 1).padStart(2, "0"),'
+        if anchor not in html:
+            raise PatchError("no flagSlides map to add the case-study href to")
+        slugs = ", ".join('"%s"' % s for s in PANEL_SLUGS)
+        html = html.replace(
+            anchor,
+            anchor
+            + ' href: `/work/${[%s][i]}/`, cta: t.featured.cta,' % slugs,
+            1,
+        )
+    return html
+
+
+# ---------------------------------------------------------------------------
+# Brand mark — the export draws the logo as a generic 8-point coral polygon
+# (clip-path) in three places: the header wordmark, the auth modal and the
+# footer. The real GeorgeAI mark is a raster asset (seo/logo-mark.png, copied
+# to /logo-mark.png by deploy.sh), so the placeholders are swapped here rather
+# than in site/, which every re-export overwrites.
+#
+# Only the 14px instances are the logo. The same polygon is used deliberately
+# as a 7px bullet (WhatsApp line) and as an 18px success glyph inside the
+# booking/configurator confirmation badges — those are left alone.
+# ---------------------------------------------------------------------------
+_MARK_DIV = re.compile(
+    r'<div style="width:14px;height:14px;background:#cc785c;'
+    r'clip-path:polygon\(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,'
+    r'0 50%,39% 39%\)"></div>'
+)
+_MARK_STYLE = 'style="display:block;width:22px;height:22px;flex:none"'
+# The footer and the auth modal are dark in BOTH themes, so they always take
+# the neon mark. The header follows the page theme, so it takes the same
+# two-tier treatment as the accent itself: neon on the dark canvas, the
+# darker companion on cream, where neon washes out (2.91:1).
+_MARK_IMG_NEON = f'<img src="/logo-mark.png" alt="" width="22" height="22" {_MARK_STYLE}>'
+_MARK_IMG_THEMED = f'<img src="{{{{ markSrc }}}}" alt="" width="22" height="22" {_MARK_STYLE}>'
+
+_CTX_ANCHOR = "rootStyle, langs, works,"
+_MARK_SRC = ' markSrc: dark ? "/logo-mark.png" : "/logo-mark-ink.png",'
+
+
+def _ensure_mark_src(html: str) -> str:
+    if "markSrc:" in html:
+        return html
+    if _CTX_ANCHOR not in html:
+        raise PatchError("no render context to expose markSrc on")
+    return html.replace(_CTX_ANCHOR, _CTX_ANCHOR + _MARK_SRC, 1)
+
+
+def brand_mark(html: str) -> str:
+    if _MARK_IMG_THEMED in html:
+        return html
+    # upgrade an earlier, uniformly-neon application
+    if _MARK_IMG_NEON in html:
+        return _ensure_mark_src(html.replace(_MARK_IMG_NEON, _MARK_IMG_THEMED, 1))
+
+    n = len(_MARK_DIV.findall(html))
+    if n != 3:
+        raise PatchError(
+            f"expected 3 brand-mark placeholders (header, auth modal, footer), "
+            f"found {n} — the export changed shape"
+        )
+    html = _MARK_DIV.sub(_MARK_IMG_THEMED, html, count=1)   # header: theme-aware
+    html = _MARK_DIV.sub(_MARK_IMG_NEON, html)              # modal + footer: always dark
+    return _ensure_mark_src(html)
+
+
+# ---------------------------------------------------------------------------
 # Impressum — legal-data.js shipped unfilled placeholders in all five
 # languages, publicly, linked from the footer of every page:
 # "[Straße und Hausnummer]", "[PLZ] Hanstedt". The Impressum is the first page
@@ -684,6 +842,8 @@ def main(argv: list[str]) -> int:
     heroes = load(hero_p) if hero_p.exists() else {}
     imp_p = seo / "impressum.json"
     impressum = load(imp_p) if imp_p.exists() else None
+    contact_p = seo / "contact.json"
+    contact = load(contact_p) if contact_p.exists() else None
     testis = load(testi_p) if testi_p.exists() else None
 
     writes: list[tuple[Path, str]] = []
@@ -706,6 +866,10 @@ def main(argv: list[str]) -> int:
             html = strip_dead_hero_video(html)
             html = fix_stale_copy(html)
             html = strip_auth_pill(html)
+            html = brand_mark(html)
+            html = wire_work_links(html)
+            if contact is not None:
+                html = contact_page.patch_contact_page(html, contact)
             html = localize_third_party_assets(html, seo / "vendor" / "icons")
             html = localize_fonts(html, seo / "vendor" / "fonts.css", seo / "vendor" / "fonts")
             writes.append((page, html))
@@ -724,7 +888,7 @@ def main(argv: list[str]) -> int:
         data = site / "services-data.js"
         if testis is not None and data.exists():
             writes.append((data, patch_testimonials(data.read_text(encoding="utf-8"), testis)))
-    except PatchError as exc:
+    except (PatchError, contact_page.PatchError) as exc:
         sys.stderr.write(f"content layer: {exc}\n")
         return 1
 

@@ -82,3 +82,30 @@
     scroll-snap-align: start !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   3. CONTACT PAGE — states inline styles cannot express
+
+   The contact block is rebuilt by seo/contact_page.py and carries a stable
+   .ga-contact class (the data-dc-tpl ids inside it are gone with the rebuild).
+   Everything visual lives inline and follows the theme tokens; this block only
+   adds the pseudo-class states: a visible focus ring for keyboard users, a
+   hover lift on the day / time chips, and a motion opt-out.
+--------------------------------------------------------------------------- */
+.ga-contact :is(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+.ga-contact button[aria-pressed="false"]:hover {
+  border-color: var(--accent) !important;
+}
+.ga-contact input::placeholder,
+.ga-contact textarea::placeholder {
+  color: var(--muted);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ga-contact * {
+    transition: none !important;
+  }
+}

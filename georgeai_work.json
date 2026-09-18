@@ -1,0 +1,44 @@
+{
+  "projects": [
+    {
+      "name": "AI SEO Automation System",
+      "category": "Flagship project",
+      "description": "An AI-driven SEO engine on OpenAI and n8n — keyword research, content generation and workflow automation that cut manual SEO work and scaled output.",
+      "image": "assets/SEO_AI.png",
+      "stack": ["OpenAI", "n8n", "Python"],
+      "relatedService": "SEO / AIO / GEO"
+    },
+    {
+      "name": "Medical AI Agent",
+      "category": "AI · RAG",
+      "description": "An OpenAI + Python + RAG assistant for medical data processing and query automation.",
+      "image": "assets/medical_ai.png",
+      "stack": ["OpenAI", "Python", "RAG"],
+      "relatedService": "RAG"
+    },
+    {
+      "name": "Smart Facility Automation",
+      "category": "IoT · BMS",
+      "description": "n8n, OpenAI (RAG) and Python for smart-building monitoring and operational control.",
+      "image": "assets/concept_smart_home.png",
+      "stack": ["n8n", "OpenAI", "Python"],
+      "relatedService": "Automation"
+    },
+    {
+      "name": "Containerized Infrastructure",
+      "category": "Infra · Cloud",
+      "description": "Scalable infrastructure with Docker, PostgreSQL, Redis and Nginx — built for high availability.",
+      "image": "assets/clouddienste.jpg",
+      "stack": ["Docker", "PostgreSQL", "Redis", "Nginx"],
+      "relatedService": null
+    },
+    {
+      "name": "Full-stack Web Platform",
+      "category": "Django · AI",
+      "description": "A scalable Django platform with WordPress integration, AI services and API automations.",
+      "image": "assets/full_stack.png",
+      "stack": ["Django", "WordPress", "AI APIs"],
+      "relatedService": "Django"
+    }
+  ]
+}
