@@ -286,3 +286,7 @@ CLAUDE.local.md
 /*.tif
 /*.tiff
 review/
+
+# local agent tooling
+.claude/worktrees/
+.codex/
