@@ -34,6 +34,7 @@ except Exception:  # imported without the generator on path — inline fallback
         "RAG": "rag", "Web Design Optimization": "web-design-optimization",
         "SaaS Projects": "saas-projects",
         "API Integration & Data Analytics": "api-integration-data-analytics",
+        "AI Consultant": "ai-consultant",
     }
 
 MOCK = "/assets/mock"

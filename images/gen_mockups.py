@@ -520,6 +520,35 @@ def sc_saas():
     return window(SW - 96, SH - 96, 48, "saas · dashboard", "".join(b))
 
 
+def sc_consultant():
+    """ai roadmap — prioritised opportunities with payback bars and a timeline."""
+    b = []
+    b.append(text(96, 122, "AI roadmap · Q4", size=12.5, fill=INK, family=SERIF))
+    b.append(text(SW - 96, 122, "payback", size=10, fill=MUTE, anchor="end", ls=.5))
+    rows = [("Quote follow-up automation", 0.92, ACCENT, "2 wk"),
+            ("Inbound call agent", 0.74, TEAL, "3 wk"),
+            ("Invoice matching (ERP)", 0.58, AMBER, "5 wk"),
+            ("Support knowledge base (RAG)", 0.40, GREEN, "6 wk")]
+    y = 150
+    for i, (lab, w, col, eta) in enumerate(rows):
+        b.append(rect(96, y, SW - 192, 62, r=12, fill=ELEV, stroke=LINE, sw=1))
+        b.append(circle(122, y + 31, 12, fill=PANEL, stroke=col, sw=1.5))
+        b.append(text(122, y + 35, str(i + 1), size=11, fill=col, anchor="middle"))
+        b.append(text(146, y + 27, lab, size=12.5, fill=INK))
+        b.append(rect(146, y + 40, 330, 6, r=3, fill=LINE2))
+        b.append(rect(146, y + 40, 330 * w, 6, r=3, fill=col))
+        b.append(pill(SW - 96 - 74, y + 19, 58, 24, eta, fg=SOFT))
+        y += 74
+    # timeline strip
+    ty = y + 14
+    b.append(line(96, ty, SW - 96, ty, stroke=LINE, sw=1))
+    for i, m in enumerate(["audit", "roadmap", "pilot 1", "scale"]):
+        x = 96 + i * (SW - 192) / 3
+        b.append(circle(x, ty, 5, fill=ACCENT if i < 2 else PANEL, stroke=ACCENT, sw=1.5))
+        b.append(text(x, ty + 22, m, size=9.5, fill=MUTE, anchor="middle" if 0 < i < 3 else ("start" if i == 0 else "end")))
+    return window(SW - 96, SH - 96, 48, "consulting · ai roadmap", "".join(b))
+
+
 def sc_api():
     """api integration — services + JSON."""
     b = []
@@ -677,6 +706,7 @@ SERVICES = [
     ("web-design-optimization",    "Web Design Optimization",          sc_cro,        "[ landing optimization ]"),
     ("saas-projects",              "SaaS Projects",                    sc_saas,       "[ saas dashboard ]"),
     ("api-integration-data-analytics", "API Integration & Data Analytics", sc_api,   "[ api integration ]"),
+    ("ai-consultant",               "AI Consultant",                    sc_consultant, "[ ai roadmap ]"),
 ]
 
 NEWS = [

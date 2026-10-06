@@ -230,8 +230,8 @@ def hub_body(data, slugs):
     return (
         '<nav class="crumbs"><a href="/">Home</a> / Services</nav>'
         "<h1>Services</h1>"
-        '<p class="intro">AI automation, chatbots, AI phone agents, growth systems and custom '
-        "Python &amp; Django software — every service below has a fixed, transparent scope. "
+        '<p class="intro">Custom Python, Django &amp; PostgreSQL software, n8n automation, CRM/ERP, '
+        "SEO for Google and AI search, and AI consulting — every service below has a fixed, transparent scope. "
         'Pick one to see what\'s included, or <a href="/">use the configurator</a> for a bundled quote.</p>'
         + "".join(sections)
     )
@@ -432,9 +432,9 @@ def main():
     hub = site / "services" / "index.html"
     hub.write_text(
         page_shell(
-            "Services — AI Automation, Chatbots, GEO/SEO & Software | GeorgeAI",
-            "All GeorgeAI services: AI automation, chatbots, AI phone agents, SEO/AIO/GEO, "
-            "email marketing, lead generation, Python, Django, ERP/CRM and web design.",
+            "Services — Python & Django Apps, n8n Automation, CRM/ERP, SEO & AI Consulting | GeorgeAI",
+            "All GeorgeAI services: Python, Django and PostgreSQL development, n8n automation, "
+            "lead generation, email marketing, CRM/ERP, SEO/GEO/AIO, web design and AI consulting.",
             f"{BASE}/services/",
             hub_body(data, slugs),
             hub_jsonld(data, slugs),

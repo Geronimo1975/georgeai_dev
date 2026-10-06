@@ -85,10 +85,21 @@
       // Arabic glyphs join across letters: one span per word keeps the shaping intact
       (document.documentElement.lang === 'ar' ? [w] : [...w]).forEach(ch => {
         const cs = document.createElement('span'); cs.className = 'c'; cs.textContent = ch;
+        if (fx === 'type') {
+          // typewriter: strictly sequential, each glyph slides in from the carriage side and
+          // keeps a hair of baseline/ink variance, like a worn ribbon and a loose platen
+          const rtl = document.documentElement.lang === 'ar';
+          cs.style.setProperty('--th', (ci / total * 0.82).toFixed(3));
+          cs.style.setProperty('--jx', ((rtl ? -1 : 1) * (26 + r() * 34)).toFixed(1) + 'px');
+          cs.style.setProperty('--jy', ((r() - 0.5) * 2.6).toFixed(2) + 'px');
+          cs.style.setProperty('--jr', ((r() - 0.5) * 3).toFixed(2) + 'deg');
+          cs.style.setProperty('--ink', (0.8 + r() * 0.2).toFixed(2));
+        } else {
         cs.style.setProperty('--th', fx === 'grid' ? (ci / total * 0.5 + r() * 0.06).toFixed(3) : (r() * 0.55).toFixed(3));
         cs.style.setProperty('--jx', ((r() - 0.5) * (fx === 'scatter' ? 160 : 60)).toFixed(1) + 'px');
         cs.style.setProperty('--jy', ((r() - 0.5) * 120).toFixed(1) + 'px');
         cs.style.setProperty('--jr', ((r() - 0.5) * 40).toFixed(1) + 'deg');
+        }
         ci++; ws.appendChild(cs);
       });
       vis.appendChild(ws);
@@ -131,7 +142,8 @@
   // caption bands + still-journey parallax, delta-gated
   let loadK = 0, loadStart = 0;
   function updateCaptions(p, now) {
-    if (loadStart && loadK < 1) loadK = clamp((now - loadStart) / 1400, 0, 1);
+    // the typewriter headline needs ~65 ms a keystroke; the other entrances assemble in 1.4 s
+    if (loadStart && loadK < 1) loadK = clamp((now - loadStart) / (bands[0] && bands[0].fx === 'type' ? 2600 : 1400), 0, 1);
     for (const bd of bands) {
       const f = Math.min(0.02, (bd.b - bd.a) / 3);
       let op = (bd.first ? 1 : smoothstep(p, bd.a, bd.a + f)) * (bd.last ? 1 : 1 - smoothstep(p, bd.b - f, bd.b));

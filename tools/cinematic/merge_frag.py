@@ -42,17 +42,18 @@ WORK4 = '<!-- ===================== WORK ===================== -->\n<section cla
     f'<article class="tile reveal"><img src="{BASE}assets/{img}" alt="{alt}" loading="lazy" width="{w}" height="{h}"><div class="tile-text"><p class="mono">{tag}</p><h3>{t}</h3><p>{d}</p></div></article>'
     for img, w, h, alt, tag, t, d in _TILES) + '</div>\n</section>\n'
 
-_svc = json.load(open('/Users/Geronimo/Projects/georgeai_dev/georgeai_services.json'))['services']
+_svcj = json.load(open('/Users/Geronimo/Projects/georgeai_dev/georgeai_services.json'))
+_svc = _svcj['services']
 def _slug(n): return {'SEO / AIO / GEO': 'seo-aio-geo'}.get(n, re.sub(r'[^a-z0-9]+', '-', n.lower()).strip('-'))
 _groups = {}
 for _x in _svc: _groups.setdefault(_x.get('group') or _x.get('category'), []).append(_x)
-_order = ['Automation & AI', 'Growth & Marketing', 'Software & Data', 'Web']
+_order = _svcj['categories']  # commercial order, see seo/services.json
 def _grp(i, g):
     items = ''.join(f'<li><a href="/services/{_slug(x["name"])}/"><span>{x["name"]}</span><small>{x.get("tagline", "")}</small><i aria-hidden="true">→</i></a></li>' for x in _groups.get(g, []))
     return f'<div class="svc-group reveal"><p class="mono">0{i}</p><h3>{g}</h3><ul>{items}</ul></div>'
 SVCGRID = '''<!-- ===================== SERVICES GRID ===================== -->
 <section class="svcs" id="services" aria-labelledby="svc-h">
-  <header class="sec-head reveal"><p class="kicker mono">Services</p><h2 id="svc-h">What I build for you.</h2><p>Fifteen services in four areas. Pick one or combine them; every one links to its own page with scope, process and outcome.</p></header>
+  <header class="sec-head reveal"><p class="kicker mono">Services</p><h2 id="svc-h">What I build for you.</h2><p>Sixteen services in five areas — software first, automation around it. Pick one or combine them; every one links to its own page with scope, process and outcome.</p></header>
   <div class="svc-grid">''' + ''.join(_grp(i + 1, g) for i, g in enumerate(_order)) + '''</div>
 </section>
 '''
