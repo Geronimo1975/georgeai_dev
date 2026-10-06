@@ -64,7 +64,7 @@ IDN_DIR="$PROJECT_DIR/idn"
 # ---------------------------------------------------------------------------
 apply_assets() {
   local f copied=""
-  for f in auth.js audit.js; do
+  for f in auth.js audit.js analytics.js; do
     [ -f "$ASSETS_DIR/$f" ] && { cp "$ASSETS_DIR/$f" "$SITE_DIR/$f"; copied="$copied $f"; }
   done
   [ -n "$copied" ] && ok "frontend assets:$copied"
@@ -201,6 +201,31 @@ apply_copy() {
     ok "content layer applied"
   else
     warn "content layer failed — deploy continues with the export's own copy"
+  fi
+  return 0
+}
+
+# ---------------------------------------------------------------------------
+# services layer — the homepage groups its service cards by category and
+# numbers them by array position, and the export hard-codes both (svcMeta in
+# the HTML, cats/items in services-data.js) in the design tool's order. The
+# commercial order (1 vibe code Python/Django/PostgreSQL, 2 n8n, 3 CRM/ERP,
+# 4 SEO/GEO/AIO, 5 AI consultant) lives in seo/services.json and is re-applied
+# here on every deploy, incl. --no-content. Prose is moved by service name, so
+# the layer also carries cards the export does not ship (e.g. AI Consultant).
+# Must run before apply_images (which keys the mockups on svcMeta names).
+# Idempotent, all-or-nothing. Edit seo/services.json — never site/.
+# ---------------------------------------------------------------------------
+apply_services() {
+  [ -f "$SEO_DIR/apply_services.py" ] || return 0
+  [ -f "$SEO_DIR/services.json" ] || return 0
+  command -v python3 >/dev/null || { warn "python3 not found — skipped services layer"; return 0; }
+
+  if python3 "$SEO_DIR/apply_services.py" "$SITE_DIR" "$SEO_DIR" \
+       index.html "${GEORGEAI_HOMEPAGE:-GeorgeAI.dc.html}"; then
+    ok "services layer applied"
+  else
+    warn "services layer failed — deploy continues with the export's own order"
   fi
   return 0
 }
@@ -393,6 +418,25 @@ apply_widget() {
     ok "lead widget on $n page(s)"
   else
     warn "widget injection failed — deploy continues"
+  fi
+  return 0
+}
+
+# analytics — GA4 (gtag.js), loaded only after the visitor accepts optional
+# cookies (analytics.js self-gates on localStorage.ga_cookie === "all"). Kept
+# out of the export so it survives a re-export; injected on every page (same
+# rationale as the lead widget: a visitor can land on any page from search).
+# Idempotent: skips a page that already references analytics.js.
+# ---------------------------------------------------------------------------
+apply_analytics() {
+  [ -f "$SITE_DIR/analytics.js" ] || return 0
+  command -v python3 >/dev/null || { warn "python3 not found — skipped analytics injection"; return 0; }
+
+  local n
+  if n=$(python3 "$SEO_DIR/inject_analytics.py" "$SITE_DIR"); then
+    ok "GA4 (consent-gated) on $n page(s)"
+  else
+    warn "analytics injection failed — deploy continues"
   fi
   return 0
 }
@@ -764,6 +808,7 @@ PY
   apply_assets
   apply_seo
   apply_copy
+  apply_services
   apply_legal
   apply_brand
   apply_idn
@@ -774,6 +819,7 @@ PY
   apply_image_opt
   apply_hero
   apply_widget
+  apply_analytics
   # mirror the unpacked content (incl. the derived index.html) into the frontend
   # template dir so the Django backend in backend/ can build against the same export.
   if [ -n "$TEMPLATE_DIR" ]; then
@@ -788,6 +834,7 @@ else
   apply_assets
   apply_seo
   apply_copy
+  apply_services
   apply_legal
   apply_brand
   apply_idn
@@ -798,6 +845,7 @@ else
   apply_image_opt
   apply_hero
   apply_widget
+  apply_analytics
 fi
 
 [ -f "$SITE_DIR/index.html" ] || die "./site has no index.html — nothing to deploy"

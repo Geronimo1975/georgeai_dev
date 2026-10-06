@@ -4,6 +4,19 @@ from merge_frag import TOPBAR, MARQ, HOW, WORK4, WORK_HEAD, SVCGRID, FAQ, FAQ_LD
 FRAG = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'frag')
 OUT = '/Users/Geronimo/Projects/georgeai_dev/pages/cinematic'
 BASE = '/cinematic/'
+# Cookie-consent banner. Text nodes here are translated by translate.py via the
+# de/fr/ro/ar dictionaries; the consent.js src is left as-is on language pages.
+# analytics.js reads the ga_cookie value this banner writes.
+CONSENT = (
+    f'<div class="cc-banner" id="cc-banner" role="dialog" aria-label="Cookie consent" aria-describedby="cc-text" hidden>'
+    f'<p class="cc-text" id="cc-text">We use optional analytics cookies to understand how the site is used. You decide. '
+    f'<a href="{BASE}legal/#cookies">Cookie policy</a></p>'
+    f'<div class="cc-actions">'
+    f'<button type="button" class="cc-btn cc-ghost" data-cc="essential">Essential only</button>'
+    f'<button type="button" class="cc-btn cc-accent" data-cc="all">Accept all</button>'
+    f'</div></div>\n'
+    f'<script src="{BASE}consent.js?v=1" defer></script>\n'
+)
 def frag(n): return open(f'{FRAG}/{n}.html', encoding='utf-8').read()
 
 SRI = {
@@ -11,7 +24,7 @@ SRI = {
  'st': 'sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d',
  'lenis': 'sha384-tKsJDT6PlUI0pSBt9/sBKJluKgA19/a6mBrDsZaXotLB4ZYfMGM6xt6/WgGpYhTm',
 }
-NAV = [('services/','Services'),('assistant/','Assistant'),('work/','Work'),('about/','About'),('/blog/','Blog'),('pricing/','Pricing'),('contact/','Contact')]
+NAV = [('services/','Services'),('assistant/','Assistant'),('n8n/','n8n'),('work/','Work'),('about/','About'),('/blog/','Blog'),('pricing/','Pricing'),('contact/','Contact')]
 
 def head(title, desc, path, og_img='assets/george.jpg', extra_js=''):
     url = f'https://georgeai.dev{BASE}{path}'
@@ -33,11 +46,11 @@ def head(title, desc, path, og_img='assets/george.jpg', extra_js=''):
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2302060a'/%3E%3Cpath d='M10 7h12l-5 9 5 9H10l5-9z' fill='none' stroke='%23fb5e31' stroke-width='2.2' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preload" href="/assets/fonts/plusjakartasans-var-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/fonts.css">
-<link rel="stylesheet" href="{BASE}style.css?v=5">
+<link rel="stylesheet" href="{BASE}style.css?v=7">
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" integrity="{SRI['gsap']}" crossorigin="anonymous" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" integrity="{SRI['st']}" crossorigin="anonymous" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js" integrity="{SRI['lenis']}" crossorigin="anonymous" defer></script>
-<script src="{BASE}script.js?v=5" defer></script>
+<script src="{BASE}script.js?v=6" defer></script>
 {extra_js}</head>
 <body data-page="{path.strip('/') or 'home'}">
 <a class="skip" href="#main">Skip to content</a>
@@ -123,8 +136,8 @@ def footer():
     f = f.replace('<a href="/services/">Automation</a><a href="/services/">AI Visibility</a><a href="/services/">Web Systems</a>',
                   f'<a href="{BASE}services/#automation">Automation</a><a href="{BASE}services/#visibility">AI Visibility</a><a href="{BASE}services/#web">Web Systems</a>')
     f = f.replace('<a href="#story">About</a>', f'<a href="{BASE}about/">About</a>').replace('<a href="#audit" data-audit>Contact</a>', f'<a href="{BASE}contact/">Contact</a>')
-    f = f.replace('<a href="/#impressum">Impressum</a><a href="/#datenschutz">Datenschutz</a>', f'<a href="{BASE}legal/#imprint">Impressum</a><a href="{BASE}legal/#privacy">Datenschutz</a><a href="{BASE}legal/#terms">Terms</a><a href="{BASE}legal/#cookies">Cookies</a>')
-    return f + '</body>\n</html>\n'
+    f = f.replace('<a href="/#impressum">Impressum</a><a href="/#datenschutz">Datenschutz</a>', f'<a href="{BASE}legal/#imprint">Impressum</a><a href="{BASE}legal/#privacy">Datenschutz</a><a href="{BASE}legal/#terms">Terms</a><a href="{BASE}legal/#cookies">Cookies</a><a href="{BASE}legal/#cookies" data-cc-reopen>Cookie settings</a>')
+    return f + CONSENT + '</body>\n</html>\n'
 
 def fix(html):
     # relative asset paths -> absolute under /cinematic/, in-page anchors -> real pages
@@ -138,7 +151,7 @@ def fix(html):
 pages = {}
 # ---- HOME
 home = frag('hero') + SAND + frag('stats') + MARQ + HOW + SVCGRID + WORK4 + FAQ + FAQ_LD + cta_strip('Find out what AI can automate in your business. Free.', 'Enter your website. In a few minutes you get a report: where you lose enquiries, what AI could handle, and what it would cost. No call required.')
-pages['index.html'] = head('GeorgeAI: Your business, running while you sleep', 'Practical AI automation for German trades, clinics and service firms. n8n workflows, AI agents, AI visibility and web systems. Live in about two weeks. Free visibility audit.', '', extra_js=f'<script src="{BASE}globe.js?v=5" defer></script>\n') + nav(None) + fix(home) + '\n</main>\n\n' + footer()
+pages['index.html'] = head('GeorgeAI: Your business, running while you sleep', 'Practical AI automation for German trades, clinics and service firms. n8n workflows, AI agents, AI visibility and web systems. Live in about two weeks. Free visibility audit.', '', extra_js=f'<script src="{BASE}globe.js?v=6" defer></script>\n') + nav(None) + fix(home) + '\n</main>\n\n' + footer()
 
 # ---- SERVICES
 pil = frag('pillars').replace('<article class="pillar reveal" data-tilt>', '<article class="pillar reveal" data-tilt id="automation">', 1)
@@ -277,7 +290,71 @@ jv = OPS + SAND_SUB + f'''
   <div class="stack" aria-label="Technology"><span>Claude</span><span>OpenAI</span><span>n8n</span><span>Python</span><span>ElevenLabs</span><span>Home Assistant</span><span>KNX / DALI</span><span>Ollama (local)</span></div>
 </section>
 ''' + cta_strip('Want this answering your phone?', 'The 24/7 phone package puts this assistant on your line in about two weeks. The free audit tells you what else it could take over.', 'Get your free visibility audit')
-pages['assistant/index.html'] = head('Assistant: Jarvis-style AI for your business | GeorgeAI', 'Try a Jarvis-style AI assistant in your browser: voice and text commands that switch devices, book meetings and report status. Built with n8n for real businesses.', 'assistant/', extra_js=f'<script src="{BASE}globe.js?v=5" defer></script>\n<script src="{BASE}jarvis.js?v=5" defer></script>\n') + nav('assistant/') + fix(jv) + '\n</main>\n\n' + footer()
+pages['assistant/index.html'] = head('Assistant: Jarvis-style AI for your business | GeorgeAI', 'Try a Jarvis-style AI assistant in your browser: voice and text commands that switch devices, book meetings and report status. Built with n8n for real businesses.', 'assistant/', extra_js=f'<script src="{BASE}globe.js?v=6" defer></script>\n<script src="{BASE}jarvis.js?v=6" defer></script>\n') + nav('assistant/') + fix(jv) + '\n</main>\n\n' + footer()
+
+# ---- N8N: live HUD from the georgeai-stats webhook + simulated workflow canvas (n8nflow.js)
+N8N = f"""<!-- ===================== OPS ROOM ===================== -->
+<section class="ops" aria-label="Automation room">
+  <canvas class="globe" id="globe" aria-hidden="true"></canvas>
+  <div class="ops-scan" aria-hidden="true"></div>
+  <div class="ops-grid" aria-label="Live n8n statistics">
+    <div class="hud-tile t1"><span class="name">Active workflows</span><b id="st-active">—</b><small>of all workflows on the server</small></div>
+    <div class="hud-tile t2"><span class="name">Runs, last 7 days</span><b id="st-runs7">—</b><small>every execution counted</small></div>
+    <div class="hud-tile t3"><span class="name">Runs, last 24 h</span><b id="st-runs24">—</b><small>while you were sleeping</small></div>
+    <div class="hud-tile t4"><span class="name">Success rate</span><b id="st-rate">—</b><small>errors are caught and retried</small></div>
+    <div class="hud-tile t5"><span class="name">Avg. run time</span><b id="st-dur">—</b><small>trigger to last node</small></div>
+    <div class="hud-tile t6"><span class="name">Runs per day</span><svg class="spark" id="spark" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"></svg></div>
+  </div>
+  <div class="ops-copy">
+    <p class="kicker mono">Every tool. One nervous system.</p>
+    <h1><span class="w1">n8n</span><span class="w2">runs your business while you sleep.</span></h1>
+    <p class="lede">The numbers in the tiles are not a mock-up. They come live from the n8n server that runs this site's own lead intake, orders and content pipelines. Watch a workflow run below.</p>
+    <p class="live" id="live"><span class="dot"></span>Connecting</p>
+    <div class="cta-row"><a class="btn" href="#lab">Watch it run</a><a class="btn btn-ghost" href="{BASE}contact/" data-audit>Automate my business</a></div>
+  </div>
+</section>
+<svg class="sand" viewBox="0 0 100 3000" preserveAspectRatio="none" aria-hidden="true"><path id="sandpath" d="M50 0 V3000"/></svg>
+
+<!-- ===================== LAB ===================== -->
+<section class="lab reveal" id="lab" aria-labelledby="lab-h">
+  <div class="hud">
+    <h2 id="lab-h" class="sr">Workflow canvas</h2>
+    <div class="wf-wrap"><svg class="wf" id="wf" viewBox="0 0 820 360" role="img" aria-label="Animated n8n workflow: a trigger, an AI step and the apps it writes to"></svg></div>
+    <div class="chips" aria-label="Run a workflow">
+      <button class="chip" type="button" data-sc="lead" aria-pressed="true">New lead from the website</button>
+      <button class="chip" type="button" data-sc="stripe" aria-pressed="false">Invoice paid (Stripe)</button>
+      <button class="chip" type="button" data-sc="phone" aria-pressed="false">Missed call → booking</button>
+      <button class="chip" type="button" data-sc="inbox" aria-pressed="false">Inbox triage</button>
+    </div>
+  </div>
+  <aside class="panel">
+    <h3>Execution log</h3>
+    <div class="runlog" id="runlog" role="log" aria-live="polite" aria-relevant="additions"></div>
+    <h3>This session</h3>
+    <div class="sys">
+      <div><div class="name">Runs</div><div class="val" id="s-runs">0</div></div>
+      <div><div class="name">Success</div><div class="val" id="s-ok">—</div></div>
+      <div><div class="name">Avg. time</div><div class="val" id="s-avg">—</div></div>
+    </div>
+    <p class="lede" style="font-size:1rem;margin-top:6px">The canvas is a browser simulation of four workflows we run for clients. The statistics above are read from the real server every five minutes. <a class="more" href="{BASE}services/#automation">How we build it <span aria-hidden="true">→</span></a></p>
+  </aside>
+</section>
+
+<!-- ===================== HOW IT WORKS ===================== -->
+<section class="flow reveal" aria-labelledby="n8n-flow-h">
+  <p class="kicker mono">How it works</p>
+  <h2 id="n8n-flow-h">Trigger in. Result out.</h2>
+  <ol>
+    <li><h3>Trigger</h3><p>A form, a payment, a call, an e-mail, a schedule.</p></li>
+    <li><h3>Route</h3><p>Validate, deduplicate, decide which path to take.</p></li>
+    <li><h3>AI step</h3><p>Claude reads, classifies, writes and extracts.</p></li>
+    <li><h3>Actions</h3><p>CRM, calendar, invoices, e-mail, WhatsApp, sheets.</p></li>
+    <li><h3>Log & retry</h3><p>Every run recorded; errors retried, then reported.</p></li>
+  </ol>
+  <div class="stack" aria-label="Technology"><span>n8n (self-hosted)</span><span>Claude</span><span>OpenAI</span><span>Python</span><span>PostgreSQL</span><span>Stripe</span><span>Gmail / IMAP</span><span>WhatsApp</span><span>Hosted in Germany</span></div>
+</section>
+""" + cta_strip('Which of your tasks should run itself?', 'Most clients start with one workflow and are live in about two weeks. The free audit lists what could run itself in your business.', 'Get your free visibility audit')
+pages['n8n/index.html'] = head('n8n Automation: live workflows for your business | GeorgeAI', 'See real n8n statistics from our server and watch a workflow run: lead intake, Stripe orders, missed-call booking and inbox triage. Self-hosted in Germany.', 'n8n/', extra_js=f'<script src="{BASE}globe.js?v=6" defer></script>\n<script src="{BASE}n8nflow.js?v=6" defer></script>\n') + nav('n8n/') + fix(N8N) + '\n</main>\n\n' + footer()
 
 # ---- PRICING: cards parsed from the live pricing page so prices and Stripe links have one source of truth
 SRC = open('/Users/Geronimo/Projects/georgeai_dev/pages/pricing/index.html', encoding='utf-8').read()
@@ -334,7 +411,7 @@ pages['pricing/index.html'] = head('Pricing: fixed-price AI packages | GeorgeAI'
 
 # ---- LEGAL: rendered client-side from the deployed /legal-data.js (identity applied by apply_legal at deploy)
 lg = page_head('Legal', 'Imprint, privacy, terms, cookies.', 'The legal documents for georgeai.dev, in five languages. Pick a document below.') + SAND_SUB + LEGAL_BODY
-pages['legal/index.html'] = head('Legal: Imprint, Privacy, Terms, Cookies | GeorgeAI', 'Impressum, Datenschutzerklaerung, AGB and cookie policy for georgeai.dev in EN, DE, FR, RO and AR.', 'legal/', extra_js=f'<script src="/legal-data.js" defer></script>\n<script src="{BASE}legal.js?v=5" defer></script>\n') + nav(None) + fix(lg) + '\n</main>\n\n' + footer()
+pages['legal/index.html'] = head('Legal: Imprint, Privacy, Terms, Cookies | GeorgeAI', 'Impressum, Datenschutzerklaerung, AGB and cookie policy for georgeai.dev in EN, DE, FR, RO and AR.', 'legal/', extra_js=f'<script src="/legal-data.js" defer></script>\n<script src="{BASE}legal.js?v=6" defer></script>\n') + nav(None) + fix(lg) + '\n</main>\n\n' + footer()
 
 # ---- CONFIGURATOR: services from georgeai_services.json, rules from its configurator block
 _cfg = json.load(open('/Users/Geronimo/Projects/georgeai_dev/georgeai_services.json'))
@@ -343,7 +420,7 @@ _grp = {}
 for _x in _svcs: _grp.setdefault(_x.get('group') or _x.get('category'), []).append(_x)
 def _svc_boxes():
     out = ''
-    for g in ['Automation & AI', 'Growth & Marketing', 'Software & Data', 'Web']:
+    for g in _cfg['categories']:
         items = ''.join(f'<label class="chk"><input type="checkbox" name="svc"><span>{x["name"]}</span><small>{x.get("tagline","")}</small></label>' for x in _grp.get(g, []))
         out += f'<fieldset class="cfg-group"><legend>{g}</legend>{items}</fieldset>'
     return out
@@ -374,7 +451,7 @@ CFG = page_head('Configurator', 'Outline your project. See the timeline before t
 </form>
 </section>
 ''' + cta_strip('Prefer to start smaller?', 'The free visibility audit shows where AI pays off first, before you configure anything.')
-pages['configurator/index.html'] = head('Configurator: outline your AI project | GeorgeAI', 'Pick services, scale and add-ons, see the estimated timeline and complexity, and request a tailored quote within 48 hours.', 'configurator/', extra_js=f'<script src="{BASE}configurator.js?v=5" defer></script>\n') + nav('configurator/') + fix(CFG) + '\n</main>\n\n' + footer()
+pages['configurator/index.html'] = head('Configurator: outline your AI project | GeorgeAI', 'Pick services, scale and add-ons, see the estimated timeline and complexity, and request a tailored quote within 48 hours.', 'configurator/', extra_js=f'<script src="{BASE}configurator.js?v=6" defer></script>\n') + nav('configurator/') + fix(CFG) + '\n</main>\n\n' + footer()
 
 # ---- ACCOUNT: sign up / log in on the Django session API
 ACC = page_head('Account', 'Log in or create your account.', 'Save configurations and track your requests. One email, one password, nothing else.') + SAND_SUB + f'''
@@ -402,7 +479,7 @@ ACC = page_head('Account', 'Log in or create your account.', 'Save configuration
   </div>
 </section>
 '''
-pages['account/index.html'] = head('Account: log in or sign up | GeorgeAI', 'Log in or create your GeorgeAI account to save configurations and track your requests.', 'account/', extra_js=f'<script src="{BASE}account.js?v=5" defer></script>\n') + nav(None) + fix(ACC) + '\n</main>\n\n' + footer()
+pages['account/index.html'] = head('Account: log in or sign up | GeorgeAI', 'Log in or create your GeorgeAI account to save configurations and track your requests.', 'account/', extra_js=f'<script src="{BASE}account.js?v=6" defer></script>\n') + nav(None) + fix(ACC) + '\n</main>\n\n' + footer()
 
 for path, html in pages.items():
     full = os.path.join(OUT, path); os.makedirs(os.path.dirname(full), exist_ok=True)
