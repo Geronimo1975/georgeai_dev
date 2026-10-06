@@ -34,7 +34,8 @@
     if (s.avg_duration_ms != null) count(tiles.dur, s.avg_duration_ms, v => v >= 1000 ? (v / 1000).toFixed(1) + ' ' + T('s') : Math.round(v) + ' ' + T('ms'));
     if (spark && s.per_day) {
       const max = Math.max(1, ...s.per_day.map(d => d.runs)), w = 100, h = 40, n = s.per_day.length;
-      const pts = s.per_day.map((d, i) => [i * (w / (n - 1)), h - 4 - (d.runs / max) * (h - 8)]);
+      const dx = n > 1 ? w / (n - 1) : 0;  // single-day payload -> one point at x=0, no Infinity/NaN
+      const pts = s.per_day.map((d, i) => [i * dx, h - 4 - (d.runs / max) * (h - 8)]);
       spark.innerHTML = `<path class="area" d="M0 ${h} ${pts.map(p => 'L' + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ')} L${w} ${h} Z"/><path class="line" d="${pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ')}"/>` +
         pts.map(p => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="1.6"/>`).join('');
     }

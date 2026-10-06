@@ -30,11 +30,6 @@
     catch (e) { return false; } // private mode / storage blocked -> no consent
   }
 
-  function consentAnswered() {
-    try { return localStorage.getItem("ga_cookie") != null; }
-    catch (e) { return false; }
-  }
-
   function loadGA() {
     if (loaded) return;
     loaded = true;
@@ -58,12 +53,12 @@
     return;
   }
 
-  // Not granted yet. If the banner is still unanswered, poll for the choice;
-  // the moment it becomes "all" we load, and we stop once it is "essential".
-  if (!consentAnswered()) {
-    var timer = setInterval(function () {
-      if (consentGranted()) { clearInterval(timer); loadGA(); }
-      else if (consentAnswered()) { clearInterval(timer); } // declined -> stop
-    }, 800);
-  }
+  // Not granted yet (unset, or "essential"). Poll and load the moment the value
+  // becomes "all" — this also covers a later upgrade from "essential" via the
+  // "Cookie settings" reopen, on any page (the cinematic banner or the export's
+  // own React banner), with no reload. The idle timer is a no-op if the visitor
+  // keeps "essential".
+  var timer = setInterval(function () {
+    if (consentGranted()) { clearInterval(timer); loadGA(); }
+  }, 800);
 })();

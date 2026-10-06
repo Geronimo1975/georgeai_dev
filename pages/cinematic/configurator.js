@@ -36,7 +36,7 @@
     e.preventDefault();
     const r = calc(); if (!r.svc.length) return;
     const name = $('#cfg-name').value.trim(), email = $('#cfg-email').value.trim(), notes = $('#cfg-notes').value.trim();
-    const body = T.body.replace('%s', r.svc.join(', ')).replace('%S', r.scale).replace('%a', r.addons.join(', ') || '-').replace('%t', `${r.min}-${r.max}`).replace('%c', r.cx).replace('%n', notes || '-').replace('%N', name || '-').replace('%E', email || '-');
+    const body = T.body.replace('%s', r.svc.join(', ')).replace('%S', r.scale).replace('%a', r.addons.join(', ') || '-').replace('%t', `${r.min}-${r.max}`).replace('%c', r.cx).replace('%n', () => notes || '-').replace('%N', () => name || '-').replace('%E', () => email || '-');
     location.href = 'mailto:contact@GeorgeAI.dev?subject=' + encodeURIComponent(T.subject) + '&body=' + encodeURIComponent(body);
     $('#cfg-done').hidden = false;
   });
