@@ -34,6 +34,7 @@ except Exception:  # imported without the generator on path — inline fallback
         "RAG": "rag", "Web Design Optimization": "web-design-optimization",
         "SaaS Projects": "saas-projects",
         "API Integration & Data Analytics": "api-integration-data-analytics",
+        "AI Consultant": "ai-consultant",
     }
 
 MOCK = "/assets/mock"
@@ -133,6 +134,28 @@ def swap_news(html, notes):
     return new
 
 
+def hide_template(html, notes):
+    """Hide the raw <x-dc> template until support.js renders over it.
+
+    <x-dc> holds the design tool's template source, which support.js reads via
+    innerHTML — but the browser also parses it as live DOM, so until hydration
+    finishes it paints as a ~12,000px block of visible `{{ }}` markup. Hiding it
+    costs nothing (support.js renders into its own root; the crawl fallback is
+    the <noscript> block) and removes that flash on a slow connection or when
+    support.js fails outright.
+    """
+    if 'x-dc[data-dc-hidden]' in html:
+        return html
+    css = "<style>x-dc[data-dc-hidden]{display:none}</style>"
+    new, n = re.subn(r'<x-dc(?=[\s>])', '<x-dc data-dc-hidden', html, count=1)
+    if not n:
+        notes.append("template: <x-dc> not found")
+        return html
+    new = new.replace("</head>", css + "</head>", 1)
+    notes.append("template: raw <x-dc> hidden pre-hydration")
+    return new
+
+
 def process(path):
     with open(path, encoding="utf-8") as fh:
         html = fh.read()
@@ -145,6 +168,7 @@ def process(path):
     html = swap_detail(html, notes)
     html = swap_about(html, notes)
     html = swap_news(html, notes)
+    html = hide_template(html, notes)
     if html != orig:
         with open(path, "w", encoding="utf-8") as fh:
             fh.write(html)

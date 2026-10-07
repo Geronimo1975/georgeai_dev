@@ -1,164 +1,15 @@
 {
   "categories": [
-    "Automation & AI",
-    "Growth & Marketing",
-    "Software & Data",
-    "Web"
+    "Vibe Code · Python, Django, PostgreSQL",
+    "n8n Automation",
+    "CRM & ERP",
+    "SEO · GEO · AIO",
+    "AI Consultant"
   ],
   "services": [
     {
-      "name": "Automation",
-      "cat": 0,
-      "stack": [
-        "n8n",
-        "Python",
-        "OpenAI",
-        "Webhooks"
-      ],
-      "label": "[ workflow canvas ]",
-      "category": "Automation & AI",
-      "tagline": "Connect every tool and kill the busywork.",
-      "intro": "Custom n8n workflows that move data between your apps automatically — CRMs, email, sheets, APIs and LLMs — so repetitive manual steps disappear.",
-      "includes": [
-        "Audit of your manual processes",
-        "Custom n8n flows with error handling & retries",
-        "OpenAI / Claude steps for smart decisions"
-      ],
-      "steps": [
-        "Map the process and the bottleneck",
-        "Build, test and harden the flow",
-        "Deploy, monitor and hand over"
-      ],
-      "outcome": "Hours of manual work removed every week — reliably, around the clock."
-    },
-    {
-      "name": "AI Chatbot",
-      "cat": 0,
-      "stack": [
-        "OpenAI",
-        "RAG",
-        "WhatsApp",
-        "n8n"
-      ],
-      "label": "[ chat widget ]",
-      "category": "Automation & AI",
-      "tagline": "A website assistant that never sleeps.",
-      "intro": "A chatbot trained on your own content (RAG) that answers questions, qualifies leads and books appointments directly on your site.",
-      "includes": [
-        "Chatbot trained on your docs & site (RAG)",
-        "Lead capture and appointment booking",
-        "WhatsApp & social-channel integration"
-      ],
-      "steps": [
-        "Train the bot on your knowledge base",
-        "Design the conversation flow",
-        "Embed, launch and refine"
-      ],
-      "outcome": "Every visitor gets an instant, accurate answer."
-    },
-    {
-      "name": "AI Phone Calls",
-      "cat": 0,
-      "stack": [
-        "Phone AI",
-        "OpenAI",
-        "Twilio",
-        "n8n"
-      ],
-      "label": "[ call agent ]",
-      "category": "Automation & AI",
-      "tagline": "An AI voice on your phone line.",
-      "intro": "AI phone agents with a custom voice and avatar that answer calls, qualify callers and book appointments 24/7 — so no enquiry is ever missed.",
-      "includes": [
-        "AI phone agent with custom voice",
-        "Call routing, qualification & booking",
-        "Transcripts and CRM sync"
-      ],
-      "steps": [
-        "Define call scripts & voice",
-        "Connect your number and CRM",
-        "Launch and continuously improve"
-      ],
-      "outcome": "Every call answered — even outside office hours."
-    },
-    {
-      "name": "SEO / AIO / GEO",
-      "cat": 1,
-      "stack": [
-        "DataForSEO",
-        "WordPress",
-        "Python",
-        "OpenAI"
-      ],
-      "label": "[ rankings dashboard ]",
-      "category": "Growth & Marketing",
-      "tagline": "Be found by people and by AI.",
-      "intro": "Optimisation for search engines (SEO), AI answers (AIO) and generative engines like ChatGPT and Perplexity (GEO) — on your current site or a new one.",
-      "includes": [
-        "Technical + content SEO audit",
-        "AIO/GEO optimisation for AI answer engines",
-        "Automated content & keyword pipelines"
-      ],
-      "steps": [
-        "Audit visibility across search & AI",
-        "Fix technical and content gaps",
-        "Automate content and track rankings"
-      ],
-      "outcome": "More qualified traffic from Google and AI assistants."
-    },
-    {
-      "name": "Email Marketing",
-      "cat": 1,
-      "stack": [
-        "Mautic",
-        "Brevo",
-        "Sendy",
-        "Amazon SES"
-      ],
-      "label": "[ campaign flow ]",
-      "category": "Growth & Marketing",
-      "tagline": "Campaigns that land and convert.",
-      "intro": "Automated email marketing with Mautic, Brevo and Amazon SES — segmented flows, newsletters and nurture sequences that run themselves.",
-      "includes": [
-        "Email platform setup & deliverability",
-        "Automated nurture & newsletter flows",
-        "Segmentation and A/B testing"
-      ],
-      "steps": [
-        "Set up platform & domain authentication",
-        "Design segments and automations",
-        "Launch, measure and optimise"
-      ],
-      "outcome": "A self-running channel that nurtures leads into customers."
-    },
-    {
-      "name": "Lead Generation",
-      "cat": 1,
-      "stack": [
-        "n8n",
-        "Python",
-        "CRM",
-        "LinkedIn"
-      ],
-      "label": "[ lead pipeline ]",
-      "category": "Growth & Marketing",
-      "tagline": "A predictable pipeline of qualified leads.",
-      "intro": "Automated lead-generation systems that find, enrich and route prospects into your CRM — combining scraping, enrichment and AI scoring.",
-      "includes": [
-        "Lead sourcing & enrichment pipelines",
-        "AI lead scoring and routing",
-        "CRM integration and reporting"
-      ],
-      "steps": [
-        "Define your ideal customer profile",
-        "Build sourcing & enrichment flows",
-        "Score, route and report"
-      ],
-      "outcome": "A steady flow of qualified leads, on autopilot."
-    },
-    {
       "name": "Python Programming",
-      "cat": 2,
+      "cat": 0,
       "stack": [
         "Python",
         "FastAPI",
@@ -166,7 +17,7 @@
         "Docker"
       ],
       "label": "[ code editor ]",
-      "category": "Software & Data",
+      "category": "Vibe Code · Python, Django, PostgreSQL",
       "tagline": "Custom backends, scripts and integrations.",
       "intro": "Python development for backends, APIs, automations and data tooling — clean, tested code that scales with your business.",
       "includes": [
@@ -179,11 +30,12 @@
         "Build and test iteratively",
         "Deploy with monitoring"
       ],
-      "outcome": "Reliable software tailored exactly to your process."
+      "outcome": "Reliable software tailored exactly to your process.",
+      "seo_title": "Python Development — Backends, APIs & Automation | GeorgeAI"
     },
     {
       "name": "Django",
-      "cat": 2,
+      "cat": 0,
       "stack": [
         "Django",
         "Python",
@@ -191,7 +43,7 @@
         "REST"
       ],
       "label": "[ web platform ]",
-      "category": "Software & Data",
+      "category": "Vibe Code · Python, Django, PostgreSQL",
       "tagline": "Full-stack web platforms, built to scale.",
       "intro": "Scalable Django applications — dashboards, portals and data platforms — with secure APIs, auth and clean admin tooling.",
       "includes": [
@@ -204,136 +56,12 @@
         "Build app, APIs and admin",
         "Deploy, secure and scale"
       ],
-      "outcome": "A robust platform your business can grow on."
-    },
-    {
-      "name": "Micro ERP",
-      "cat": 2,
-      "stack": [
-        "Django",
-        "PostgreSQL",
-        "Supabase",
-        "REST"
-      ],
-      "label": "[ erp modules ]",
-      "category": "Software & Data",
-      "tagline": "Run your whole operation in one place.",
-      "intro": "A lightweight, custom ERP that fits how you actually work — inventory, invoicing, orders and reporting, without the bloat of off-the-shelf suites.",
-      "includes": [
-        "Custom modules for your workflow",
-        "Inventory, orders & invoicing",
-        "Dashboards and exportable reports"
-      ],
-      "steps": [
-        "Map your operational processes",
-        "Build the modules you need",
-        "Roll out, train and support"
-      ],
-      "outcome": "One system replacing a dozen spreadsheets."
-    },
-    {
-      "name": "CRM",
-      "cat": 2,
-      "stack": [
-        "Django",
-        "PostgreSQL",
-        "n8n",
-        "REST"
-      ],
-      "label": "[ crm pipeline ]",
-      "category": "Software & Data",
-      "tagline": "Know every customer, never drop a lead.",
-      "intro": "A tailored CRM that tracks contacts, deals and conversations — integrated with your email, phone and automation so nothing slips.",
-      "includes": [
-        "Custom CRM tailored to your sales flow",
-        "Pipeline, tasks and reminders",
-        "Email, phone & automation integration"
-      ],
-      "steps": [
-        "Define your pipeline and stages",
-        "Build and migrate your data",
-        "Integrate and automate"
-      ],
-      "outcome": "A single source of truth for every relationship."
-    },
-    {
-      "name": "Web Design",
-      "cat": 3,
-      "stack": [
-        "Next.js",
-        "WordPress",
-        "HTML/CSS",
-        "Figma"
-      ],
-      "label": "[ website mockup ]",
-      "category": "Web",
-      "tagline": "Sites that look sharp and convert.",
-      "intro": "Modern, responsive websites — fast, multilingual and built to turn visitors into enquiries, with SEO and automation baked in.",
-      "includes": [
-        "Responsive, multilingual design",
-        "SEO-ready, fast-loading build",
-        "Integrations for chat, forms & analytics"
-      ],
-      "steps": [
-        "Define goals, content and structure",
-        "Design and build responsively",
-        "Launch, measure and iterate"
-      ],
-      "outcome": "A site that works as hard as you do."
-    },
-    {
-      "name": "RAG",
-      "cat": 0,
-      "stack": [
-        "RAG",
-        "Vector DB",
-        "OpenAI",
-        "Embeddings"
-      ],
-      "label": "[ rag pipeline ]",
-      "category": "Automation & AI",
-      "tagline": "Give your AI your knowledge.",
-      "intro": "Retrieval-Augmented Generation that grounds chatbots and phone agents in your own documents — accurate, source-backed answers instead of guesses.",
-      "includes": [
-        "Document ingestion & vector indexing",
-        "Retrieval pipeline wired into your AI",
-        "Source citations and continuous updates"
-      ],
-      "steps": [
-        "Collect and clean your knowledge base",
-        "Build the embedding & retrieval pipeline",
-        "Connect to chat and phone agents"
-      ],
-      "outcome": "AI that answers from your facts, not its imagination."
-    },
-    {
-      "name": "Web Design Optimization",
-      "cat": 1,
-      "stack": [
-        "CRO",
-        "SEO",
-        "Analytics",
-        "A/B testing"
-      ],
-      "label": "[ landing optimization ]",
-      "category": "Growth & Marketing",
-      "tagline": "Turn more visitors into enquiries.",
-      "intro": "Conversion-focused optimisation of your existing site — speed, layout, copy and SEO — so the traffic you already have converts better.",
-      "includes": [
-        "Speed, UX and SEO audit",
-        "Conversion-focused redesign of key pages",
-        "A/B testing and analytics setup"
-      ],
-      "steps": [
-        "Audit performance and drop-off points",
-        "Redesign and optimise key pages",
-        "Test, measure and iterate"
-      ],
-      "outcome": "More leads from the same traffic."
+      "outcome": "A robust platform your business can grow on.",
+      "seo_title": "Django Development — Web Platforms & Portals | GeorgeAI"
     },
     {
       "name": "SaaS Projects",
-      "cat": 2,
+      "cat": 0,
       "stack": [
         "Django",
         "React",
@@ -341,7 +69,7 @@
         "PostgreSQL"
       ],
       "label": "[ saas dashboard ]",
-      "category": "Software & Data",
+      "category": "Vibe Code · Python, Django, PostgreSQL",
       "tagline": "From idea to launched product.",
       "intro": "End-to-end development of SaaS products — auth, billing, dashboards and APIs — built on Django and React and ready to scale.",
       "includes": [
@@ -354,11 +82,12 @@
         "Build core features and billing",
         "Launch, monitor and iterate"
       ],
-      "outcome": "A market-ready SaaS, built to grow."
+      "outcome": "A market-ready SaaS, built to grow.",
+      "seo_title": "SaaS Development — Auth, Billing, Dashboards | GeorgeAI"
     },
     {
       "name": "API Integration & Data Analytics",
-      "cat": 2,
+      "cat": 0,
       "stack": [
         "REST",
         "Python",
@@ -366,7 +95,7 @@
         "PostgreSQL"
       ],
       "label": "[ api integration ]",
-      "category": "Software & Data",
+      "category": "Vibe Code · Python, Django, PostgreSQL",
       "tagline": "Connect every platform, see every number.",
       "intro": "API integrations that make your platforms talk to each other in one place — plus the data analytics that turn the combined data into insight.",
       "includes": [
@@ -379,7 +108,321 @@
         "Build and install the integrations",
         "Centralise data and build dashboards"
       ],
-      "outcome": "One connected system with analytics you can act on."
+      "outcome": "One connected system with analytics you can act on.",
+      "seo_title": "API Integration & Data Analytics Dashboards | GeorgeAI"
+    },
+    {
+      "name": "Automation",
+      "cat": 1,
+      "stack": [
+        "n8n",
+        "Python",
+        "OpenAI",
+        "Webhooks"
+      ],
+      "label": "[ workflow canvas ]",
+      "category": "n8n Automation",
+      "tagline": "Connect every tool and kill the busywork.",
+      "intro": "Custom n8n workflows that move data between your apps automatically — CRMs, email, sheets, APIs and LLMs — so repetitive manual steps disappear.",
+      "includes": [
+        "Audit of your manual processes",
+        "Custom n8n flows with error handling & retries",
+        "OpenAI / Claude steps for smart decisions"
+      ],
+      "steps": [
+        "Map the process and the bottleneck",
+        "Build, test and harden the flow",
+        "Deploy, monitor and hand over"
+      ],
+      "outcome": "Hours of manual work removed every week — reliably, around the clock.",
+      "seo_title": "n8n Workflow Automation for SMBs | GeorgeAI"
+    },
+    {
+      "name": "Lead Generation",
+      "cat": 1,
+      "stack": [
+        "n8n",
+        "Python",
+        "CRM",
+        "LinkedIn"
+      ],
+      "label": "[ lead pipeline ]",
+      "category": "n8n Automation",
+      "tagline": "A predictable pipeline of qualified leads.",
+      "intro": "Automated lead-generation systems that find, enrich and route prospects into your CRM — combining scraping, enrichment and AI scoring.",
+      "includes": [
+        "Lead sourcing & enrichment pipelines",
+        "AI lead scoring and routing",
+        "CRM integration and reporting"
+      ],
+      "steps": [
+        "Define your ideal customer profile",
+        "Build sourcing & enrichment flows",
+        "Score, route and report"
+      ],
+      "outcome": "A steady flow of qualified leads, on autopilot.",
+      "seo_title": "Automated B2B Lead Generation & Enrichment | GeorgeAI"
+    },
+    {
+      "name": "Email Marketing",
+      "cat": 1,
+      "stack": [
+        "Mautic",
+        "Brevo",
+        "Sendy",
+        "Amazon SES"
+      ],
+      "label": "[ campaign flow ]",
+      "category": "n8n Automation",
+      "tagline": "Campaigns that land and convert.",
+      "intro": "Automated email marketing with Mautic, Brevo and Amazon SES — segmented flows, newsletters and nurture sequences that run themselves.",
+      "includes": [
+        "Email platform setup & deliverability",
+        "Automated nurture & newsletter flows",
+        "Segmentation and A/B testing"
+      ],
+      "steps": [
+        "Set up platform & domain authentication",
+        "Design segments and automations",
+        "Launch, measure and optimise"
+      ],
+      "outcome": "A self-running channel that nurtures leads into customers.",
+      "seo_title": "Email Marketing Automation & Deliverability | GeorgeAI"
+    },
+    {
+      "name": "CRM",
+      "cat": 2,
+      "stack": [
+        "Django",
+        "PostgreSQL",
+        "n8n",
+        "REST"
+      ],
+      "label": "[ crm pipeline ]",
+      "category": "CRM & ERP",
+      "tagline": "Know every customer, never drop a lead.",
+      "intro": "A tailored CRM that tracks contacts, deals and conversations — integrated with your email, phone and automation so nothing slips.",
+      "includes": [
+        "Custom CRM tailored to your sales flow",
+        "Pipeline, tasks and reminders",
+        "Email, phone & automation integration"
+      ],
+      "steps": [
+        "Define your pipeline and stages",
+        "Build and migrate your data",
+        "Integrate and automate"
+      ],
+      "outcome": "A single source of truth for every relationship.",
+      "seo_title": "Custom CRM Development on Django & n8n | GeorgeAI"
+    },
+    {
+      "name": "Micro ERP",
+      "cat": 2,
+      "stack": [
+        "Django",
+        "PostgreSQL",
+        "Supabase",
+        "REST"
+      ],
+      "label": "[ erp modules ]",
+      "category": "CRM & ERP",
+      "tagline": "Run your whole operation in one place.",
+      "intro": "A lightweight, custom ERP that fits how you actually work — inventory, invoicing, orders and reporting, without the bloat of off-the-shelf suites.",
+      "includes": [
+        "Custom modules for your workflow",
+        "Inventory, orders & invoicing",
+        "Dashboards and exportable reports"
+      ],
+      "steps": [
+        "Map your operational processes",
+        "Build the modules you need",
+        "Roll out, train and support"
+      ],
+      "outcome": "One system replacing a dozen spreadsheets.",
+      "seo_title": "Custom Micro ERP — Inventory, Invoicing, Orders | GeorgeAI"
+    },
+    {
+      "name": "SEO / AIO / GEO",
+      "cat": 3,
+      "stack": [
+        "DataForSEO",
+        "WordPress",
+        "Python",
+        "OpenAI"
+      ],
+      "label": "[ rankings dashboard ]",
+      "category": "SEO · GEO · AIO",
+      "tagline": "Be found by people and by AI.",
+      "intro": "Optimisation for search engines (SEO), AI answers (AIO) and generative engines like ChatGPT and Perplexity (GEO) — on your current site or a new one.",
+      "includes": [
+        "Technical + content SEO audit",
+        "AIO/GEO optimisation for AI answer engines",
+        "Automated content & keyword pipelines"
+      ],
+      "steps": [
+        "Audit visibility across search & AI",
+        "Fix technical and content gaps",
+        "Automate content and track rankings"
+      ],
+      "outcome": "More qualified traffic from Google and AI assistants.",
+      "seo_title": "SEO, AIO & GEO — Rank in Google and in AI Answers | GeorgeAI"
+    },
+    {
+      "name": "Web Design Optimization",
+      "cat": 3,
+      "stack": [
+        "CRO",
+        "SEO",
+        "Analytics",
+        "A/B testing"
+      ],
+      "label": "[ landing optimization ]",
+      "category": "SEO · GEO · AIO",
+      "tagline": "Turn more visitors into enquiries.",
+      "intro": "Conversion-focused optimisation of your existing site — speed, layout, copy and SEO — so the traffic you already have converts better.",
+      "includes": [
+        "Speed, UX and SEO audit",
+        "Conversion-focused redesign of key pages",
+        "A/B testing and analytics setup"
+      ],
+      "steps": [
+        "Audit performance and drop-off points",
+        "Redesign and optimise key pages",
+        "Test, measure and iterate"
+      ],
+      "outcome": "More leads from the same traffic.",
+      "seo_title": "Website Conversion Optimization (CRO & Speed) | GeorgeAI"
+    },
+    {
+      "name": "Web Design",
+      "cat": 3,
+      "stack": [
+        "Next.js",
+        "WordPress",
+        "HTML/CSS",
+        "Figma"
+      ],
+      "label": "[ website mockup ]",
+      "category": "SEO · GEO · AIO",
+      "tagline": "Sites that look sharp and convert.",
+      "intro": "Modern, responsive websites — fast, multilingual and built to turn visitors into enquiries, with SEO and automation baked in.",
+      "includes": [
+        "Responsive, multilingual design",
+        "SEO-ready, fast-loading build",
+        "Integrations for chat, forms & analytics"
+      ],
+      "steps": [
+        "Define goals, content and structure",
+        "Design and build responsively",
+        "Launch, measure and iterate"
+      ],
+      "outcome": "A site that works as hard as you do.",
+      "seo_title": "Web Design — Fast, Multilingual, SEO-Ready | GeorgeAI"
+    },
+    {
+      "name": "AI Consultant",
+      "cat": 4,
+      "stack": [
+        "Claude",
+        "OpenAI",
+        "Roadmap",
+        "Training"
+      ],
+      "label": "[ ai roadmap ]",
+      "category": "AI Consultant",
+      "tagline": "Know what to automate before you spend a euro.",
+      "intro": "A hands-on AI consultant for owner-run businesses: I audit your processes, pick the two or three places where AI and automation pay back fastest, and give you a roadmap your team can actually execute.",
+      "includes": [
+        "Process and tooling audit (half a day on site or remote)",
+        "Prioritised AI roadmap with costs, risks and quick wins",
+        "Vendor-neutral model and tool selection (Claude, OpenAI, open source)",
+        "Team workshop and hand-over"
+      ],
+      "steps": [
+        "Map the processes and the data you already have",
+        "Rank the opportunities by payback and risk",
+        "Deliver the roadmap and start the first pilot"
+      ],
+      "outcome": "A clear, costed plan — and no money spent on AI that does not move the business.",
+      "seo_title": "AI Consultant — Audit, Roadmap & Quick Wins for SMBs | GeorgeAI"
+    },
+    {
+      "name": "AI Chatbot",
+      "cat": 4,
+      "stack": [
+        "OpenAI",
+        "RAG",
+        "WhatsApp",
+        "n8n"
+      ],
+      "label": "[ chat widget ]",
+      "category": "AI Consultant",
+      "tagline": "A website assistant that never sleeps.",
+      "intro": "A chatbot trained on your own content (RAG) that answers questions, qualifies leads and books appointments directly on your site.",
+      "includes": [
+        "Chatbot trained on your docs & site (RAG)",
+        "Lead capture and appointment booking",
+        "WhatsApp & social-channel integration"
+      ],
+      "steps": [
+        "Train the bot on your knowledge base",
+        "Design the conversation flow",
+        "Embed, launch and refine"
+      ],
+      "outcome": "Every visitor gets an instant, accurate answer.",
+      "seo_title": "AI Chatbot for Your Website — RAG-Trained | GeorgeAI"
+    },
+    {
+      "name": "AI Phone Calls",
+      "cat": 4,
+      "stack": [
+        "Phone AI",
+        "OpenAI",
+        "Twilio",
+        "n8n"
+      ],
+      "label": "[ call agent ]",
+      "category": "AI Consultant",
+      "tagline": "An AI voice on your phone line.",
+      "intro": "AI phone agents with a custom voice and avatar that answer calls, qualify callers and book appointments 24/7 — so no enquiry is ever missed.",
+      "includes": [
+        "AI phone agent with custom voice",
+        "Call routing, qualification & booking",
+        "Transcripts and CRM sync"
+      ],
+      "steps": [
+        "Define call scripts & voice",
+        "Connect your number and CRM",
+        "Launch and continuously improve"
+      ],
+      "outcome": "Every call answered — even outside office hours.",
+      "seo_title": "AI Phone Agents That Answer & Book 24/7 | GeorgeAI"
+    },
+    {
+      "name": "RAG",
+      "cat": 4,
+      "stack": [
+        "RAG",
+        "Vector DB",
+        "OpenAI",
+        "Embeddings"
+      ],
+      "label": "[ rag pipeline ]",
+      "category": "AI Consultant",
+      "tagline": "Give your AI your knowledge.",
+      "intro": "Retrieval-Augmented Generation that grounds chatbots and phone agents in your own documents — accurate, source-backed answers instead of guesses.",
+      "includes": [
+        "Document ingestion & vector indexing",
+        "Retrieval pipeline wired into your AI",
+        "Source citations and continuous updates"
+      ],
+      "steps": [
+        "Collect and clean your knowledge base",
+        "Build the embedding & retrieval pipeline",
+        "Connect to chat and phone agents"
+      ],
+      "outcome": "AI that answers from your facts, not its imagination.",
+      "seo_title": "RAG Development — Ground Your AI in Your Docs | GeorgeAI"
     }
   ],
   "configurator": {

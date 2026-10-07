@@ -38,6 +38,11 @@ app.n8n-studio.com, STOP and confirm with George first.
   (`Nx1WqOlQ1k3IWdgB`) + data table `orders` (`MGvuy74ouTb6vUpB`);
   `georgeai-free-audit` (`z2KyQTirBkTJN1UG`, active) + data table `audit_leads`
   (`PO51GZevogi8WCrw`) — migrated here 2026-08-19.
+  `georgeai-stats` (`dmfcIgq3LIJhNfWi`, active) — public `GET /webhook/georgeai-stats`,
+  aggregate-only JSON (counts, success rate, per-day runs; excludes itself) that feeds the
+  live HUD on `/cinematic/n8n/`; CORS locked to `https://georgeai.dev`; export in
+  `docs/n8n-georgeai-stats.json`. Uses credential `1SpYrNltRRsTHy7S` (header auth, the
+  same API key) to read its own instance.
   API key: the repo-root `.env` `N8N_API_KEY` authenticates against THIS
   instance (despite the generic name); there is no `N8N_STUDIO_API_KEY`.
 - **n8n.rotocon.world** (legacy, retire): old `georgeai-free-audit`

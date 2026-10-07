@@ -171,7 +171,12 @@
     var subEl = lede.querySelector('.ga-lede__sub');
     if (!titleEl || !subEl) return;
     if (!ledeBase) {
-      ledeBase = { title: titleEl.innerHTML, sub: subEl.innerHTML };
+      var basePill = lede.querySelector('.ga-lede__pill-text');
+      ledeBase = {
+        title: titleEl.innerHTML,
+        sub: subEl.innerHTML,
+        pill: basePill ? basePill.innerHTML : null
+      };
     }
     var all;
     try { all = JSON.parse(raw); } catch (e) { return; }
@@ -181,6 +186,11 @@
     lede.setAttribute('data-lang', lang);
     titleEl.innerHTML = copy.title;
     subEl.innerHTML = copy.sub;
+    /* The pill is optional: an older injected lede has no such element,
+     * and ledeBase carries no pill key, so an untranslated language must
+     * leave the English text standing rather than blank the link. */
+    var pillEl = lede.querySelector('.ga-lede__pill-text');
+    if (pillEl && copy.pill) pillEl.innerHTML = copy.pill;
     lede.dir = lang === 'ar' ? 'rtl' : 'ltr';
   }
 
@@ -425,12 +435,64 @@
     if (!state.entered) {
       state.entered = true;
       hero.root.classList.add('ga-hero--enter');
-      requestAnimationFrame(function () {
-        requestAnimationFrame(function () {
-          hero.root.classList.add('ga-hero--ready');
-        });
-      });
+      /* Held until the accordion is actually on screen. hero-cinema.js inserts
+       * its 400vh stage BEFORE this hero (hero-cinema.js:279), so on desktop
+       * the panel row starts four viewports down: an entrance fired at boot
+       * played its whole stagger — and then removed itself 900ms later —
+       * without anyone seeing a frame of it. In static mode (mobile, reduced
+       * motion) the hero is at the top and the observer fires on its first
+       * callback, so nothing there changes.
+       *
+       * rootMargin instead of a threshold: the hero wrapper's height varies
+       * with the lede copy and the panel row, and a fraction-of-element
+       * threshold is unreachable once it grows past the viewport. -15% starts
+       * the choreography as the top edge clears the lower fifth of the screen. */
+      playEntrance(hero.root);
     }
+  }
+
+  function playEntrance(root) {
+    if (!('IntersectionObserver' in window)) { runEntrance(root); return; }
+    var done = false;
+    function play() {
+      if (done) return;
+      done = true;
+      clearTimeout(fallback);
+      io.disconnect();
+      runEntrance(root);
+    }
+    var io = new IntersectionObserver(function (entries) {
+      if (entries[0].isIntersecting) play();
+    }, { rootMargin: '0px 0px -15% 0px' });
+    io.observe(root);
+    /* `.ga-hero--enter` holds the panels at opacity 0, so an observer that never
+     * fires does not merely skip an animation — it leaves the hero blank. That
+     * happens whenever the observed root has no box to intersect with: the
+     * export re-rendering this wrapper out from under us between arming and
+     * firing, or a collapsed/hidden ancestor. The gate is an enhancement, so it
+     * gets a deadline; 10s is far past any real scroll-into-view. */
+    var fallback = setTimeout(play, 10000);
+  }
+
+  function runEntrance(root) {
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        root.classList.add('ga-hero--ready');
+        /* Drop the entrance classes once the choreography has played. They
+         * carry `transition: ... 420ms ... !important`, which is right for a
+         * five-panel staggered arrival and wrong for every panel expand
+         * afterwards — and because the classes used to stay on the root for
+         * the life of the page, that 420ms silently governed every later
+         * click instead of the 280ms the panel rule asks for. Removing them
+         * is visually free: the entrance ends on opacity 1 / translateY(0),
+         * which is exactly what the base rules already say.
+         * 900ms clears the slowest chain (240ms stagger + 420ms panel, and
+         * 300ms delay + 380ms for the CTA). */
+        setTimeout(function () {
+          root.classList.remove('ga-hero--enter', 'ga-hero--ready');
+        }, 900);
+      });
+    });
   }
 
   /* --------------------------------------------------------------------

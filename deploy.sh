@@ -54,6 +54,7 @@ BRAND_DIR="$PROJECT_DIR/brand"
 # committed on-brand SVG mockups. Survives re-exports.
 IMAGES_DIR="$PROJECT_DIR/images"
 HERO_DIR="$PROJECT_DIR/hero"
+IDN_DIR="$PROJECT_DIR/idn"
 
 # ---------------------------------------------------------------------------
 # frontend assets — JS kept out of the export (backend/assets/) so it survives
@@ -63,7 +64,7 @@ HERO_DIR="$PROJECT_DIR/hero"
 # ---------------------------------------------------------------------------
 apply_assets() {
   local f copied=""
-  for f in auth.js audit.js; do
+  for f in auth.js audit.js analytics.js; do
     [ -f "$ASSETS_DIR/$f" ] && { cp "$ASSETS_DIR/$f" "$SITE_DIR/$f"; copied="$copied $f"; }
   done
   [ -n "$copied" ] && ok "frontend assets:$copied"
@@ -202,6 +203,52 @@ apply_copy() {
   else
     warn "content layer failed — deploy continues with the export's own copy"
   fi
+  return 0
+}
+
+# ---------------------------------------------------------------------------
+# services layer — the homepage groups its service cards by category and
+# numbers them by array position, and the export hard-codes both (svcMeta in
+# the HTML, cats/items in services-data.js) in the design tool's order. The
+# commercial order (1 vibe code Python/Django/PostgreSQL, 2 n8n, 3 CRM/ERP,
+# 4 SEO/GEO/AIO, 5 AI consultant) lives in seo/services.json and is re-applied
+# here on every deploy, incl. --no-content. Prose is moved by service name, so
+# the layer also carries cards the export does not ship (e.g. AI Consultant).
+# Must run before apply_images (which keys the mockups on svcMeta names).
+# Idempotent, all-or-nothing. Edit seo/services.json — never site/.
+# ---------------------------------------------------------------------------
+apply_services() {
+  [ -f "$SEO_DIR/apply_services.py" ] || return 0
+  [ -f "$SEO_DIR/services.json" ] || return 0
+  command -v python3 >/dev/null || { warn "python3 not found — skipped services layer"; return 0; }
+
+  if python3 "$SEO_DIR/apply_services.py" "$SITE_DIR" "$SEO_DIR" \
+       index.html "${GEORGEAI_HOMEPAGE:-GeorgeAI.dc.html}"; then
+    ok "services layer applied"
+  else
+    warn "services layer failed — deploy continues with the export's own order"
+  fi
+  return 0
+}
+
+# ---------------------------------------------------------------------------
+# legal layer — the export ships site/legal-data.js with [bracketed] Impressum
+# placeholders (street, ZIP, VAT) and cites the repealed § 5 TMG. site/ is wiped
+# on every deploy, so the real identity is re-applied here from seo/legal.json.
+# Runs on every deploy, including --no-content. Idempotent, all-or-nothing.
+# Edit seo/legal.json — never site/legal-data.js.
+# ---------------------------------------------------------------------------
+apply_legal() {
+  [ -d "$SEO_DIR" ] || return 0
+  [ -f "$SEO_DIR/apply_legal.py" ] || return 0
+  command -v python3 >/dev/null || { warn "python3 not found — skipped legal layer"; return 0; }
+
+  python3 "$SEO_DIR/apply_legal.py" "$SITE_DIR" "$SEO_DIR"
+  case $? in
+    0) ok "legal layer applied" ;;
+    2) warn "Impressum still has placeholders — fill seo/legal.json before taking real money" ;;
+    *) warn "legal layer failed — deploy continues with the export's own Impressum" ;;
+  esac
   return 0
 }
 
@@ -377,6 +424,25 @@ apply_widget() {
   return 0
 }
 
+# analytics — GA4 (gtag.js), loaded only after the visitor accepts optional
+# cookies (analytics.js self-gates on localStorage.ga_cookie === "all"). Kept
+# out of the export so it survives a re-export; injected on every page (same
+# rationale as the lead widget: a visitor can land on any page from search).
+# Idempotent: skips a page that already references analytics.js.
+# ---------------------------------------------------------------------------
+apply_analytics() {
+  [ -f "$SITE_DIR/analytics.js" ] || return 0
+  command -v python3 >/dev/null || { warn "python3 not found — skipped analytics injection"; return 0; }
+
+  local n
+  if n=$(python3 "$SEO_DIR/inject_analytics.py" "$SITE_DIR"); then
+    ok "GA4 (consent-gated) on $n page(s)"
+  else
+    warn "analytics injection failed — deploy continues"
+  fi
+  return 0
+}
+
 apply_pages() {
   [ -d "$PAGES_DIR" ] || return 0
   cp -R "$PAGES_DIR"/. "$SITE_DIR"/
@@ -385,12 +451,88 @@ apply_pages() {
 
 
 # ---------------------------------------------------------------------------
+# image weight layer — the export ships its photography as full-size PNG (three
+# files alone were 5.7 MB of a 7.8 MB homepage at the 2026-08-26 audit).
+# images/optimize_assets.py re-encodes anything over 100 KB in site/assets/ to
+# WebP at display width and rewrites every reference to it. Originals are kept
+# so an un-rewritten reference still resolves. Runs after apply_media (which
+# owns the mp4s) and before apply_hero, on every deploy incl. --no-content.
+# Idempotent: the .webp is reused while it is newer than its source, and the
+# rewritten references have nothing left to match. Needs cwebp; without it the
+# script no-ops and the deploy continues with the original PNGs.
+# ---------------------------------------------------------------------------
+apply_image_opt() {
+  [ -f "$IMAGES_DIR/optimize_assets.py" ] || return 0
+  command -v python3 >/dev/null || { warn "python3 not found — skipped image optimisation"; return 0; }
+  local out
+  if out=$(python3 "$IMAGES_DIR/optimize_assets.py" "$SITE_DIR"); then
+    ok "${out#optimize_assets: }"
+  else
+    warn "image optimisation failed — deploy continues with original assets"
+  fi
+  return 0
+}
+
+# ---------------------------------------------------------------------------
 # hero motion layer — hero/hero-motion.{css,js} add autoplay, entrance
 # choreography, pointer parallax and the video backdrop to the homepage hero.
 # Kept out of the export (the export has no classes and re-renders the hero
 # subtree, so the JS hooks it by structure) and re-applied on every deploy,
 # including --no-content. Idempotent per asset (hero:motion / hero-cinema markers).
 # ---------------------------------------------------------------------------
+# The corporate B2B layer: corner geometry now, homepage sections later.
+# Runs AFTER apply_brand, so the palette variables its CSS leans on already
+# exist, and BEFORE apply_hero, so the hero's structural probe
+# (div[style*="46px 46px"]) still meets the hero shape it expects.
+apply_idn() {
+  [ -d "$IDN_DIR" ] || { warn "idn/ not found — skipping corporate layer"; return 0; }
+
+  local f copied=""
+  for f in idn-type.css; do
+    [ -f "$IDN_DIR/$f" ] && { cp "$IDN_DIR/$f" "$SITE_DIR/$f"; copied="$copied $f"; }
+  done
+  [ -n "$copied" ] && ok "idn:$copied"
+
+  [ -f "$SITE_DIR/index.html" ] || return 0
+  command -v python3 >/dev/null || { warn "python3 missing — idn head links not injected"; return 0; }
+
+  python3 - "$SITE_DIR/index.html" <<'PY'
+import re, sys
+p = sys.argv[1]
+html = open(p, encoding="utf-8").read()
+orig = html
+
+def in_head(markup):
+    global html
+    if re.search(r"</head>", html, re.I):
+        html = re.sub(r"</head>", lambda m: markup + m.group(0), html, count=1, flags=re.I)
+    else:
+        html = markup + html
+
+# Guarded per asset, not per layer — the same lesson apply_hero() records: a
+# head rewritten by a later layer must be able to get this link back on its own.
+if "idn:type" not in html:
+    in_head('<!-- idn:type — see idn/idn-type.css, never edit site/ -->'
+            '<link rel="stylesheet" href="/idn-type.css">')
+
+if html != orig:
+    open(p, "w", encoding="utf-8").write(html)
+    print("idn: linked idn-type.css")
+else:
+    print("idn: index.html already current")
+PY
+
+  # Section surgery. This one DIES rather than warns: a missing anchor means the
+  # export was redesigned, and the choices are to stop, or to rsync a homepage
+  # that is silently missing a section. Stopping before the sync is the cheap
+  # failure — every other layer here warns because a warning still leaves a
+  # correct page, which is not true of this one.
+  if [ -f "$IDN_DIR/sections.py" ]; then
+    python3 "$IDN_DIR/sections.py" "$SITE_DIR/index.html" "$IDN_DIR" \
+      || die "idn sections failed — refusing to deploy a homepage with missing or misplaced blocks"
+  fi
+}
+
 apply_hero() {
   [ -d "$HERO_DIR" ] || { warn "hero/ not found — skipping hero motion layer"; return 0; }
 
@@ -440,18 +582,42 @@ def at_body_end(markup):
     else:
         html = html + "\n" + markup + "\n"
 
+def script_once(src):
+    """Ensure exactly one <script src=SRC defer> at the end of the body.
+
+    Guarding on a marker in the <head> was wrong twice over. The head marker and
+    the body script are injected together but live in different places, so a
+    later layer that rewrites the head drops the marker while the script
+    survives — and the next deploy, seeing no marker, appends a SECOND copy.
+    That is how /hero-motion.js ended up loading twice in production, running
+    its whole discovery-and-observer pass a second time over the same DOM.
+
+    Guarding on the bare filename is wrong too: hero-lede.html and
+    hero-cinema.html both NAME these files in their comments, so once either
+    block is injected the guard sees the name in prose and skips the real tag
+    forever. Match the exact tag, and keep the FIRST copy rather than the last
+    so that hero-motion.js stays ahead of hero-cinema.js — both are deferred,
+    so document order is execution order, and the cinema mount expects the
+    motion layer's hooks to already exist.
+    """
+    global html
+    tag = "<script src=\"%s\" defer></script>" % src
+    first = html.find(tag)
+    if first < 0:
+        at_body_end(tag)
+        return
+    # self-healing: drop any extra copies a previous deploy already appended
+    head, tail = html[:first + len(tag)], html[first + len(tag):]
+    html = head + tail.replace(tag, "")
+
 if "hero:motion" not in html:
     in_head("<!-- hero:motion — see hero/hero-motion.css, never edit site/ -->"
             "<link rel=\"stylesheet\" href=\"/hero-motion.css\">")
-    at_body_end("<script src=\"/hero-motion.js\" defer></script>")
-
-# hero-cinema.js must run AFTER hero-motion.js: both defer, so load order is
-# execution order, and the cinema's mount pass expects the motion layer's hooks
-# to already exist.
 if "hero-cinema.css" not in html:
     in_head("<link rel=\"stylesheet\" href=\"/hero-cinema.css\">")
-if "hero-cinema.js" not in html:
-    at_body_end("<script src=\"/hero-cinema.js\" defer></script>")
+
+script_once("/hero-motion.js")
+script_once("/hero-cinema.js")
 
 open(p, "w", encoding="utf-8").write(html)
 PY
@@ -644,13 +810,18 @@ PY
   apply_assets
   apply_seo
   apply_copy
+  apply_services
+  apply_legal
   apply_brand
+  apply_idn
   apply_images
   apply_pages
   apply_prune
   apply_media
+  apply_image_opt
   apply_hero
   apply_widget
+  apply_analytics
   # mirror the unpacked content (incl. the derived index.html) into the frontend
   # template dir so the Django backend in backend/ can build against the same export.
   if [ -n "$TEMPLATE_DIR" ]; then
@@ -665,13 +836,18 @@ else
   apply_assets
   apply_seo
   apply_copy
+  apply_services
+  apply_legal
   apply_brand
+  apply_idn
   apply_images
   apply_pages
   apply_prune
   apply_media
+  apply_image_opt
   apply_hero
   apply_widget
+  apply_analytics
 fi
 
 [ -f "$SITE_DIR/index.html" ] || die "./site has no index.html — nothing to deploy"
@@ -783,7 +959,8 @@ DEPLOY_FAIL=0
 check_url() {
   local url="$1" code
   # curl prints "000" on connect failure; capture it without a spurious extra echo
-  code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 12 "$url")" || code="000"
+  # -L: the apex 301s to /cinematic/ (deploy/nginx.conf); the check follows it
+  code="$(curl -sL -o /dev/null -w '%{http_code}' --max-time 12 "$url")" || code="000"
   if [ "$code" = "200" ]; then
     ok "$url → 200"
   elif [ "$code" = "000" ]; then

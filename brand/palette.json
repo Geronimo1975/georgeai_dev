@@ -1,0 +1,168 @@
+{
+  "_comment": [
+    "Source of truth for the export's two theme palettes. brand/apply_brand.py is",
+    "the ONLY writer — it rewrites the `light:`/`dark:` literals inside the",
+    "`const themes = {` block of every exported page, which the export's own",
+    "renderer then emits as CSS custom properties (--canvas, --ink, --accent, ...)",
+    "on its root div. Every key below becomes one CSS variable of the same name.",
+    "",
+    "Direction: the corporate B2B register of idnow.io — a near-black canvas with",
+    "a blue cast, a single hot coral-orange accent, flat surfaces, white ink.",
+    "Replaces the design tool's warm cream + coral, which read as a personal",
+    "portfolio rather than as an engineering vendor.",
+    "",
+    "The values are taken from the reference site's own published theme palette",
+    "(canvas #02060A, accent #FB5E31, surface #0F1317, borders #35383B), not from",
+    "a description of it. An earlier pass of this file guessed 'teal' from a prose",
+    "summary and shipped a palette that missed the target completely — the accent",
+    "is the one token worth reading off the source rather than inferring.",
+    "",
+    "CONTRAST IS LOAD-BEARING. Every pair below clears WCAG AA (4.5:1); the",
+    "numbers in _measured are computed, not estimated, and",
+    "tests/test_hero_contrast.py enforces the hero's composited floor separately.",
+    "",
+    "Two traps, both already paid for once:",
+    "  * A WHITE label on the orange accent is 3.11:1 and FAILS. The label is",
+    "    near-black in both themes (6.53:1). Dark-on-hot is also what makes the",
+    "    button read as a brand mark rather than as a warning.",
+    "  * The dark accent #FB5E31 is only 2.89:1 on a light canvas. The light theme",
+    "    therefore uses the darkened #B23C0A, chosen so it clears 4.5 on the",
+    "    DARKEST light surface (#e8e8e8, 4.84:1) and not merely on white — the",
+    "    obvious #C2410C passes on white and fails at 4.23:1 on that surface."
+  ],
+
+  "buttonLabel": "#02060a",
+
+  "_inverseBtn_comment": [
+    "The export's secondary CTA — a solid button that sits ON the accent band and",
+    "on the About page, where an accent-filled button would vanish. The export",
+    "ships it as warm cream with a warm ink label, both left over from the old",
+    "palette. This is the cool equivalent: white surface, near-black label."
+  ],
+  "inverseBtnBg": "#ffffff",
+  "inverseBtnLabel": "#02060a",
+
+  "_fonts_comment": [
+    "The export routes ALL typography through two JS expressions in its own",
+    "script — `fontDisplay` (41 headings) and `fontBody` — each a one-line",
+    "`ar ? <arabic> : <latin>` ternary. Rewriting those two lines is far more",
+    "surgical than a `#dc-root *` override with !important.",
+    "",
+    "Only the LATIN arm is ours to set. The arabic arm stays Amiri / Noto Sans",
+    "Arabic: Plus Jakarta Sans has no arabic subset, and substituting a face that",
+    "cannot render the script would break the ar locale outright.",
+    "",
+    "Single-family by design. The export shipped a serif display (editorial) and",
+    "the repo's hero layer had pushed every heading to JetBrains Mono (technical);",
+    "both read as a different product than the corporate B2B target, which is one",
+    "geometric sans throughout. Plus Jakarta Sans is vendored as a variable woff2",
+    "in seo/vendor/fonts/, so all weights cost one request."
+  ],
+  "fontDisplayLatin": "'Plus Jakarta Sans',sans-serif",
+  "fontBodyLatin": "'Plus Jakarta Sans',sans-serif",
+
+  "_hardcoded_comment": [
+    "Chrome the export paints with LITERAL hex instead of theme variables, so the",
+    "palette rewrite above cannot reach it: the auth modal (panel, inputs, borders,",
+    "helper text), the mobile nav panel wordmark, and the seo:footer link strip.",
+    "These are intentionally dark in BOTH themes, like the footer.",
+    "",
+    "Left alone they stay warm brown-grey on a near-black site — the single most",
+    "visible way this palette swap could look half-finished.",
+    "",
+    "Keys are the export's OLD warm values; values are the new equivalents, role",
+    "for role. This map assumes it runs against a PRISTINE export: it translates",
+    "warm -> new, so re-pointing it at a site/ this layer already transformed",
+    "would find none of its keys. Rebuild site/ from the export (or from a",
+    "snapshot) before changing these.",
+    "",
+    "socialGrey is called out separately because this layer WRITES it (social",
+    "marks are muted so the accent stays scarce). It must equal the mapping target",
+    "for the old grey below — otherwise the simpleicons rewrite would flip it back",
+    "on every run and the layer would never reach a fixed point."
+  ],
+  "socialGrey": "#8b9199",
+  "hardcodedNeutrals": {
+    "#181715": "#02060a",
+    "#1f1e1b": "#0f1317",
+    "#201f1c": "#0d1116",
+    "#2f2c28": "#35383b",
+    "#2a2824": "#23272b",
+    "#252320": "#0f1317",
+    "#faf9f5": "#ffffff",
+    "#cfccc4": "#c7ccd1",
+    "#a09d96": "#8b9199",
+    "#8e8b82": "#8b9199",
+    "#6c6a64": "#666d72",
+    "#0f0e0d": "#000305"
+  },
+
+  "light": {
+    "canvas": "#f4f4f4",
+    "surface": "#e8e8e8",
+    "card": "#ffffff",
+    "cardBorder": "#d6d6d6",
+    "ink": "#02060a",
+    "accent": "#b23c0a",
+    "accentBtn": "#fb5e31",
+    "body": "#35383b",
+    "muted": "#666d72",
+    "hairline": "#e0e0e0",
+    "navBg": "rgba(244,244,244,.88)",
+    "pillBg": "#e8e8e8",
+    "phA": "#e8e8e8",
+    "phB": "#dcdcdc",
+    "phText": "#666d72",
+    "footerBg": "#02060a",
+    "footerText": "#9aa0a6",
+    "footerHead": "#ffffff",
+    "gridline": "rgba(2,6,10,0.07)"
+  },
+
+  "dark": {
+    "canvas": "#02060a",
+    "surface": "#0f1317",
+    "card": "#0d1116",
+    "cardBorder": "#35383b",
+    "ink": "#ffffff",
+    "accent": "#fb5e31",
+    "accentBtn": "#fb5e31",
+    "body": "#c7ccd1",
+    "muted": "#8b9199",
+    "hairline": "#23272b",
+    "navBg": "rgba(2,6,10,.88)",
+    "pillBg": "#0f1317",
+    "phA": "#0f1317",
+    "phB": "#191d22",
+    "phText": "#8b9199",
+    "footerBg": "#000305",
+    "footerText": "#9aa0a6",
+    "footerHead": "#ffffff",
+    "gridline": "rgba(255,255,255,0.06)"
+  },
+
+  "_measured": {
+    "dark": {
+      "ink on canvas": "20.33:1",
+      "body on canvas": "12.57:1",
+      "muted on canvas": "6.40:1",
+      "accent on canvas": "6.53:1",
+      "accent on surface": "5.99:1",
+      "accent on card": "6.08:1",
+      "footerText on footerBg": "7.83:1"
+    },
+    "light": {
+      "ink on canvas": "18.48:1",
+      "body on canvas": "10.73:1",
+      "muted on canvas": "4.78:1",
+      "accent on canvas": "5.39:1",
+      "accent on card": "5.93:1",
+      "accent on surface": "4.84:1"
+    },
+    "buttons": {
+      "buttonLabel on accentBtn": "6.53:1",
+      "white on accentBtn (rejected)": "3.11:1",
+      "inverseBtnLabel on inverseBtnBg": "20.33:1"
+    }
+  }
+}

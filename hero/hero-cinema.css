@@ -121,8 +121,10 @@
 
 .gc__title,
 .gc .ga-lede__title {
-  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-weight: 500;
+  font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Heavy, not the mono's 500 — see the same note in hero-motion.css. This is
+   * the page's one full-viewport claim and the register sets it bold. */
+  font-weight: 700;
   /* Bigger than the rest of the site's headings on purpose. This is the one
    * full-viewport moment on the page, and at the page's normal 38px cap the
    * type read as a paragraph floating on a wide dark frame. 1440px -> 52px. */
@@ -175,6 +177,12 @@
 
 .gc__title[data-split] .c {
   display: inline-block;
+}
+
+/* Promoted only while the band is on screen — hero-cinema.js toggles --warm
+ * from the drive loop. See the note there for why the threshold is not
+ * --visible's. */
+.gc__band--warm .c {
   will-change: transform, opacity;
 }
 
@@ -267,8 +275,21 @@
   color: #141413;
 }
 
-.gc__btn:hover {
-  transform: translateY(-2px);
+/* Gated behind a fine pointer: a touch device fires hover on tap and latches
+ * the lift until the next tap elsewhere. hero-motion.css already gates the
+ * export's panels this way — this block was the one that did not. */
+@media (hover: hover) and (pointer: fine) {
+  .gc__btn:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* Press feedback. The export's CTAs answer a click with scale(0.97) over in
+ * hero-motion.css; these two sit on the same page and must answer the same
+ * way. Shorter than the hover so the press reads as immediate. */
+.gc__btn:active {
+  transform: scale(0.97);
+  transition-duration: 120ms;
 }
 
 .gc__btn:focus-visible {
@@ -292,7 +313,11 @@
   align-items: center;
   gap: 10px;
   opacity: var(--cue, 1);
-  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* The wide-tracked uppercase micro-label. Sans now, like everything else;
+   * the tracking below is what carries the "system label" reading, not the
+   * monospacing that used to. */
+  font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-weight: 600;
   font-size: 11px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -399,10 +424,15 @@
   }
 }
 
-/* Reduced motion, honoured completely: no cue pulse, no button travel. */
+/* Reduced motion: no cue pulse, no button travel. The colour transitions stay
+ * — the preference is about movement, and a hover that snaps between two
+ * background colours is harder to read than one that fades. The press still
+ * scales, instantly now that transform is off the transition list. */
 @media (prefers-reduced-motion: reduce) {
   .gc__cue-line { animation: none; }
-  .gc__btn { transition: none; }
+  .gc__btn {
+    transition: background-color 200ms ease, border-color 200ms ease;
+  }
   .gc__btn:hover { transform: none; }
 }
 

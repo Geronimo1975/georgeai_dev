@@ -285,6 +285,7 @@ CLAUDE.local.md
 /*.heic
 /*.tif
 /*.tiff
+review/
 
 # local agent tooling
 .claude/worktrees/

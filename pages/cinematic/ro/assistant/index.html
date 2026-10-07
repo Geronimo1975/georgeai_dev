@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asistent: AI în stil Jarvis pentru afacerea dvs. | GeorgeAI</title>
+<meta name="description" content="Încercați un asistent AI în stil Jarvis în browser: comenzi vocale și text care comută dispozitive, programează întâlniri și raportează starea. Construit cu n8n pentru afaceri reale.">
+<meta name="theme-color" content="#02060a">
+<link rel="alternate" hreflang="en" href="https://georgeai.dev/cinematic/assistant/">
+<link rel="alternate" hreflang="de" href="https://georgeai.dev/cinematic/de/assistant/">
+<link rel="alternate" hreflang="fr" href="https://georgeai.dev/cinematic/fr/assistant/">
+<link rel="alternate" hreflang="ro" href="https://georgeai.dev/cinematic/ro/assistant/">
+<link rel="alternate" hreflang="ar" href="https://georgeai.dev/cinematic/ar/assistant/">
+<link rel="alternate" hreflang="x-default" href="https://georgeai.dev/cinematic/assistant/">
+<link rel="canonical" href="https://georgeai.dev/cinematic/ro/assistant/">
+<!-- DEPLOY STEP: og:url / og:image carry the live absolute URLs -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Asistent: AI în stil Jarvis pentru afacerea dvs. | GeorgeAI">
+<meta property="og:description" content="Încercați un asistent AI în stil Jarvis în browser: comenzi vocale și text care comută dispozitive, programează întâlniri și raportează starea. Construit cu n8n pentru afaceri reale.">
+<meta property="og:url" content="https://georgeai.dev/cinematic/ro/assistant/">
+<meta property="og:image" content="https://georgeai.dev/cinematic/assets/george.jpg">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2302060a'/%3E%3Cpath d='M10 7h12l-5 9 5 9H10l5-9z' fill='none' stroke='%23fb5e31' stroke-width='2.2' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preload" href="/assets/fonts/plusjakartasans-var-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/fonts.css">
+<link rel="stylesheet" href="/cinematic/style.css?v=7">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js" integrity="sha384-tKsJDT6PlUI0pSBt9/sBKJluKgA19/a6mBrDsZaXotLB4ZYfMGM6xt6/WgGpYhTm" crossorigin="anonymous" defer></script>
+<script src="/cinematic/script.js?v=6" defer></script>
+<script src="/cinematic/globe.js?v=6" defer></script>
+<script src="/cinematic/jarvis.js?v=6" defer></script>
+</head>
+<body data-lang="ro" data-page="assistant">
+<a class="skip" href="#main">Sari la conținut</a>
+<div class="env" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+<div class="topbar" aria-label="Date de contact">
+  <a href="tel:+491604155546"><span class="dot"></span>+49 160 4155546</a>
+  <a href="mailto:contact@GeorgeAI.dev">contact@GeorgeAI.dev</a>
+  <span class="tb-social">
+    <a href="https://wa.me/491604155546" rel="noopener" target="_blank" aria-label="WhatsApp"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 20zm4.4-6c-.2-.1-1.4-.7-1.6-.8s-.4-.1-.5.1-.6.8-.8 1-.3.2-.5.1a6.5 6.5 0 0 1-3.2-2.8c-.2-.4.2-.4.7-1.2.1-.2 0-.3 0-.4l-.7-1.7c-.2-.5-.4-.4-.5-.4h-.5a1 1 0 0 0-.7.3 2.8 2.8 0 0 0-.9 2.1 4.9 4.9 0 0 0 1 2.6c.1.2 1.8 2.7 4.3 3.8 1.6.7 2.2.7 3 .6.5-.1 1.4-.6 1.6-1.1s.2-1 .2-1.1-.3-.2-.5-.3z"/></svg></a>
+    <a href="https://linkedin.com/in/georgesebastian-c-212b7455" rel="me noopener" target="_blank" aria-label="LinkedIn"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM.2 8h4.6v14H.2V8zm7.4 0h4.4v1.9h.1c.6-1.1 2.1-2.3 4.3-2.3 4.6 0 5.5 3 5.5 7V22h-4.6v-6.5c0-1.6 0-3.6-2.2-3.6s-2.5 1.7-2.5 3.5V22H7.6V8z"/></svg></a>
+    <a href="https://github.com/Geronimo1975" rel="me noopener" target="_blank" aria-label="GitHub"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z"/></svg></a>
+  </span>
+  <span class="tb-right"><a href="/cinematic/ro/configurator/">Configurator</a><a href="/cinematic/ro/account/">Cont</a><span class="tb-lang mono"><a href="/cinematic/assistant/" hreflang="en" lang="en">EN</a> <a href="/cinematic/de/assistant/" hreflang="de" lang="de">DE</a> <a href="/cinematic/fr/assistant/" hreflang="fr" lang="fr">FR</a> <b>RO</b> <a href="/cinematic/ar/assistant/" hreflang="ar" lang="ar">AR</a></span></span>
+</div>
+<header class="nav" id="nav">
+  <a class="wordmark" href="/cinematic/ro/" aria-label="Pagina principală GeorgeAI">
+    <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><path d="M10 7h12l-5 9 5 9H10l5-9z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg>
+    George<b>AI</b>
+  </a>
+  <nav aria-label="Navigare principală"><a href="/cinematic/ro/services/">Servicii</a><a href="/cinematic/ro/assistant/" aria-current="page">Asistent</a><a href="/cinematic/ro/n8n/">n8n</a><a href="/cinematic/ro/work/">Proiecte</a><a href="/cinematic/ro/about/">Despre</a><a href="/blog/">Blog</a><a href="/cinematic/ro/pricing/">Prețuri</a><a href="/cinematic/ro/contact/">Contact</a></nav>
+  <a class="btn btn-nav" href="/cinematic/ro/contact/" data-audit>Audit gratuit</a>
+  <button class="burger" aria-label="Deschide meniul" aria-expanded="false" aria-controls="sheet"><span></span><span></span></button>
+</header>
+<div class="sheet" id="sheet" hidden>
+  <a href="/cinematic/ro/services/">Servicii</a><a href="/cinematic/ro/assistant/">Asistent</a><a href="/cinematic/ro/n8n/">n8n</a><a href="/cinematic/ro/work/">Proiecte</a><a href="/cinematic/ro/about/">Despre</a><a href="/blog/">Blog</a><a href="/cinematic/ro/pricing/">Prețuri</a><a href="/cinematic/ro/contact/">Contact</a>
+  <a class="btn" href="/cinematic/ro/contact/" data-audit>Obțineți auditul gratuit de vizibilitate</a>
+</div>
+
+<main id="main" tabindex="-1">
+<!-- ===================== OPS ROOM ===================== -->
+<section class="ops" aria-label="Camera de comandă">
+  <canvas class="globe" id="globe" aria-hidden="true"></canvas>
+  <div class="ops-scan" aria-hidden="true"></div>
+  <div class="ops-grid" aria-hidden="true">
+    <div class="hud-tile t1"><span class="name">Sisteme</span><b><span class="dot"></span>Online</b><small>12 / 12 servicii</small></div>
+    <div class="hud-tile t2"><span class="name">Workflow-uri azi</span><b data-tick="1284" data-rate="0.4">1,284</b><small>n8n · automat</small></div>
+    <div class="hud-tile t3"><span class="name">Apeluri preluate</span><b data-tick="317" data-rate="0.08">317</b><small>24/7 · 4 limbi</small></div>
+    <div class="hud-tile t4"><span class="name">Programări</span><b data-tick="46" data-rate="0.02">46</b><small>calendar sincronizat</small></div>
+    <div class="hud-tile t5"><span class="name">Răspuns mediu</span><b>1.8 s</b><small>de la voce la acțiune</small></div>
+    <div class="hud-tile t6"><span class="name">Radar</span><svg class="radar" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46"/><circle cx="50" cy="50" r="30"/><circle cx="50" cy="50" r="14"/><path d="M50 50 L50 4"/><path d="M4 50 H96"/><path class="sweep" d="M50 50 L50 4 A46 46 0 0 1 96 50 Z"/></svg></div>
+  </div>
+  <div class="ops-copy">
+    <p class="kicker mono">Lumea dvs. Vocea dvs. O singură inteligență.</p>
+    <h1><span class="w1">JARVIS</span><span class="w2">pentru afacerea dvs.</span></h1>
+    <p class="lede">Gândește. Înțelege. Acționează. Asistentul pe care îl construim răspunde la telefon, programează lucrarea și comandă clădirea, în limba apelantului. Încercați demo-ul de mai jos.</p>
+    <div class="cta-row"><a class="btn" href="#jarvis">Încearcă acum</a><a class="btn btn-ghost" href="/cinematic/ro/contact/" data-audit>Pune-l pe linia mea telefonică</a></div>
+  </div>
+</section>
+<svg class="sand" viewBox="0 0 100 3000" preserveAspectRatio="none" aria-hidden="true"><path id="sandpath" d="M50 0 V3000"/></svg>
+
+<!-- ===================== JARVIS ===================== -->
+<section class="jarvis reveal" id="jarvis" aria-labelledby="jv-h">
+  <div class="hud">
+    <h2 id="jv-h" class="sr">Consola asistentului</h2>
+    <div class="core" aria-hidden="true">
+      <span class="pulse"></span>
+      <svg viewBox="0 0 200 200"><circle class="r1" cx="100" cy="100" r="96"/><circle class="r2" cx="100" cy="100" r="80"/><circle class="r3" cx="100" cy="100" r="62"/><circle cx="100" cy="100" r="46" fill="none" stroke="rgba(255,255,255,.12)"/></svg>
+      <span class="label">JARVIS</span>
+    </div>
+    <div class="wave" id="wave" aria-hidden="true"></div>
+    <div class="transcript" id="transcript" role="log" aria-live="polite" aria-relevant="additions"></div>
+    <form class="ask" id="ask" autocomplete="off">
+      <label class="sr" for="q">Întreabă asistentul</label>
+      <input id="q" name="q" type="text" placeholder="Hey Jarvis, aprinde lumina" maxlength="140">
+      <button class="mic" id="mic" type="button" aria-pressed="false" aria-label="Vorbește" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      <button class="btn" type="submit">Trimite</button>
+    </form>
+    <div class="chips" aria-label="Încearcă una">
+      <button class="chip" type="button" data-say="Aprinde lumina">Aprinde lumina</button>
+      <button class="chip" type="button" data-say="Setează temperatura la 22 de grade">22 de grade</button>
+      <button class="chip" type="button" data-say="Pune niște muzică">Pornește muzica</button>
+      <button class="chip" type="button" data-say="Programează un apel marți la 10">Programează marți 10:00</button>
+      <button class="chip" type="button" data-say="Armează securitatea">Armează securitatea</button>
+      <button class="chip" type="button" data-say="Care este starea?">Stare</button>
+    </div>
+  </div>
+  <aside class="panel">
+    <h3>Stare live</h3>
+    <ul class="devices">
+      <li class="dev" data-dev="lights"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 1 3.6 10.8c-.6.5-.9 1.2-.9 2V16H9.3v-.2c0-.8-.3-1.5-.9-2A6 6 0 0 1 12 3z"/></svg><div><div class="name">Lumini</div><div class="val">Oprit</div></div></li>
+      <li class="dev" data-dev="fan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="2"/><path d="M12 10c0-4 2-7 4-7s2 4-1 6M14 12c4 0 7 2 7 4s-4 2-6-1M12 14c0 4-2 7-4 7s-2-4 1-6M10 12c-4 0-7-2-7-4s4-2 6 1"/></svg><div><div class="name">Ventilator</div><div class="val">Oprit</div></div></li>
+      <li class="dev" data-dev="music"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><div><div class="name">Muzică</div><div class="val">Pauză</div></div></li>
+      <li class="dev on" data-dev="temp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 14.8V5a2 2 0 1 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg><div><div class="name">Temperatură</div><div class="val">21°C</div></div></li>
+      <li class="dev" data-dev="security"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><div><div class="name">Securitate</div><div class="val">Dezarmat</div></div></li>
+      <li class="dev" data-dev="calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><div><div class="name">Următoarea întâlnire</div><div class="val">Niciunul</div></div></li>
+    </ul>
+    <h3>Sistem</h3>
+    <div class="sys">
+      <div><div class="name">Stare</div><div class="val"><span class="dot"></span>Online</div></div>
+      <div><div class="name">Ora locală</div><div class="val" id="clock">--:--</div></div>
+      <div><div class="name">Răspuns</div><div class="val" id="lat">-- ms</div></div>
+    </div>
+    <p class="lede" style="font-size:1rem;margin-top:6px">Acest demo rulează integral în browser. În producție, aceleași comenzi conduc sisteme reale prin n8n: telefoane, calendare, CRM, clădiri inteligente. <a class="more" href="/cinematic/ro/services/#automation">Cum îl construim <span aria-hidden="true">→</span></a></p>
+  </aside>
+</section>
+
+<!-- ===================== HOW IT WORKS ===================== -->
+<section class="flow reveal" aria-labelledby="flow-h">
+  <p class="kicker mono">Cum funcționează</p>
+  <h2 id="flow-h">Voce la intrare. Acțiune la ieșire.</h2>
+  <ol>
+    <li><h3>Intrare vocală</h3><p>Din voce în text, în limba apelantului.</p></li>
+    <li><h3>Creier AI</h3><p>Înțelege intenția, păstrează contextul, decide.</p></li>
+    <li><h3>Motor de acțiune</h3><p>n8n rulează fluxul: programează, trimite, comută, înregistrează.</p></li>
+    <li><h3>Sisteme</h3><p>Calendar, CRM, linie telefonică, KNX și automatizare de clădire.</p></li>
+    <li><h3>Ieșire vocală</h3><p>Răspunde, confirmă și înregistrează rezultatul.</p></li>
+  </ol>
+  <div class="stack" aria-label="Tehnologie"><span>Claude</span><span>OpenAI</span><span>n8n</span><span>Python</span><span>ElevenLabs</span><span>Home Assistant</span><span>KNX / DALI</span><span>Ollama (local)</span></div>
+</section>
+<!-- ===================== CTA STRIP ===================== -->
+<section class="final reveal" id="cta">
+  <h2>Vreți să vă răspundă la telefon?</h2>
+  <p class="lede">Pachetul telefonic 24/7 pune acest asistent pe linia dvs. în aproximativ două săptămâni. Auditul gratuit vă spune ce altceva ar putea prelua.</p>
+  <div class="cta-row">
+    <a class="btn btn-lg" href="/cinematic/ro/contact/" data-audit>Obțineți auditul gratuit de vizibilitate</a>
+    <a class="more" href="/cinematic/ro/pricing/">Sau vezi pachetele cu preț fix <span aria-hidden="true">→</span></a>
+  </div>
+  <p class="mono trust">Construit și găzduit în Germania · GDPR implicit · Răspunsuri în EN, DE, FR, RO</p>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="foot-brand">
+    <a class="wordmark" href="/cinematic/ro/">George<b>AI</b></a>
+    <p>Automatizare AI, backend Python și infrastructură. Hanstedt, Germania, lucrez remote.</p>
+    <form class="news" action="mailto:contact@GeorgeAI.dev?subject=Subscribe%20to%20GeorgeAI%20notes" method="post" enctype="text/plain">
+      <label for="nl">Rămâneți la curent.</label>
+      <p class="nl-sub">Note ocazionale despre automatizare AI, proiecte noi și câte un jurnal de build. Fără spam.</p>
+      <div class="nl-row"><input id="nl" name="email" type="email" placeholder="E-mailul dvs." required autocomplete="email"><button class="btn" type="submit">Abonează-te</button></div>
+      <p class="nl-note">Deschide aplicația de e-mail cu un mesaj de abonare; nimic nu se stochează în această pagină.</p>
+    </form>
+  </div>
+  <div class="foot-cols">
+    <div><h4 class="mono">Servicii</h4><a href="/cinematic/ro/services/#automation">Automatizare</a><a href="/cinematic/ro/services/#visibility">Vizibilitate AI</a><a href="/cinematic/ro/services/#web">Sisteme web</a><a href="/pricing/">Prețuri</a></div>
+    <div><h4 class="mono">Companie</h4><a href="/cinematic/ro/about/">Despre</a><a href="/blog/">Blog</a><a href="/index.html">Site-ul clasic</a><a href="/cinematic/ro/contact/">Contact</a></div>
+    <div><h4 class="mono">Juridic</h4><a href="/cinematic/ro/legal/#imprint">Date de identificare</a><a href="/cinematic/ro/legal/#privacy">Confidențialitate</a><a href="/cinematic/ro/legal/#terms">Termeni</a><a href="/cinematic/ro/legal/#cookies">Cookie-uri</a><a href="/cinematic/ro/legal/#cookies" data-cc-reopen>Setări cookie-uri</a></div>
+  </div>
+  <div class="foot-line">
+    <p>© 2026 GeorgeAI · Hanstedt, Germany</p>
+    <p class="foot-note">Imaginile cinematice sunt generate cu AI. Persoana arătată este George.</p>
+    <p class="social"><a href="https://linkedin.com/in/georgesebastian-c-212b7455" rel="me noopener" target="_blank" aria-label="LinkedIn"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM.2 8h4.6v14H.2V8zm7.4 0h4.4v1.9h.1c.6-1.1 2.1-2.3 4.3-2.3 4.6 0 5.5 3 5.5 7V22h-4.6v-6.5c0-1.6 0-3.6-2.2-3.6s-2.5 1.7-2.5 3.5V22H7.6V8z"/></svg></a><a href="https://github.com/Geronimo1975" rel="me noopener" target="_blank" aria-label="GitHub"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z"/></svg></a></p>
+  </div>
+</footer>
+<div class="cc-banner" id="cc-banner" role="dialog" aria-label="Consimțământ cookie-uri" aria-describedby="cc-text" hidden><p class="cc-text" id="cc-text">Folosim cookie-uri opționale de analiză pentru a înțelege cum este utilizat site-ul. Tu decizi. <a href="/cinematic/ro/legal/#cookies">Politica de cookie-uri</a></p><div class="cc-actions"><button type="button" class="cc-btn cc-ghost" data-cc="essential">Doar esențiale</button><button type="button" class="cc-btn cc-accent" data-cc="all">Acceptă tot</button></div></div>
+<script src="/cinematic/consent.js?v=1" defer></script>
+</body>
+</html>

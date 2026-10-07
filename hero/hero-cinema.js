@@ -81,6 +81,12 @@
   var idleId = null;
   var lastTick = 0;
 
+  /* Fallbacks only — readColors() samples the live theme off the export's root
+   * div a few lines down. They still matter twice: for the first frame before
+   * the export has painted, and because tests/test_hero_contrast.py composites
+   * against THESE values to prove the canvas text clears WCAG AA. These are the
+   * export's own cream palette, NOT brand/palette.json's; the two are completely
+   * separate. Keep these in step with tests/test_hero_contrast.py's constants. */
   var colors = { ink: '#f5f2ec', body: '#a8a29a', accent: '#ff8300', line: '#2a2724', ground: '#141413' };
 
   /* The export's theme colours live on its own root div, and which element that
@@ -96,6 +102,78 @@
       el = el.parentElement;
     }
     return '';
+  }
+
+  /* WCAG contrast floor, computed at runtime from whatever colours readColors()
+   * actually samples. The alphas below are fixed by design, but the alpha a
+   * given foreground/background pair needs to clear AA depends on the theme,
+   * so the floor cannot be a second set of hardcoded constants — it has to be
+   * derived from the live colours or it will be wrong for some theme. */
+
+  /* Accepts '#rgb', '#rrggbb' and 'rgb()'/'rgba()' (what getComputedStyle
+   * returns for custom properties and what themeGround() returns for the
+   * sampled background). Returns null on anything else so a colour this
+   * cannot parse produces no lift rather than a wrong one. */
+  function parseColor(s) {
+    if (!s || typeof s !== 'string') return null;
+    s = s.trim();
+    var m = /^#([0-9a-f]{3})$/i.exec(s);
+    if (m) {
+      var h3 = m[1];
+      return [
+        parseInt(h3[0] + h3[0], 16),
+        parseInt(h3[1] + h3[1], 16),
+        parseInt(h3[2] + h3[2], 16)
+      ];
+    }
+    m = /^#([0-9a-f]{6})$/i.exec(s);
+    if (m) {
+      var h6 = m[1];
+      return [
+        parseInt(h6.slice(0, 2), 16),
+        parseInt(h6.slice(2, 4), 16),
+        parseInt(h6.slice(4, 6), 16)
+      ];
+    }
+    m = /^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i.exec(s);
+    if (m) return [parseFloat(m[1]), parseFloat(m[2]), parseFloat(m[3])];
+    return null;
+  }
+
+  /* WCAG 2.x relative luminance, sRGB gamma. */
+  function relLum(c) {
+    function chan(v) {
+      var x = v / 255;
+      return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+    }
+    return 0.2126 * chan(c[0]) + 0.7152 * chan(c[1]) + 0.0722 * chan(c[2]);
+  }
+
+  /* Composite fg over bg at alpha a the way canvas globalAlpha does (linear
+   * blend of sRGB channels), then return the WCAG ratio of that result
+   * against bg — i.e. the effective contrast the eye actually sees. */
+  function contrastAt(fg, bg, a) {
+    var comp = [
+      a * fg[0] + (1 - a) * bg[0],
+      a * fg[1] + (1 - a) * bg[1],
+      a * fg[2] + (1 - a) * bg[2]
+    ];
+    var l1 = relLum(comp), l2 = relLum(bg);
+    var hi = Math.max(l1, l2), lo = Math.min(l1, l2);
+    return (hi + 0.05) / (lo + 0.05);
+  }
+
+  /* Binary search for the smallest alpha that clears `target`. Returns 1 if
+   * even fully opaque fg cannot reach it — the caller then lifts as far as it
+   * can rather than throwing. */
+  function minAlphaFor(fg, bg, target) {
+    if (contrastAt(fg, bg, 1) < target) return 1;
+    var lo = 0, hi = 1, i;
+    for (i = 0; i < 24; i++) {
+      var mid = (lo + hi) / 2;
+      if (contrastAt(fg, bg, mid) >= target) hi = mid; else lo = mid;
+    }
+    return hi;
   }
 
   function readColors() {
@@ -120,6 +198,20 @@
         document.documentElement.style.setProperty('--gc-veil-soft', 'rgba(' + base + ', 0.45)');
       }
     }
+
+    /* Recompute the contrast lift for whatever colours were just sampled. Both
+     * text kinds are drawn in colors.ink today (see drawGraph); if either one
+     * changes fill, update the parsed foreground here to match. A colour that
+     * fails to parse yields null, and minAlphaFor is only called when both
+     * foreground and ground parsed, so a bad read always means "no lift"
+     * rather than a wrong one. */
+    var groundRGB = parseColor(colors.ground);
+    var subFg = parseColor(colors.ink);
+    var labelFg = parseColor(colors.ink);
+    var designedSub = 0.36 + 0.18 * MIN_Z;
+    var designedLabel = 0.34 + 0.34 * MIN_Z;
+    subLift = (subFg && groundRGB) ? Math.max(0, minAlphaFor(subFg, groundRGB, AA_RATIO) - designedSub) : 0;
+    labelLift = (labelFg && groundRGB) ? Math.max(0, minAlphaFor(labelFg, groundRGB, AA_RATIO) - designedLabel) : 0;
   }
 
   /* The theme switch animates the export root's background over 300ms, so the
@@ -400,9 +492,23 @@
         band.vis = vis;
         band.el.classList.toggle('gc__band--visible', vis);
       }
+      /* will-change is scoped to bands that are actually on screen. A split
+       * title is ~40 inline-block spans, so promoting all three bands for the
+       * whole session pins compositor memory for two bands that are not
+       * moving. The threshold is deliberately far below --visible's 0.55: the
+       * layer has to exist before the assembly starts, not halfway through
+       * it, or the promotion itself lands mid-animation. */
+      var warm = op > 0.004;
+      if (warm !== band.warm) {
+        band.warm = warm;
+        band.el.classList.toggle('gc__band--warm', warm);
+      }
     }
 
-    var kb = clamp((p - 0.78) * 5, 0, 1);
+    /* Floored by REST_P via loadK, not by scroll alone. `p` here is raw eased
+     * scroll progress (0 on landing), so without mirroring the load ramp the
+     * buttons stay hidden until a scroll that may never come. */
+    var kb = clamp((Math.max(p, loadK * REST_P) - 0.06) * 6, 0, 1);
     if (Math.abs(kb - (state.cta._kb == null ? -1 : state.cta._kb)) > 0.008) {
       state.cta._kb = kb;
       state.cta.style.setProperty('--kb', kb.toFixed(3));
@@ -459,6 +565,26 @@
    * the trigger and the agent, which are the two nodes the eye should land on. */
   var HUES = { teal: '#5db8a6', amber: '#e8a55a' };
 
+  /* The hero's resting progress: where the field sits when nobody has
+   * scrolled. Past Airtable (t=0.40), short of the dashed port cluster
+   * (t=0.48-0.56), so six of nine nodes are present and the sub-nodes stay
+   * the scroll's payoff. The CTA reveal is floored by this same value, so
+   * retuning it moves both together — which is the point of naming it.
+   * Keep it above 0.143, below which the CTA stops clearing its kb > 0.5
+   * gate at landing. */
+  var REST_P = 0.46;
+
+  /* WCAG 2.x AA for normal text. tests/test_hero_contrast.py holds the design
+   * to this ratio; the lift below is computed against it at runtime rather
+   * than baked into a second set of alpha constants, because the ground is
+   * sampled live and can be anything. */
+  var AA_RATIO = 4.5;
+
+  /* Recomputed by readColors() on every call (init, resize, and the theme
+   * switch) and read by drawGraph. Zero until the first readColors() call. */
+  var subLift = 0;
+  var labelLift = 0;
+
   /* x/y are normalised into the graph box. t is when the node joins during the
    * build. z is depth: the left of the field is the far plane, because that is
    * the half the text lane sits over. */
@@ -484,6 +610,10 @@
     { x: 0.62, y: 0.68, t: 0.56, z: 0.7,  kind: 'sub', icon: 'code',  hue: 'ink',
       label: 'Vector Store', sub: 'Tool' }
   ];
+  /* The dimmest depth plane in NODES, derived rather than hardcoded so the
+   * lift stays correct if a node's z changes. Used as the "worst case" z for
+   * the contrast floor. */
+  var MIN_Z = NODES.reduce(function (m, n) { return Math.min(m, n.z); }, 1);
   /* d marks a port connection: drawn dashed and without an arrow, the way the
    * editor distinguishes what an agent USES from what it PASSES ON. */
   var EDGES = [
@@ -779,7 +909,11 @@
       // Payloads. They start once the graph is wired and keep running after it
       // settles: the workflow is supposed to still be working when you stop
       // scrolling. This is the hero's one living element.
-      var flow = smoothstep(p, 0.5, 0.78);
+      /* Flow used to ride the same axis as node arrival, which forced a choice
+       * between a moving field and a scroll that still had something to reveal.
+       * Wires now carry traffic as soon as there is a wire to carry it on, so
+       * the resting progress is free to sit below the last node's arrival. */
+      var flow = smoothstep(p, 0.18, 0.42);
       if (flow > 0 && g >= 1 && t) {
         var phase = ((t * 0.00016) + e * 0.37) % 1;
         for (var tr = 0; tr < 3; tr++) {
@@ -822,13 +956,17 @@
       else roundRect(ctx, pos.x - w / 2, pos.y - h / 2, w, h, sz.r);
       ctx.fillStyle = colors.ground;
       ctx.fill();
-      ctx.globalAlpha = k * 0.05;
+      /* The card is filled with the page's own ground, then lifted by its own
+       * ink so it separates on either theme without a hard-coded surface
+       * colour. At 0.05 that lift was invisible and the card read as a hole.
+       * 0.08 is the smallest value that gives it a plane at the near depth. */
+      ctx.globalAlpha = k * 0.08;
       ctx.fillStyle = colors.ink;
       ctx.fill();
 
       // Border. The active node borrows the accent, which is how the editor
       // shows you which step a run is on.
-      ctx.globalAlpha = k * (0.16 + 0.30 * n.z) * (1 + busy * 1.6);
+      ctx.globalAlpha = k * (0.28 + 0.30 * n.z) * (1 + busy * 1.6);
       ctx.strokeStyle = busy > 0.05 ? colors.accent : colors.ink;
       ctx.lineWidth = busy > 0.05 ? 1.5 : 1;
       ctx.stroke();
@@ -865,13 +1003,24 @@
       var fs = Math.max(9, Math.round(h * (isSub ? 0.34 : 0.26)));
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
-      ctx.globalAlpha = k * (0.34 + 0.34 * n.z);
+      /* labelLift/subLift are the runtime WCAG floor (see readColors()): the
+       * shortfall between the designed alpha at the dimmest plane and what
+       * this theme's actual ink-over-ground pair needs for AA, lifting the
+       * whole range rather than clamping so the depth gradient survives.
+       * Multiplied by k so a node still fades in from nothing during assembly
+       * instead of popping in already at the lifted floor. */
+      ctx.globalAlpha = Math.min(1, k * (0.34 + 0.34 * n.z) + labelLift * k);
       ctx.fillStyle = colors.ink;
       ctx.font = '600 ' + fs + 'px Inter, system-ui, sans-serif';
       ctx.fillText(n.label, pos.x, pos.y + h / 2 + fs * 0.55);
+      /* Ink, not body, and the token change is the point: body needs alpha
+       * 0.74 to clear 4.5:1 over the ground, which pins the sub-line near
+       * opaque and erases its depth cue. Ink clears the same floor at 0.48.
+       * The label above stays brighter still, so the hierarchy holds.
+       * tests/test_hero_contrast.py recomputes this and fails if it slips. */
       if (n.sub) {
-        ctx.globalAlpha = k * (0.20 + 0.20 * n.z);
-        ctx.fillStyle = colors.body;
+        ctx.globalAlpha = Math.min(1, k * (0.36 + 0.18 * n.z) + subLift * k);
+        ctx.fillStyle = colors.ink;
         ctx.font = Math.max(8, fs - 1) + 'px Inter, system-ui, sans-serif';
         ctx.fillText(n.sub, pos.x, pos.y + h / 2 + fs * 1.85);
       }
@@ -1001,12 +1150,16 @@
     /* The graph gets the same opening courtesy the first text band does: it
      * assembles its first few nodes on load, so the hero never opens on an
      * empty right half waiting for a scroll that may not come. */
-    drawGraph(Math.max(shown, lk * 0.30), now);
+    /* The resting floor ensures six of nine nodes are visible before any scroll. */
+    drawGraph(Math.max(shown, lk * REST_P), now);
 
     // The loop keeps running only while there is something to move: the ease
     // has not converged, the opening assembly is still playing, or payloads are
     // in flight on a stage that is actually on screen and visible.
-    var flowing = shown > 0.55 && !reduceMotion.matches;
+    /* The flowing predicate must see the same resting floor applied to the frame
+     * (Math.max(shown, lk * REST_P)), else the loop parks while the frame is still
+     * animated. This guards against independently simplified bounds. */
+    var flowing = Math.max(shown, lk * REST_P) > 0.20 && !reduceMotion.matches;
     var alive = !converged || lk < 1 || flowing;
     if (alive && state.onScreen && !state.hidden && state.scrubOn) {
       rafId = requestAnimationFrame(tick);

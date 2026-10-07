@@ -1,0 +1,401 @@
+{
+  "updatedAt": "2026-09-20T16:07:47.751Z",
+  "createdAt": "2026-09-20T16:04:46.278Z",
+  "id": "dmfcIgq3LIJhNfWi",
+  "name": "georgeai-stats",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "w",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "georgeai-stats",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "91eb3a6b-7772-4fb1-bc16-dd0486801ba7"
+    },
+    {
+      "id": "a",
+      "name": "Workflows",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "url": "https://app.n8n-studio.com/api/v1/workflows",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "250"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b",
+      "name": "Executions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "url": "https://app.n8n-studio.com/api/v1/executions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "250"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "jsCode": "\nconst SELF = $workflow.id;\nconst wfs = ($('Workflows').first().json.data || []).filter(w=>w.id!==SELF);\nconst ex  = ($('Executions').first().json.data || []).filter(e=>e.workflowId!==SELF);\nconst now = Date.now(), day = 864e5;\nconst days = Array.from({length:7},(_,i)=>{const d=new Date(now-(6-i)*day);return {day:d.toISOString().slice(0,10),runs:0};});\nlet ok=0, err=0, durSum=0, durN=0, runs24=0;\nfor (const e of ex) {\n  const t = Date.parse(e.startedAt); if (!t) continue;\n  if (e.status==='success') ok++; else if (e.status==='error' || e.status==='crashed') err++;\n  if (e.stoppedAt) { durSum += Date.parse(e.stoppedAt)-t; durN++; }\n  if (now-t < day) runs24++;\n  const k = new Date(t).toISOString().slice(0,10); const d = days.find(x=>x.day===k); if (d) d.runs++;\n}\nconst total = ok+err;\nreturn [{json:{\n  workflows_total: wfs.length,\n  workflows_active: wfs.filter(w=>w.active).length,\n  runs_7d: ex.length, runs_24h: runs24,\n  success_rate: total ? Math.round(ok/total*1000)/10 : null,\n  errors_caught: err,\n  avg_duration_ms: durN ? Math.round(durSum/durN) : null,\n  last_run_at: ex[0] ? ex[0].startedAt : null,\n  per_day: days,\n  generated_at: new Date().toISOString()\n}}];\n"
+      }
+    },
+    {
+      "id": "r",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        0
+      ],
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "https://georgeai.dev"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "public, max-age=300"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflows": {
+      "main": [
+        [
+          {
+            "node": "Executions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Executions": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": null,
+  "versionId": "dffe33f9-5aa1-4426-a528-b3e70b467394",
+  "activeVersionId": "dffe33f9-5aa1-4426-a528-b3e70b467394",
+  "versionCounter": 2,
+  "triggerCount": 1,
+  "sourceWorkflowId": null,
+  "shared": [
+    {
+      "updatedAt": "2026-09-20T16:04:46.278Z",
+      "createdAt": "2026-09-20T16:04:46.278Z",
+      "role": "workflow:owner",
+      "workflowId": "dmfcIgq3LIJhNfWi",
+      "projectId": "04kRyiownwvd05cL",
+      "project": {
+        "updatedAt": "2026-03-23T11:26:47.368Z",
+        "createdAt": "2025-12-27T09:55:19.991Z",
+        "id": "04kRyiownwvd05cL",
+        "name": "George Sebastian george.cucuiet@gmx.de <george.cucuiet@gmx.de>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "5f7f66c5-60e3-4ee8-9271-c6b59c27e500"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-09-20T16:07:47.753Z",
+    "createdAt": "2026-09-20T16:07:47.753Z",
+    "versionId": "dffe33f9-5aa1-4426-a528-b3e70b467394",
+    "workflowId": "dmfcIgq3LIJhNfWi",
+    "nodes": [
+      {
+        "id": "w",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "httpMethod": "GET",
+          "path": "georgeai-stats",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "webhookId": "91eb3a6b-7772-4fb1-bc16-dd0486801ba7"
+      },
+      {
+        "id": "a",
+        "name": "Workflows",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          240,
+          0
+        ],
+        "parameters": {
+          "url": "https://app.n8n-studio.com/api/v1/workflows",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "limit",
+                "value": "250"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "1SpYrNltRRsTHy7S",
+            "name": "n8n self API (georgeai-stats)"
+          }
+        }
+      },
+      {
+        "id": "b",
+        "name": "Executions",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          480,
+          0
+        ],
+        "parameters": {
+          "url": "https://app.n8n-studio.com/api/v1/executions",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "limit",
+                "value": "250"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "1SpYrNltRRsTHy7S",
+            "name": "n8n self API (georgeai-stats)"
+          }
+        }
+      },
+      {
+        "id": "c",
+        "name": "Aggregate",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          720,
+          0
+        ],
+        "parameters": {
+          "jsCode": "\nconst SELF = $workflow.id;\nconst wfs = ($('Workflows').first().json.data || []).filter(w=>w.id!==SELF);\nconst ex  = ($('Executions').first().json.data || []).filter(e=>e.workflowId!==SELF);\nconst now = Date.now(), day = 864e5;\nconst days = Array.from({length:7},(_,i)=>{const d=new Date(now-(6-i)*day);return {day:d.toISOString().slice(0,10),runs:0};});\nlet ok=0, err=0, durSum=0, durN=0, runs24=0;\nfor (const e of ex) {\n  const t = Date.parse(e.startedAt); if (!t) continue;\n  if (e.status==='success') ok++; else if (e.status==='error' || e.status==='crashed') err++;\n  if (e.stoppedAt) { durSum += Date.parse(e.stoppedAt)-t; durN++; }\n  if (now-t < day) runs24++;\n  const k = new Date(t).toISOString().slice(0,10); const d = days.find(x=>x.day===k); if (d) d.runs++;\n}\nconst total = ok+err;\nreturn [{json:{\n  workflows_total: wfs.length,\n  workflows_active: wfs.filter(w=>w.active).length,\n  runs_7d: ex.length, runs_24h: runs24,\n  success_rate: total ? Math.round(ok/total*1000)/10 : null,\n  errors_caught: err,\n  avg_duration_ms: durN ? Math.round(durSum/durN) : null,\n  last_run_at: ex[0] ? ex[0].startedAt : null,\n  per_day: days,\n  generated_at: new Date().toISOString()\n}}];\n"
+        }
+      },
+      {
+        "id": "r",
+        "name": "Respond",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          960,
+          0
+        ],
+        "parameters": {
+          "respondWith": "firstIncomingItem",
+          "options": {
+            "responseHeaders": {
+              "entries": [
+                {
+                  "name": "Access-Control-Allow-Origin",
+                  "value": "https://georgeai.dev"
+                },
+                {
+                  "name": "Cache-Control",
+                  "value": "public, max-age=300"
+                },
+                {
+                  "name": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Workflows",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Workflows": {
+        "main": [
+          [
+            {
+              "node": "Executions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Executions": {
+        "main": [
+          [
+            {
+              "node": "Aggregate",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Aggregate": {
+        "main": [
+          [
+            {
+              "node": "Respond",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "George Sebastian george.cucuiet@gmx.de",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-09-20T16:07:47.796Z",
+        "id": 556,
+        "workflowId": "dmfcIgq3LIJhNfWi",
+        "versionId": "dffe33f9-5aa1-4426-a528-b3e70b467394",
+        "event": "deactivated",
+        "userId": "5f7f66c5-60e3-4ee8-9271-c6b59c27e500"
+      },
+      {
+        "createdAt": "2026-09-20T16:07:47.823Z",
+        "id": 557,
+        "workflowId": "dmfcIgq3LIJhNfWi",
+        "versionId": "dffe33f9-5aa1-4426-a528-b3e70b467394",
+        "event": "activated",
+        "userId": "5f7f66c5-60e3-4ee8-9271-c6b59c27e500"
+      }
+    ]
+  }
+}
