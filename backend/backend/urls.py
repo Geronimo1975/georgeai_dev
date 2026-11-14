@@ -4,13 +4,23 @@
 design export (frontend/template/) via the catch-all.
 """
 from django.contrib import admin
+from django.contrib.auth import views as auth_views
 from django.urls import include, path, re_path
+
+from console import urls as console_urls
 
 from .views import auth_js, serve_frontend
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/auth/", include("accounts.urls")),
+    # GeorgeAI Console — JSON/SSE API + the SPA shell (all /console/* paths)
+    path("api/console/v1/", include((console_urls.api, "console_api"))),
+    path("console/login/", auth_views.LoginView.as_view(
+        template_name="console/login.html", redirect_authenticated_user=True,
+        next_page="/console/"), name="console_login"),
+    path("console/logout/", auth_views.LogoutView.as_view(next_page="/console/login/"), name="console_logout"),
+    path("console/", include((console_urls.pages, "console"))),
     path("auth.js", auth_js),
     # catch-all: serve the design export at the site root (keep this last)
     re_path(r"^(?P<path>.*)$", serve_frontend),

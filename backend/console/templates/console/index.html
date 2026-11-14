@@ -1,0 +1,100 @@
+{% extends "console/base.html" %}
+{% load static %}
+{% block head %}
+  {# vendored, pinned: marked 12.0.2 + DOMPurify 3.1.6 (no third-party CDN at runtime) #}
+  <script src="{% static 'console/vendor/marked.min.js' %}" defer></script>
+  <script src="{% static 'console/vendor/purify.min.js' %}" defer></script>
+  <script src="{% static 'console/app.js' %}?v=0.1.2" defer></script>
+{% endblock %}
+{% block body %}
+<div class="app" id="app" data-sidebar="open">
+  <aside class="sidebar" id="sidebar" aria-label="Conversations">
+    <div class="sb-top">
+      <a class="brand" href="/console/new" data-link><span class="brand-mark" aria-hidden="true"></span>GeorgeAI <span class="brand-sub">Console</span></a>
+      <button class="icon-btn" id="collapseBtn" type="button" aria-label="Close sidebar" title="Close sidebar">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg>
+      </button>
+    </div>
+    <a class="new-chat" href="/console/new" data-link>
+      <span class="new-chat-icon"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+      New chat
+      <kbd class="kbd">⌘⇧O</kbd>
+    </a>
+    <label class="sb-search">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="searchInput" type="search" placeholder="Search chats" aria-label="Search chats" autocomplete="off">
+      <kbd class="kbd">⌘K</kbd>
+    </label>
+    <nav class="sb-list" id="convList"></nav>
+    <div class="sb-foot">
+      <button class="user-btn" id="userBtn" type="button" aria-haspopup="menu">
+        <span class="avatar" id="userAvatar"></span>
+        <span class="user-meta"><span class="user-name" id="userName"></span><span class="user-plan">Free plan</span></span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="m7 15 5-5 5 5"/></svg>
+      </button>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <main class="main" id="main">
+    <header class="topbar">
+      <button class="icon-btn" id="openSidebarBtn" type="button" aria-label="Open sidebar" title="Open sidebar">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg>
+      </button>
+      <button class="conv-title" id="convTitle" type="button" title="Rename" hidden></button>
+      <span class="demo-pill" id="demoPill" hidden title="No ANTHROPIC_API_KEY configured — replies come from the offline fake provider.">Demo mode</span>
+      <div class="topbar-actions" id="convActions" hidden>
+        <button class="icon-btn" id="starBtn" type="button" aria-label="Star" title="Star">
+          <svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>
+        </button>
+        <button class="icon-btn" id="deleteBtn" type="button" aria-label="Delete chat" title="Delete chat">
+          <svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <section class="hero" id="hero" aria-live="polite">
+      <div class="hero-mark" aria-hidden="true"></div>
+      <h1 class="greeting" id="greeting"></h1>
+    </section>
+
+    <section class="thread" id="thread" aria-label="Conversation">
+      <div class="thread-inner" id="threadInner"></div>
+    </section>
+
+    <div class="composer-wrap">
+      <button class="jump-btn" id="jumpBtn" type="button" aria-label="Scroll to bottom" hidden>
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+      </button>
+      <form class="composer" id="composer" autocomplete="off">
+        <label class="sr-only" for="input">Message GeorgeAI</label>
+        <textarea id="input" rows="1" placeholder="How can I help you today?"></textarea>
+        <div class="composer-row">
+          <div class="composer-left">
+            <button class="icon-btn icon-btn--ghost" type="button" id="attachBtn" aria-label="Attach files (coming soon)" title="Attach files — coming soon" disabled>
+              <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+          </div>
+          <div class="composer-right">
+            <button class="model-btn" type="button" id="modelBtn" aria-haspopup="menu">
+              <span id="modelName"></span>
+              <svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg>
+            </button>
+            <button class="send-btn" type="submit" id="sendBtn" aria-label="Send message" disabled>
+              <svg class="i-send" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+              <svg class="i-stop" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="2"/></svg>
+            </button>
+          </div>
+        </div>
+      </form>
+      <div class="chips" id="chips"></div>
+      <p class="disclaimer">GeorgeAI can make mistakes. Please double-check responses.</p>
+    </div>
+  </main>
+</div>
+
+<div class="menu" id="menu" role="menu" hidden></div>
+<div class="toast" id="toast" role="status" hidden></div>
+<form id="logoutForm" method="post" action="/console/logout/" hidden>{% csrf_token %}</form>
+<noscript><p class="noscript">GeorgeAI Console needs JavaScript.</p></noscript>
+{% endblock %}

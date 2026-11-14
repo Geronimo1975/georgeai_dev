@@ -1,0 +1,23 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "plus jakarta sans",
+        "createdAt": "2026-11-14T20:16:05.600Z",
+        "reason": "repo rule: brand/palette.json + CLAUDE.md make Plus Jakarta Sans the single brand family"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "backend/console/static/console/app.css"
+        ],
+        "createdAt": "2026-11-14T20:16:05.635Z",
+        "reason": "agent triage: L207 is the Markdown blockquote rule (neutral --line-strong), not an accent card tab"
+      }
+    ]
+  }
+}

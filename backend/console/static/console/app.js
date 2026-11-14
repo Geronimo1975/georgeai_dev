@@ -1,0 +1,554 @@
+/* GeorgeAI Console — no-build SPA (prompts 04.03–04.12).
+   Talks to /api/console/v1/*; replies stream as SSE over a POST fetch. */
+(() => {
+  "use strict";
+
+  const API = "/api/console/v1";
+  const $ = (id) => document.getElementById(id);
+  const els = {
+    app: $("app"), main: $("main"), convList: $("convList"), search: $("searchInput"),
+    thread: $("thread"), inner: $("threadInner"), input: $("input"), composer: $("composer"),
+    send: $("sendBtn"), modelBtn: $("modelBtn"), modelName: $("modelName"), greeting: $("greeting"),
+    chips: $("chips"), title: $("convTitle"), actions: $("convActions"), star: $("starBtn"),
+    del: $("deleteBtn"), demo: $("demoPill"), menu: $("menu"), toast: $("toast"), jump: $("jumpBtn"),
+    userBtn: $("userBtn"), userName: $("userName"), userAvatar: $("userAvatar"), scrim: $("scrim"),
+  };
+
+  const ICON = {
+    copy: '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>',
+    check: '<svg viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></svg>',
+    retry: '<svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.5 6.2L3 16M3 21v-5h5"/></svg>',
+    more: '<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg>',
+    star: '<svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>',
+    edit: '<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>',
+    trash: '<svg viewBox="0 0 24 24"><path d="M4 7h16M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>',
+    code: '<svg viewBox="0 0 24 24"><path d="m8 7-5 5 5 5M16 7l5 5-5 5"/></svg>',
+    flow: '<svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.5 6H14a4 4 0 0 1 4 4v5.5"/></svg>',
+    search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+    spark: '<svg viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/></svg>',
+    sun: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+    shield: '<svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/></svg>',
+    out: '<svg viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H3"/></svg>',
+    ok: '<svg viewBox="0 0 24 24" class="check"><path d="m5 12 5 5 9-10"/></svg>',
+  };
+
+  const SUGGESTIONS = [
+    { icon: "code", text: "Plan a Django + PostgreSQL app", prompt: "Help me plan a Django 5 + PostgreSQL web app. Ask me 3 short questions about the business first, then propose the data model and the first sprint." },
+    { icon: "flow", text: "Automate a workflow with n8n", prompt: "I want to automate a business process with n8n. Ask me what the process is, then sketch the workflow node by node." },
+    { icon: "search", text: "Audit my site for SEO & GEO", prompt: "Give me a checklist to audit a company website for classic SEO and for visibility in AI answers (GEO/AIO), ordered by impact." },
+    { icon: "spark", text: "Find AI quick wins", prompt: "What are 5 realistic AI quick wins for a small B2B services company in Germany? Keep each to two sentences with expected effort." },
+  ];
+
+  const state = {
+    user: null, models: [], provider: "fake", defaultModel: "",
+    conversations: [], currentId: null, messages: [],
+    model: null, stream: null, filter: "", stick: true,
+  };
+
+  // ------------------------------------------------------------------ utils
+  const csrf = () => (document.cookie.match(/(?:^|; )csrftoken=([^;]+)/) || [])[1] || "";
+  const store = {
+    get(k, d) { try { return localStorage.getItem(k) ?? d; } catch { return d; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  };
+  const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  async function api(path, opts = {}) {
+    const res = await fetch(API + path, {
+      method: opts.method || "GET",
+      headers: { "Content-Type": "application/json", "X-CSRFToken": csrf() },
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
+      credentials: "same-origin",
+    });
+    if (res.status === 401) { location.href = "/console/login/?next=" + encodeURIComponent(location.pathname); throw new Error("auth"); }
+    if (res.status === 204) return null;
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.error?.message || `Request failed (${res.status})`);
+    return data;
+  }
+
+  let toastTimer;
+  function toast(msg) {
+    els.toast.textContent = msg; els.toast.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => (els.toast.hidden = true), 2200);
+  }
+
+  function renderMarkdown(text) {
+    if (!window.marked || !window.DOMPurify) return `<p>${esc(text).replace(/\n/g, "<br>")}</p>`;
+    const html = marked.parse(text, { gfm: true, breaks: false });
+    // Block remote images: a reply must not be able to beacon data out via <img src>.
+    return DOMPurify.sanitize(html, { FORBID_TAGS: ["img", "style", "iframe", "form"], ADD_ATTR: ["target"] });
+  }
+
+  function enhanceCode(root) {
+    root.querySelectorAll("pre").forEach((pre) => {
+      if (pre.parentElement.classList.contains("code")) return;
+      const lang = (pre.querySelector("code")?.className.match(/language-(\S+)/) || [])[1] || "text";
+      const wrap = document.createElement("div");
+      wrap.className = "code";
+      wrap.innerHTML = `<div class="code-head"><span>${esc(lang)}</span><button type="button">${ICON.copy}<span>Copy</span></button></div>`;
+      pre.replaceWith(wrap); wrap.appendChild(pre);
+      wrap.querySelector("button").addEventListener("click", (e) => copy(pre.innerText, e.currentTarget));
+    });
+    root.querySelectorAll("a[href]").forEach((a) => { a.target = "_blank"; a.rel = "noopener noreferrer"; });
+  }
+
+  async function copy(text, btn) {
+    try { await navigator.clipboard.writeText(text); } catch { return toast("Copy failed"); }
+    if (btn) {
+      const prev = btn.innerHTML;
+      btn.innerHTML = ICON.check + (btn.querySelector("span") ? "<span>Copied</span>" : "");
+      setTimeout(() => (btn.innerHTML = prev), 1400);
+    } else toast("Copied");
+  }
+
+  // ------------------------------------------------------------------ menu
+  function openMenu(anchor, items, align = "start") {
+    const m = els.menu;
+    m.innerHTML = "";
+    items.forEach((it) => {
+      if (it === "-") return m.insertAdjacentHTML("beforeend", '<div class="menu-sep"></div>');
+      if (it.label) return m.insertAdjacentHTML("beforeend", `<div class="menu-label">${esc(it.label)}</div>`);
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "menu-item" + (it.danger ? " danger" : ""); b.setAttribute("role", "menuitem");
+      b.innerHTML = (it.icon ? ICON[it.icon] : "") + `<span>${esc(it.text)}${it.desc ? `<span class="desc">${esc(it.desc)}</span>` : ""}</span>` + (it.checked ? ICON.ok : "");
+      b.addEventListener("click", () => { closeMenu(); it.onClick(); });
+      m.appendChild(b);
+    });
+    m.hidden = false;
+    anchor.setAttribute("aria-expanded", "true");
+    m._anchor = anchor;
+    const r = anchor.getBoundingClientRect(), mr = m.getBoundingClientRect();
+    let top = r.bottom + 6;
+    if (top + mr.height > innerHeight - 8) top = r.top - mr.height - 6;
+    let left = align === "end" ? r.right - mr.width : r.left;
+    left = Math.max(8, Math.min(left, innerWidth - mr.width - 8));
+    m.style.top = `${Math.max(8, top)}px`; m.style.left = `${left}px`;
+    m.querySelector(".menu-item")?.focus();
+  }
+  function closeMenu() {
+    if (els.menu.hidden) return;
+    els.menu.hidden = true;
+    els.menu._anchor?.setAttribute("aria-expanded", "false");
+  }
+  document.addEventListener("click", (e) => {
+    if (!els.menu.hidden && !els.menu.contains(e.target) && !els.menu._anchor?.contains(e.target)) closeMenu();
+  });
+
+  // ------------------------------------------------------------------ sidebar
+  function groupOf(c) {
+    if (c.is_starred) return "Starred";
+    const d = new Date(c.updated_at), now = new Date();
+    const day = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+    const diff = (day(now) - day(d)) / 86400000;
+    if (diff < 1) return "Today";
+    if (diff < 2) return "Yesterday";
+    if (diff < 7) return "Previous 7 days";
+    if (diff < 30) return "Previous 30 days";
+    return "Older";
+  }
+
+  function renderSidebar(newId) {
+    const order = ["Starred", "Today", "Yesterday", "Previous 7 days", "Previous 30 days", "Older"];
+    const q = state.filter.toLowerCase();
+    const list = state.conversations.filter((c) => !q || (c.title || "New chat").toLowerCase().includes(q));
+    const groups = {};
+    list.forEach((c) => (groups[groupOf(c)] ||= []).push(c));
+    els.convList.innerHTML = "";
+    if (!list.length) {
+      els.convList.innerHTML = `<p class="sb-empty">${q ? "No chats match your search." : "Your chats will show up here."}</p>`;
+      return;
+    }
+    order.filter((g) => groups[g]).forEach((g) => {
+      const sec = document.createElement("div");
+      sec.className = "sb-group";
+      sec.innerHTML = `<div class="sb-group-title">${g}</div>`;
+      groups[g].forEach((c) => {
+        const item = document.createElement("div");
+        item.className = "sb-item" + (c.id === state.currentId ? " is-active" : "") + (c.id === newId ? " is-new" : "");
+        item.dataset.id = c.id;
+        item.innerHTML = `<a href="/console/chat/${c.id}" data-link title="${esc(c.title || "New chat")}">${esc(c.title || "New chat")}</a>
+          <button class="icon-btn more" type="button" aria-label="Chat options" aria-haspopup="menu">${ICON.more}</button>`;
+        item.querySelector(".more").addEventListener("click", (e) => {
+          e.stopPropagation();
+          openMenu(e.currentTarget, [
+            { icon: "star", text: c.is_starred ? "Unstar" : "Star", onClick: () => toggleStar(c.id) },
+            { icon: "edit", text: "Rename", onClick: () => renameInline(item, c) },
+            "-",
+            { icon: "trash", text: "Delete", danger: true, onClick: () => deleteConv(c.id) },
+          ], "end");
+        });
+        sec.appendChild(item);
+      });
+      els.convList.appendChild(sec);
+    });
+  }
+
+  function renameInline(item, c) {
+    const input = document.createElement("input");
+    input.value = c.title || ""; input.setAttribute("aria-label", "Chat title");
+    item.replaceChildren(input); input.focus(); input.select();
+    let done = false;
+    const finish = (save) => {
+      if (done) return; done = true;
+      if (save && input.value.trim() && input.value.trim() !== c.title) rename(c.id, input.value.trim());
+      else renderSidebar();
+    };
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") finish(true); if (e.key === "Escape") finish(false); });
+    input.addEventListener("blur", () => finish(true));
+  }
+
+  const conv = (id) => state.conversations.find((c) => c.id === id);
+
+  async function rename(id, title) {
+    const updated = await api(`/conversations/${id}`, { method: "PATCH", body: { title } }).catch((e) => toast(e.message));
+    if (updated) Object.assign(conv(id), { title: updated.title });
+    renderSidebar(); renderHeader();
+  }
+
+  async function toggleStar(id) {
+    const c = conv(id); if (!c) return;
+    c.is_starred = !c.is_starred; renderSidebar(); renderHeader();
+    await api(`/conversations/${id}`, { method: "PATCH", body: { is_starred: c.is_starred } })
+      .catch((e) => { c.is_starred = !c.is_starred; renderSidebar(); renderHeader(); toast(e.message); });
+  }
+
+  async function deleteConv(id) {
+    const c = conv(id);
+    if (!confirm(`Delete “${c?.title || "New chat"}”? This can’t be undone.`)) return;
+    await api(`/conversations/${id}`, { method: "DELETE" }).catch((e) => toast(e.message));
+    state.conversations = state.conversations.filter((x) => x.id !== id);
+    if (state.currentId === id) navigate("/console/new"); else renderSidebar();
+    toast("Chat deleted");
+  }
+
+  // ------------------------------------------------------------------ header / models
+  function renderHeader() {
+    const c = conv(state.currentId);
+    els.title.hidden = els.actions.hidden = !c;
+    if (c) {
+      els.title.textContent = c.title || "New chat";
+      els.star.classList.toggle("is-on", c.is_starred);
+      els.star.setAttribute("aria-label", c.is_starred ? "Unstar" : "Star");
+      document.title = `${c.title || "New chat"} · GeorgeAI Console`;
+    } else document.title = "GeorgeAI Console";
+    els.demo.hidden = state.provider !== "fake";
+  }
+
+  function modelInfo(id) { return state.models.find((m) => m.id === id) || state.models[0]; }
+  function setModel(id) {
+    state.model = id; store.set("gai-model", id);
+    els.modelName.textContent = modelInfo(id)?.name || id;
+  }
+  els.modelBtn.addEventListener("click", (e) => openMenu(e.currentTarget, state.models.map((m) => ({
+    text: m.name, desc: m.description, checked: m.id === state.model,
+    onClick: () => {
+      setModel(m.id);
+      if (state.currentId) api(`/conversations/${state.currentId}`, { method: "PATCH", body: { model: m.id } }).catch(() => {});
+    },
+  })), "end"));
+
+  // ------------------------------------------------------------------ thread
+  function greeting() {
+    const h = new Date().getHours();
+    const part = h < 5 ? "Working late" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+    return `${part}, ${state.user?.name || "there"}`;
+  }
+
+  function renderChips() {
+    els.chips.innerHTML = "";
+    SUGGESTIONS.forEach((s) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "chip"; b.innerHTML = ICON[s.icon] + esc(s.text);
+      b.addEventListener("click", () => { els.input.value = s.prompt; autosize(); updateSend(); els.input.focus(); });
+      els.chips.appendChild(b);
+    });
+  }
+
+  function renderThread() {
+    const empty = !state.currentId && !state.messages.length;
+    els.main.classList.toggle("is-empty", empty);
+    if (empty) { els.greeting.textContent = greeting(); return; }
+    els.inner.innerHTML = "";
+    state.messages.forEach((m, i) => els.inner.appendChild(messageEl(m, i === state.messages.length - 1)));
+    scrollToBottom(true);
+  }
+
+  function messageEl(m, isLast) {
+    const el = document.createElement("div");
+    el.className = `msg ${m.role}` + (isLast ? " is-last" : "") + (m.streaming ? " streaming" : "");
+    el.dataset.id = m.id;
+    if (m.role === "user") {
+      el.innerHTML = `<div class="bubble"></div><div class="msg-actions"></div>`;
+      el.querySelector(".bubble").textContent = m.content;
+      addAction(el, "copy", "Copy", (btn) => copy(m.content, btn));
+      return el;
+    }
+    el.innerHTML = `<div class="mark" aria-hidden="true"></div><div class="msg-body"><div class="md"></div></div><div class="msg-actions"></div>`;
+    paintAssistant(el, m);
+    return el;
+  }
+
+  function addAction(el, icon, label, fn) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "icon-btn"; b.innerHTML = ICON[icon];
+    b.setAttribute("aria-label", label); b.title = label;
+    b.addEventListener("click", () => fn(b));
+    el.querySelector(".msg-actions").appendChild(b);
+  }
+
+  function paintAssistant(el, m) {
+    const md = el.querySelector(".md"), body = el.querySelector(".msg-body");
+    el.classList.toggle("streaming", !!m.streaming);
+    if (m.streaming && !m.content) md.innerHTML = '<span class="thinking-dots" aria-label="Thinking"><i></i><i></i><i></i></span>';
+    else { md.innerHTML = renderMarkdown(m.content); enhanceCode(md); }
+    body.querySelectorAll(".msg-note, .msg-error").forEach((n) => n.remove());
+    if (m.stop_reason === "user_cancelled") body.insertAdjacentHTML("beforeend", '<div class="msg-note">Stopped by you.</div>');
+    if (m.stop_reason === "error" && !m.error && !m.streaming) m.error = "This response failed to generate.";
+    if (m.error) {
+      body.insertAdjacentHTML("beforeend", `<div class="msg-error" role="alert"><span>${esc(m.error)}</span><button type="button">Retry</button></div>`);
+      body.querySelector(".msg-error button").addEventListener("click", regenerate);
+    }
+    const actions = el.querySelector(".msg-actions");
+    actions.innerHTML = "";
+    if (!m.streaming) {
+      addAction(el, "copy", "Copy", (btn) => copy(m.content, btn));
+      if (state.messages[state.messages.length - 1] === m) addAction(el, "retry", "Retry", regenerate);
+    }
+  }
+
+  function nearBottom() { const t = els.thread; return t.scrollHeight - t.scrollTop - t.clientHeight < 80; }
+  function scrollToBottom(force) {
+    if (force || state.stick) els.thread.scrollTop = els.thread.scrollHeight;
+    els.jump.hidden = nearBottom();
+  }
+  els.thread.addEventListener("scroll", () => { state.stick = nearBottom(); els.jump.hidden = state.stick; }, { passive: true });
+  els.jump.addEventListener("click", () => { state.stick = true; els.thread.scrollTo({ top: els.thread.scrollHeight, behavior: "smooth" }); });
+
+  // ------------------------------------------------------------------ composer
+  function autosize() {
+    const t = els.input; t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, innerHeight * 0.4) + "px";
+  }
+  function updateSend() {
+    const streaming = !!state.stream;
+    els.send.classList.toggle("is-stop", streaming);
+    els.send.disabled = !streaming && !els.input.value.trim();
+    els.send.setAttribute("aria-label", streaming ? "Stop response" : "Send message");
+  }
+  const draftKey = () => `gai-draft:${state.currentId || "new"}`;
+  els.input.addEventListener("input", () => { autosize(); updateSend(); store.set(draftKey(), els.input.value); });
+  els.input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); if (!state.stream) submit(); }
+  });
+  els.composer.addEventListener("submit", (e) => { e.preventDefault(); state.stream ? stop() : submit(); });
+
+  async function submit() {
+    const content = els.input.value.trim();
+    if (!content || state.stream) return;
+    store.set(draftKey(), ""); // clear before currentId changes, or the "new" draft lingers
+    if (!state.currentId) {
+      let c;
+      try { c = await api("/conversations", { method: "POST", body: { model: state.model } }); }
+      catch (e) { return toast(e.message); }
+      state.conversations.unshift(c);
+      state.currentId = c.id; state.messages = [];
+      history.pushState({}, "", `/console/chat/${c.id}`);
+      renderSidebar(); renderHeader();
+    }
+    els.input.value = ""; autosize();
+    state.messages.push({ id: "tmp-" + Date.now(), role: "user", content });
+    runStream({ content, model: state.model });
+  }
+
+  function regenerate() {
+    if (state.stream) return;
+    const last = state.messages[state.messages.length - 1];
+    if (last?.role === "assistant") state.messages.pop();
+    runStream({ regenerate: true, model: state.model });
+  }
+
+  function stop() { state.stream?.controller.abort(); }
+
+  async function runStream(payload) {
+    const convId = state.currentId;
+    const assistant = { id: "pending", role: "assistant", content: "", streaming: true };
+    state.messages.push(assistant);
+    state.stick = true;
+    renderThread();
+    const el = () => els.inner.lastElementChild;
+    const controller = new AbortController();
+    state.stream = { controller, convId };
+    updateSend();
+
+    let raf = 0;
+    const paint = () => { raf = 0; if (state.currentId === convId && el()) { paintAssistant(el(), assistant); scrollToBottom(); } };
+    const schedule = () => { if (!raf) raf = requestAnimationFrame(paint); };
+
+    try {
+      const res = await fetch(`${API}/conversations/${convId}/messages`, {
+        method: "POST", signal: controller.signal, credentials: "same-origin",
+        headers: { "Content-Type": "application/json", "X-CSRFToken": csrf(), Accept: "text/event-stream" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error?.message || `Request failed (${res.status})`);
+      }
+      const reader = res.body.getReader(), dec = new TextDecoder();
+      let buf = "";
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let idx;
+        while ((idx = buf.indexOf("\n\n")) >= 0) {
+          const raw = buf.slice(0, idx); buf = buf.slice(idx + 2);
+          const ev = (raw.match(/^event: (.*)$/m) || [])[1];
+          const dataLine = (raw.match(/^data: (.*)$/m) || [])[1];
+          if (!ev || !dataLine) continue;
+          handleEvent(ev, JSON.parse(dataLine), assistant, convId);
+          schedule();
+        }
+      }
+    } catch (e) {
+      if (e.name === "AbortError") assistant.stop_reason = "user_cancelled";
+      else assistant.error = e.message || "Network error — check your connection and retry.";
+    } finally {
+      assistant.streaming = false;
+      state.stream = null;
+      updateSend();
+      if (raf) cancelAnimationFrame(raf);
+      if (state.currentId === convId) { renderThread(); els.input.focus(); }
+      const c = conv(convId);
+      if (c) { c.updated_at = new Date().toISOString(); state.conversations.sort((a, b) => b.updated_at.localeCompare(a.updated_at)); renderSidebar(); }
+    }
+  }
+
+  function handleEvent(ev, data, assistant, convId) {
+    switch (ev) {
+      case "user_message": {
+        const tmp = [...state.messages].reverse().find((m) => m.role === "user" && String(m.id).startsWith("tmp-"));
+        if (tmp) Object.assign(tmp, data);
+        break;
+      }
+      case "message_start": assistant.id = data.id; assistant.model = data.model; break;
+      case "delta": assistant.content += data.text; break;
+      case "error": assistant.error = data.message; break;
+      case "message_stop": if (data.stop_reason) assistant.stop_reason = data.stop_reason; break;
+      case "conversation_title": {
+        const c = conv(data.id);
+        if (c) { c.title = data.title; renderSidebar(data.id); if (state.currentId === convId) renderHeader(); }
+        break;
+      }
+    }
+  }
+
+  // ------------------------------------------------------------------ routing
+  async function route() {
+    closeMenu(); closeMobileSidebar();
+    const m = location.pathname.match(/^\/console\/chat\/([0-9a-f-]{36})/);
+    const id = m ? m[1] : null;
+    if (state.stream && state.stream.convId !== id) stop();
+    state.currentId = id; state.messages = [];
+    renderSidebar(); renderHeader();
+    if (!id) {
+      if (location.pathname !== "/console/new") history.replaceState({}, "", "/console/new");
+      setModel(store.get("gai-model", state.defaultModel));
+      renderThread();
+    } else {
+      els.main.classList.remove("is-empty");
+      els.inner.innerHTML = "";
+      try {
+        const data = await api(`/conversations/${id}`);
+        if (state.currentId !== id) return;
+        state.messages = data.messages;
+        if (data.model && state.models.some((x) => x.id === data.model)) setModel(data.model);
+        renderThread();
+      } catch (e) {
+        if (e.message === "auth") return;
+        toast("That chat could not be found");
+        return navigate("/console/new");
+      }
+    }
+    els.input.value = store.get(draftKey(), ""); autosize(); updateSend();
+    if (matchMedia("(pointer: fine)").matches) els.input.focus();
+  }
+
+  function navigate(path) { if (location.pathname !== path) history.pushState({}, "", path); route(); }
+  addEventListener("popstate", route);
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest("a[data-link]");
+    if (!a || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    e.preventDefault(); navigate(a.getAttribute("href"));
+  });
+
+  // ------------------------------------------------------------------ chrome
+  const mobile = () => matchMedia("(max-width: 860px)").matches;
+  function closeMobileSidebar() { delete els.app.dataset.mobileOpen; els.scrim.hidden = true; }
+  $("collapseBtn").addEventListener("click", () => {
+    if (mobile()) return closeMobileSidebar();
+    els.app.dataset.sidebar = "closed"; store.set("gai-sidebar", "closed");
+  });
+  $("openSidebarBtn").addEventListener("click", () => {
+    if (mobile()) { els.app.dataset.mobileOpen = ""; els.scrim.hidden = false; return; }
+    els.app.dataset.sidebar = "open"; store.set("gai-sidebar", "open");
+  });
+  els.scrim.addEventListener("click", closeMobileSidebar);
+  els.search.addEventListener("input", () => { state.filter = els.search.value; renderSidebar(); });
+  els.title.addEventListener("click", () => {
+    const c = conv(state.currentId); if (!c) return;
+    const input = document.createElement("input");
+    input.className = "conv-title-input"; input.value = c.title || ""; input.setAttribute("aria-label", "Chat title");
+    els.title.hidden = true; els.title.after(input); input.focus(); input.select();
+    let done = false;
+    const finish = (save) => {
+      if (done) return; done = true; input.remove(); els.title.hidden = false;
+      if (save && input.value.trim() && input.value.trim() !== c.title) rename(c.id, input.value.trim());
+    };
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") finish(true); if (e.key === "Escape") finish(false); });
+    input.addEventListener("blur", () => finish(true));
+  });
+  els.star.addEventListener("click", () => state.currentId && toggleStar(state.currentId));
+  els.del.addEventListener("click", () => state.currentId && deleteConv(state.currentId));
+
+  function setTheme(t) {
+    store.set("gai-theme", t);
+    const eff = t === "system" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : t;
+    document.documentElement.dataset.theme = eff;
+  }
+  els.userBtn.addEventListener("click", (e) => {
+    const theme = store.get("gai-theme", "dark");
+    const items = [
+      { label: state.user.email },
+      { icon: "sun", text: "Dark", checked: theme === "dark", onClick: () => setTheme("dark") },
+      { icon: "sun", text: "Light", checked: theme === "light", onClick: () => setTheme("light") },
+      { icon: "sun", text: "Match system", checked: theme === "system", onClick: () => setTheme("system") },
+      "-",
+    ];
+    if (state.user.is_staff) items.push({ icon: "shield", text: "Admin dashboard", onClick: () => window.open("/admin/", "_blank") });
+    items.push({ icon: "out", text: "Log out", onClick: () => $("logoutForm").submit() });
+    openMenu(e.currentTarget, items);
+  });
+
+  document.addEventListener("keydown", (e) => {
+    const mod = e.metaKey || e.ctrlKey;
+    if (mod && e.key.toLowerCase() === "k") { e.preventDefault(); if (mobile()) { els.app.dataset.mobileOpen = ""; els.scrim.hidden = false; } els.search.focus(); }
+    else if (mod && e.shiftKey && e.key.toLowerCase() === "o") { e.preventDefault(); navigate("/console/new"); }
+    else if (e.key === "Escape") { if (!els.menu.hidden) closeMenu(); else if (state.stream) stop(); else closeMobileSidebar(); }
+  });
+
+  // ------------------------------------------------------------------ boot
+  async function boot() {
+    if (store.get("gai-sidebar", "open") === "closed") els.app.dataset.sidebar = "closed";
+    let data;
+    try { data = await api("/bootstrap"); } catch (e) { if (e.message !== "auth") toast(e.message); return; }
+    Object.assign(state, { user: data.user, models: data.models, provider: data.provider, defaultModel: data.default_model, conversations: data.conversations });
+    els.userName.textContent = data.user.name;
+    els.userAvatar.textContent = (data.user.name || "?").slice(0, 1).toUpperCase();
+    const saved = store.get("gai-model", data.default_model);
+    setModel(state.models.some((m) => m.id === saved) ? saved : data.default_model);
+    renderChips();
+    route();
+  }
+  boot();
+})();

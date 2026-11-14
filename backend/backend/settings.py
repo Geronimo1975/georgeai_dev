@@ -47,7 +47,13 @@ INSTALLED_APPS = [
     "rest_framework",
     # local apps
     "accounts",
+    "console",
 ]
+
+# GeorgeAI Console — LLM provider. Without a key the console runs on an offline
+# fake provider (LLM_PROVIDER=auto|fake|anthropic).
+ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", default="")
+LLM_PROVIDER = env("LLM_PROVIDER", default="auto")
 
 AUTH_USER_MODEL = "accounts.User"
 
@@ -222,5 +228,16 @@ JAZZMIN_SETTINGS = {
     "site_brand": "georgeai.dev",
     "welcome_sign": "Welcome to the georgeai.dev admin",
     "copyright": "georgeai.dev",
-    "search_model": ["accounts.User"],
+    "search_model": ["accounts.User", "console.Conversation"],
+    "topmenu_links": [
+        {"name": "Open Console", "url": "/console/", "new_window": True},
+    ],
+    "icons": {
+        "accounts.User": "fas fa-user",
+        "auth.Group": "fas fa-users",
+        "console.Conversation": "fas fa-comments",
+        "console.Message": "fas fa-comment-dots",
+    },
+    "order_with_respect_to": ["console", "accounts", "auth"],
 }
+JAZZMIN_UI_TWEAKS = {"theme": "darkly", "dark_mode_theme": "darkly", "navbar": "navbar-dark"}
