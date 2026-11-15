@@ -10,7 +10,7 @@ import uuid
 from functools import wraps
 
 from django.contrib.auth.decorators import login_required
-from django.db import transaction
+from django.db import connection, transaction
 from django.http import Http404, JsonResponse, StreamingHttpResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -63,15 +63,57 @@ def conv_json(c):
     }
 
 
-def msg_json(m):
+def msg_json(m, siblings=None):
     return {
         "id": str(m.id),
+        "parent_id": str(m.parent_id) if m.parent_id else None,
+        "siblings": [str(x) for x in siblings] if siblings else [str(m.id)],
         "role": m.role,
         "content": m.content,
         "model": m.model,
         "stop_reason": m.stop_reason,
         "created_at": m.created_at.isoformat(),
     }
+
+
+class Tree:
+    """All messages of one conversation, loaded in a single query (02.07).
+
+    ``path(leaf)`` walks parents back to the root; ``siblings(m)`` lists the
+    alternatives at that position (edits of a user turn, regenerations of a
+    reply) oldest first — what the "< 2/3 >" control pages through.
+    """
+
+    def __init__(self, conversation):
+        self.conversation = conversation
+        self.msgs = list(conversation.messages.all())  # ordered by created_at
+        self.by_id = {m.id: m for m in self.msgs}
+        self.children = {}
+        for m in self.msgs:
+            self.children.setdefault(m.parent_id, []).append(m)
+
+    def leaf(self):
+        leaf = self.by_id.get(self.conversation.current_leaf_id)
+        return leaf or (self.msgs[-1] if self.msgs else None)
+
+    def path(self, leaf=None):
+        node, out = (leaf if leaf is not None else self.leaf()), []
+        while node is not None:
+            out.append(node)
+            node = self.by_id.get(node.parent_id)
+        return out[::-1]
+
+    def siblings(self, m):
+        return [x.id for x in self.children.get(m.parent_id, [])]
+
+    def deepest(self, m):
+        """Follow the newest child down — where switching to ``m``'s branch lands."""
+        while self.children.get(m.id):
+            m = self.children[m.id][-1]
+        return m
+
+    def path_json(self, leaf=None):
+        return [msg_json(m, self.siblings(m)) for m in self.path(leaf)]
 
 
 def sse(event, data):
@@ -139,10 +181,25 @@ def conversation_detail(request, pk):
             c.model = data["model"]
         c.save()
         return JsonResponse(conv_json(c))
-    return JsonResponse({
-        **conv_json(c),
-        "messages": [msg_json(m) for m in c.messages.all()],
-    })
+    return JsonResponse({**conv_json(c), "messages": Tree(c).path_json()})
+
+
+@api_login_required
+@require_http_methods(["POST"])
+def switch_branch(request, pk):
+    """Show another branch: ``message_id`` is any message, typically a sibling
+    picked with "< 2/3 >"; the view lands on that branch's newest leaf."""
+    c = own_conversation(request, pk)
+    tree = Tree(c)
+    try:
+        target = tree.by_id.get(uuid.UUID(str(body(request).get("message_id", ""))))
+    except ValueError:
+        target = None
+    if target is None:
+        return error(404, "not_found_error", "Message not found in this conversation.")
+    leaf = tree.deepest(target)
+    Conversation.objects.filter(pk=c.pk).update(current_leaf=leaf)
+    return JsonResponse({**conv_json(c), "messages": tree.path_json(leaf)})
 
 
 @api_login_required
@@ -156,26 +213,41 @@ def send_message(request, pk):
     content = str(data.get("content", "")).strip()
 
     with transaction.atomic():
-        history = list(c.messages.all())
+        tree = Tree(c)
         if regenerate:
-            if history and history[-1].role == Message.Role.ASSISTANT:
-                history.pop().delete()
-            if not history:
+            # A new sibling of the reply, not an overwrite: the old one stays
+            # reachable through "< 1/2 >". Defaults to the last reply on screen.
+            target = tree.by_id.get(_uuid(data.get("message_id"))) if data.get("message_id") else None
+            if target is None:
+                path = tree.path()
+                target = path[-1] if path else None
+            if target is not None and target.role == Message.Role.ASSISTANT:
+                target = tree.by_id.get(target.parent_id)
+            if target is None or target.role != Message.Role.USER:
                 return error(400, "invalid_request_error", "Nothing to regenerate.")
-            user_msg, new_user = history[-1], False
+            user_msg, new_user = target, False
+            history = tree.path(user_msg)
         else:
             if not content:
                 return error(400, "invalid_request_error", "Message is empty.")
             if len(content) > MAX_MESSAGE_CHARS:
                 return error(400, "invalid_request_error", "Message is too long.")
+            if data.get("edit_of"):
+                # Editing a user turn forks a new branch from that turn's parent.
+                edited = tree.by_id.get(_uuid(data["edit_of"]))
+                if edited is None or edited.role != Message.Role.USER:
+                    return error(404, "not_found_error", "Message not found in this conversation.")
+                parent = tree.by_id.get(edited.parent_id)
+            else:
+                parent = tree.leaf()
+            history = tree.path(parent) if parent else []
             user_msg = Message.objects.create(
-                conversation=c, role=Message.Role.USER, content=content,
-                parent=history[-1] if history else None,
+                conversation=c, role=Message.Role.USER, content=content, parent=parent,
             )
             history.append(user_msg)
             new_user = True
-        if c.model != model:
-            c.model = model
+        c.model = model
+        c.current_leaf = user_msg
         c.save()  # bumps updated_at so the sidebar re-sorts
 
     needs_title = not c.title
@@ -200,24 +272,91 @@ def send_message(request, pk):
             state["status"] = "error"
             state["error"] = friendly_error(exc)
         finally:
-            Message.objects.create(
+            reply = Message.objects.create(
                 id=assistant_id, conversation=c, parent=user_msg,
                 role=Message.Role.ASSISTANT, content="".join(parts), model=model,
                 stop_reason=result.stop_reason or ("user_cancelled" if state["status"] == "cancelled" else state["status"]),
                 input_tokens=result.input_tokens, output_tokens=result.output_tokens,
             )
+            Conversation.objects.filter(pk=c.pk).update(current_leaf=reply)
         if state["error"]:
             yield sse("error", state["error"])
         yield sse("message_stop", {"id": str(assistant_id), "stop_reason": result.stop_reason})
         if needs_title and state["status"] == "done":
             c.title = provider.title(user_msg.content)
-            c.save(update_fields=["title", "updated_at"])
+            Conversation.objects.filter(pk=c.pk).update(title=c.title)
             yield sse("conversation_title", {"id": str(c.id), "title": c.title})
 
     resp = StreamingHttpResponse(stream(), content_type="text/event-stream")
     resp["Cache-Control"] = "no-cache"
     resp["X-Accel-Buffering"] = "no"  # nginx/Traefik: don't buffer the stream
     return resp
+
+
+def _uuid(value):
+    try:
+        return uuid.UUID(str(value))
+    except ValueError:
+        return None
+
+
+SEARCH_LIMIT = 30
+
+
+@api_login_required
+@require_http_methods(["GET"])
+def search(request):
+    """Full-text search over the user's chat titles and messages (02.09).
+
+    PostgreSQL: ``simple``-config tsvector (language-neutral, so EN/DE/RO all
+    match) backed by the GIN index from migration 0002, with ts_headline
+    snippets. Other backends (local SQLite) fall back to icontains.
+    """
+    q = request.GET.get("q", "").strip()[:200]
+    if len(q) < 2:
+        return JsonResponse({"query": q, "results": []})
+    msgs = Message.objects.filter(conversation__owner=request.user).select_related("conversation")
+    if connection.vendor == "postgresql":
+        from django.contrib.postgres.search import SearchHeadline, SearchQuery, SearchRank, SearchVector
+
+        query = SearchQuery(q, config="simple", search_type="websearch")
+        vector = SearchVector("content", config="simple")
+        msgs = (
+            msgs.annotate(rank=SearchRank(vector, query))
+            .filter(rank__gt=0)
+            .annotate(snippet=SearchHeadline(
+                "content", query, config="simple", start_sel="\x02", stop_sel="\x03",
+                max_words=24, min_words=8, max_fragments=1,
+            ))
+            .order_by("-rank", "-created_at")
+        )
+    else:
+        msgs = msgs.filter(content__icontains=q).order_by("-created_at")
+
+    results, seen = [], set()
+    for c in Conversation.objects.filter(owner=request.user, title__icontains=q)[:10]:
+        seen.add(c.id)
+        results.append({"conversation": conv_json(c), "message_id": None, "snippet": ""})
+    for m in msgs[: SEARCH_LIMIT * 3]:
+        if m.conversation_id in seen:
+            continue
+        seen.add(m.conversation_id)
+        snippet = getattr(m, "snippet", None) or _snippet(m.content, q)
+        results.append({"conversation": conv_json(m.conversation), "message_id": str(m.id), "snippet": snippet})
+        if len(results) >= SEARCH_LIMIT:
+            break
+    return JsonResponse({"query": q, "results": results})
+
+
+def _snippet(text, q, width=90):
+    """Fallback highlight, same \x02/\x03 markers as ts_headline (client renders <mark>)."""
+    text = " ".join(text.split())
+    i = text.lower().find(q.lower())
+    if i < 0:
+        return text[:width * 2]
+    start, end = max(0, i - width), min(len(text), i + len(q) + width)
+    return (("…" if start else "") + text[start:i] + "\x02" + text[i:i + len(q)] + "\x03"
+            + text[i + len(q):end] + ("…" if end < len(text) else ""))
 
 
 def friendly_error(exc):

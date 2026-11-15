@@ -50,12 +50,101 @@ class ConsoleApiTests(TestCase):
         self.assertEqual(roles, ["user", "assistant"])
         self.assertTrue(conv.messages.get(role="assistant").content)
 
-    def test_regenerate_replaces_last_reply(self):
+    def test_regenerate_adds_sibling_reply(self):
         c = self.client.post(f"{API}/conversations", "{}", content_type="application/json").json()
         self.stream(c["id"], {"content": "Hi"})
         events = self.stream(c["id"], {"regenerate": True})
         self.assertNotIn("user_message", events)
-        self.assertEqual(Message.objects.filter(conversation_id=c["id"]).count(), 2)
+        self.assertEqual(Message.objects.filter(conversation_id=c["id"]).count(), 3)
+        path = self.detail(c["id"])["messages"]
+        self.assertEqual([m["role"] for m in path], ["user", "assistant"])
+        self.assertEqual(len(path[1]["siblings"]), 2)
+        self.assertEqual(path[1]["siblings"][-1], path[1]["id"])  # newest is shown
+
+    # ---------------------------------------------------------------- branches (02.07)
+
+    def detail(self, conv_id):
+        return self.client.get(f"{API}/conversations/{conv_id}").json()
+
+    def sent_history(self, conv_id, payload):
+        """Run a turn and capture the messages actually sent to the model."""
+        from . import llm
+
+        seen = {}
+        real = llm.FakeProvider.stream
+
+        def spy(provider, model, system, messages, result):
+            seen["messages"] = [m["content"] for m in messages]
+            yield from real(provider, model, system, messages, result)
+
+        with mock.patch.object(llm.FakeProvider, "stream", spy):
+            self.stream(conv_id, payload)
+        return seen["messages"]
+
+    def test_three_levels_of_branches_send_only_the_active_path(self):
+        c = Conversation.objects.create(owner=self.user)
+        cid = str(c.id)
+        self.stream(cid, {"content": "A1"})
+        self.stream(cid, {"content": "B1"})
+        self.stream(cid, {"content": "C1"})
+        path = self.detail(cid)["messages"]
+        a1, b1, c1 = path[0]["id"], path[2]["id"], path[4]["id"]
+
+        # level 1: edit A1 -> fresh branch with nothing below it
+        sent = self.sent_history(cid, {"content": "A2", "edit_of": a1})
+        self.assertEqual(sent, ["A2"])
+        path = self.detail(cid)["messages"]
+        self.assertEqual([m["content"] for m in path if m["role"] == "user"], ["A2"])
+        self.assertEqual(len(path[0]["siblings"]), 2)
+
+        # back to the A1 branch: lands on its newest leaf (C1's reply)
+        r = self.client.post(f"{API}/conversations/{cid}/branch", json.dumps({"message_id": a1}),
+                             content_type="application/json").json()
+        self.assertEqual([m["content"] for m in r["messages"] if m["role"] == "user"], ["A1", "B1", "C1"])
+
+        # level 2: edit B1 on that branch
+        sent = self.sent_history(cid, {"content": "B2", "edit_of": b1})
+        self.assertEqual([x for x in sent if not x.startswith("**Demo")], ["A1", "B2"])
+
+        # level 3: back to B1, edit C1
+        self.client.post(f"{API}/conversations/{cid}/branch", json.dumps({"message_id": b1}),
+                         content_type="application/json")
+        sent = self.sent_history(cid, {"content": "C2", "edit_of": c1})
+        self.assertEqual([x for x in sent if not x.startswith("**Demo")], ["A1", "B1", "C2"])
+        path = self.detail(cid)["messages"]
+        self.assertEqual([m["content"] for m in path if m["role"] == "user"], ["A1", "B1", "C2"])
+        self.assertEqual([len(m["siblings"]) for m in path if m["role"] == "user"], [2, 2, 2])
+
+        # regenerate the C2 reply: 2 replies at that slot, history unchanged
+        sent = self.sent_history(cid, {"regenerate": True})
+        self.assertEqual([x for x in sent if not x.startswith("**Demo")], ["A1", "B1", "C2"])
+        self.assertEqual(len(self.detail(cid)["messages"][-1]["siblings"]), 2)
+
+    def test_branch_rejects_foreign_message(self):
+        mine = Conversation.objects.create(owner=self.user)
+        theirs = Conversation.objects.create(owner=self.other)
+        foreign = Message.objects.create(conversation=theirs, role="user", content="secret")
+        r = self.client.post(f"{API}/conversations/{mine.id}/branch", json.dumps({"message_id": str(foreign.id)}),
+                             content_type="application/json")
+        self.assertEqual(r.status_code, 404)
+        r = self.client.post(f"{API}/conversations/{mine.id}/messages",
+                             json.dumps({"content": "x", "edit_of": str(foreign.id)}),
+                             content_type="application/json")
+        self.assertEqual(r.status_code, 404)
+
+    # ---------------------------------------------------------------- search (02.09)
+
+    def test_search_finds_messages_and_respects_ownership(self):
+        mine = Conversation.objects.create(owner=self.user, title="Invoices")
+        Message.objects.create(conversation=mine, role="user", content="How do I configure the gunicorn workers?")
+        theirs = Conversation.objects.create(owner=self.other, title="gunicorn secrets")
+        Message.objects.create(conversation=theirs, role="user", content="gunicorn workers for b")
+        data = self.client.get(f"{API}/search", {"q": "gunicorn"}).json()
+        ids = [r["conversation"]["id"] for r in data["results"]]
+        self.assertEqual(ids, [str(mine.id)])
+        self.assertIn("\x02", data["results"][0]["snippet"])
+        self.assertEqual(self.client.get(f"{API}/search", {"q": "invoices"}).json()["results"][0]["message_id"], None)
+        self.assertEqual(self.client.get(f"{API}/search", {"q": "x"}).json()["results"], [])
 
     def test_other_users_conversation_is_404(self):
         theirs = Conversation.objects.create(owner=self.other)

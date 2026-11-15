@@ -9,6 +9,8 @@ api = [
     path("conversations", views.conversations, name="conversations"),
     path("conversations/<uuid:pk>", views.conversation_detail, name="conversation"),
     path("conversations/<uuid:pk>/messages", views.send_message, name="send_message"),
+    path("conversations/<uuid:pk>/branch", views.switch_branch, name="switch_branch"),
+    path("search", views.search, name="search"),
 ]
 
 pages = [

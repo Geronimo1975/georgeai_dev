@@ -43,7 +43,8 @@ blochează importurile minute întregi, pentru că fișierele sunt descărcate l
 | 02.04 Trimiterea mesajelor | 🟡 | Fără Idempotency-Key deocamdată. |
 | 02.05 Streaming SSE | 🟡 | Evenimente normalizate; reluarea cu `Last-Event-ID` nu e făcută încă. |
 | 02.06 Stop | ✅ | Răspunsul parțial e salvat cu `user_cancelled`. |
-| 02.07 Regenerare / ramuri | 🟡 | Retry înlocuiește ultimul răspuns; edit și navigarea „< 2/3 >” sunt ⬜. |
+| 02.07 Regenerare / ramuri | ✅ | Edit pe mesajul user și Retry creează frați noi; „< 2/3 >” comută ramura (`POST …/branch`), iar la model se trimite doar calea activă (`Conversation.current_leaf`). Test pe 3 niveluri. |
+| 02.09 Căutare | 🟡 | `GET /search?q=` în titluri + mesaje: Postgres `tsvector` `simple` + index GIN + `ts_headline`; SQLite local cade pe `icontains`. Benchmark-ul pe 50k mesaje și configurațiile per limbă sunt ⬜. |
 | 02.08 Titlu automat | ✅ | Haiku 5.5 (fake: primele 48 de caractere), apare animat în sidebar. |
 | 03.01 Client Anthropic | ✅ | Streaming, retry-uri, `cache_control` pe system prompt. |
 | 03.02 Catalog modele | ✅ | Opus / Sonnet / Haiku 5.5 în model picker. |
@@ -56,15 +57,15 @@ blochează importurile minute întregi, pentru că fișierele sunt descărcate l
 | 04.05 Composer | 🟡 | Model picker, Send↔Stop, Enter/Shift+Enter, ciornă per chat; atașamentele sunt ⬜. |
 | 04.06 Randarea streamului | ✅ | Paint pe `requestAnimationFrame`, auto-scroll lipit de final. |
 | 04.07 Markdown | 🟡 | marked + DOMPurify (vendored), blocuri de cod cu Copy; Shiki și KaTeX sunt ⬜. |
-| 04.08 Acțiuni pe mesaj | 🟡 | Copy, Retry; 👍/👎 și Edit sunt ⬜. |
-| 04.10 Lista de conversații | 🟡 | Meniu cu Star / Rename / Delete; virtualizarea e ⬜. |
+| 04.08 Acțiuni pe mesaj | 🟡 | Copy, Retry, Edit, „< 2/3 >”; 👍/👎 este ⬜. |
+| 04.10 Lista de conversații | 🟡 | Meniu cu Star / Rename / Delete; căutarea din sidebar caută și în mesaje, cu fragment evidențiat; virtualizarea e ⬜. |
 | 04.12 Scurtături | 🟡 | ⌘K, ⌘⇧O, Esc. |
 | 04.16 Mobil | 🟡 | Verificat la 375px, fără scroll orizontal. |
 | 06.01 Login consolă | 🟡 | `/console/login/` cu sesiunea Django; signup, verificarea emailului și resetarea parolei sunt ⬜. |
 | 09.02 Provider fake | ✅ | Folosit de toate testele. |
-| 09.04 / 09.06 Teste | 🟡 | `console/tests.py`: 8 teste (stream, regenerare, 404 anti-IDOR, PATCH/DELETE, login). |
+| 09.04 / 09.06 Teste | 🟡 | `console/tests.py`: 11 teste (stream, ramuri pe 3 niveluri, căutare cu ownership, 404 anti-IDOR, PATCH/DELETE, login); CI-ul rulează acum și `console` pe Postgres 16. |
 
-**Ieșire din Faza 1:** ramuri cu edit, căutare full-text (02.09), preferințe și styles (02.10–02.11),
+**Ieșire din Faza 1:** ~~ramuri cu edit~~ ✅, ~~căutare full-text (02.09)~~ 🟡, preferințe și styles (02.10–02.11),
 setări (04.13), i18n (04.19), accesibilitate (04.18).
 
 ## Faza 2 — Proiecte & fișiere

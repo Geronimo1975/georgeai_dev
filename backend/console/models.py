@@ -1,7 +1,9 @@
 """GeorgeAI Console — conversations and messages (prompts 02.01 / 02.02).
 
-Messages form a tree through ``parent`` so edit/regenerate can branch later
-(prompt 02.07); the MVP keeps one active path and regenerates in place.
+Messages form a tree through ``parent``: editing a user turn or regenerating a
+reply adds a sibling instead of overwriting (prompt 02.07). ``current_leaf``
+marks the end of the branch the user is looking at; the active path is that
+leaf walked back to the root, and only that path is sent to the model.
 """
 import uuid
 
@@ -17,6 +19,9 @@ class Conversation(models.Model):
     title = models.CharField(max_length=200, blank=True, default="")
     model = models.CharField(max_length=64, blank=True, default="")
     is_starred = models.BooleanField(default=False)
+    current_leaf = models.ForeignKey(
+        "Message", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

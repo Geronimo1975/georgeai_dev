@@ -30,6 +30,8 @@
     shield: '<svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/></svg>',
     out: '<svg viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H3"/></svg>',
     ok: '<svg viewBox="0 0 24 24" class="check"><path d="m5 12 5 5 9-10"/></svg>',
+    prev: '<svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>',
+    next: '<svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>',
   };
 
   const SUGGESTIONS = [
@@ -43,6 +45,7 @@
     user: null, models: [], provider: "fake", defaultModel: "",
     conversations: [], currentId: null, messages: [],
     model: null, stream: null, filter: "", stick: true,
+    searchResults: null, editing: null,
   };
 
   // ------------------------------------------------------------------ utils
@@ -148,7 +151,46 @@
     return "Older";
   }
 
+  // Full-text search (02.09): title filter is instant and local; from 2 chars
+  // the server also searches message content and returns highlighted snippets.
+  const snippetHtml = (s) => esc(s).replace(/\x02/g, "<mark>").replace(/\x03/g, "</mark>");
+  let searchTimer, searchSeq = 0;
+  function runSearch() {
+    clearTimeout(searchTimer);
+    const q = state.filter.trim();
+    if (q.length < 2) { state.searchResults = null; return renderSidebar(); }
+    renderSidebar();
+    searchTimer = setTimeout(async () => {
+      const seq = ++searchSeq;
+      const data = await api(`/search?q=${encodeURIComponent(q)}`).catch(() => null);
+      if (seq !== searchSeq || state.filter.trim() !== q || !data) return;
+      state.searchResults = data.results;
+      renderSidebar();
+    }, 220);
+  }
+
+  function renderSearchResults() {
+    els.convList.innerHTML = "";
+    const sec = document.createElement("div");
+    sec.className = "sb-group";
+    sec.innerHTML = `<div class="sb-group-title">Search results</div>`;
+    if (!state.searchResults.length) {
+      els.convList.innerHTML = '<p class="sb-empty">No chats or messages match your search.</p>';
+      return;
+    }
+    state.searchResults.forEach((r) => {
+      const c = r.conversation, a = document.createElement("a");
+      a.className = "sb-result" + (c.id === state.currentId ? " is-active" : "");
+      a.href = `/console/chat/${c.id}`; a.dataset.link = "";
+      a.innerHTML = `<span class="sb-result-title">${esc(c.title || "New chat")}</span>` +
+        (r.snippet ? `<span class="sb-result-snippet">${snippetHtml(r.snippet)}</span>` : "");
+      sec.appendChild(a);
+    });
+    els.convList.appendChild(sec);
+  }
+
   function renderSidebar(newId) {
+    if (state.searchResults && state.filter.trim().length >= 2) return renderSearchResults();
     const order = ["Starred", "Today", "Yesterday", "Previous 7 days", "Previous 30 days", "Older"];
     const q = state.filter.toLowerCase();
     const list = state.conversations.filter((c) => !q || (c.title || "New chat").toLowerCase().includes(q));
@@ -265,13 +307,13 @@
     });
   }
 
-  function renderThread() {
+  function renderThread(scroll = true) {
     const empty = !state.currentId && !state.messages.length;
     els.main.classList.toggle("is-empty", empty);
     if (empty) { els.greeting.textContent = greeting(); return; }
     els.inner.innerHTML = "";
     state.messages.forEach((m, i) => els.inner.appendChild(messageEl(m, i === state.messages.length - 1)));
-    scrollToBottom(true);
+    if (scroll) scrollToBottom(true);
   }
 
   function messageEl(m, isLast) {
@@ -279,13 +321,83 @@
     el.className = `msg ${m.role}` + (isLast ? " is-last" : "") + (m.streaming ? " streaming" : "");
     el.dataset.id = m.id;
     if (m.role === "user") {
+      if (state.editing === m.id) return editorEl(el, m);
       el.innerHTML = `<div class="bubble"></div><div class="msg-actions"></div>`;
       el.querySelector(".bubble").textContent = m.content;
+      branchNav(el, m);
       addAction(el, "copy", "Copy", (btn) => copy(m.content, btn));
+      if (!state.stream && !String(m.id).startsWith("tmp-")) addAction(el, "edit", "Edit", () => startEdit(m.id));
       return el;
     }
     el.innerHTML = `<div class="mark" aria-hidden="true"></div><div class="msg-body"><div class="md"></div></div><div class="msg-actions"></div>`;
     paintAssistant(el, m);
+    return el;
+  }
+
+  // "< 2/3 >" between edits of a user turn or regenerations of a reply (02.07).
+  function branchNav(el, m) {
+    const sibs = m.siblings || [];
+    if (sibs.length < 2) return;
+    const i = sibs.indexOf(m.id);
+    const nav = document.createElement("div");
+    nav.className = "branch-nav";
+    nav.setAttribute("role", "group"); nav.setAttribute("aria-label", "Response versions");
+    nav.innerHTML = `<button type="button" class="icon-btn" aria-label="Previous version" ${i <= 0 ? "disabled" : ""}>${ICON.prev}</button>` +
+      `<span aria-live="polite">${i + 1} / ${sibs.length}</span>` +
+      `<button type="button" class="icon-btn" aria-label="Next version" ${i >= sibs.length - 1 ? "disabled" : ""}>${ICON.next}</button>`;
+    const [prev, next] = nav.querySelectorAll("button");
+    prev.addEventListener("click", () => switchBranch(sibs[i - 1]));
+    next.addEventListener("click", () => switchBranch(sibs[i + 1]));
+    if (state.stream) prev.disabled = next.disabled = true;
+    el.querySelector(".msg-actions").appendChild(nav);
+  }
+
+  async function switchBranch(messageId) {
+    if (state.stream || !messageId) return;
+    const id = state.currentId;
+    const data = await api(`/conversations/${id}/branch`, { method: "POST", body: { message_id: messageId } })
+      .catch((e) => { toast(e.message); return null; });
+    if (!data || state.currentId !== id) return;
+    const keep = els.thread.scrollTop;
+    state.messages = data.messages; state.editing = null;
+    renderThread(); els.thread.scrollTop = keep; scrollToBottom();
+  }
+
+  function startEdit(id) {
+    if (state.stream) return;
+    state.editing = id;
+    renderThread(false);
+    const ta = els.inner.querySelector(".msg-edit textarea");
+    if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+  }
+
+  function editorEl(el, m) {
+    el.classList.add("is-editing");
+    el.innerHTML = `<form class="msg-edit"><textarea rows="1" aria-label="Edit message"></textarea>
+      <div class="msg-edit-bar"><span class="msg-edit-hint">Editing creates a new branch — the original stays available.</span>
+      <button type="button" class="btn-ghost">Cancel</button><button type="submit" class="btn-accent">Save</button></div></form>`;
+    const form = el.querySelector("form"), ta = el.querySelector("textarea");
+    ta.value = m.content;
+    const size = () => { ta.style.height = "auto"; ta.style.height = Math.min(ta.scrollHeight, innerHeight * 0.4) + "px"; };
+    requestAnimationFrame(size);
+    const cancel = () => { state.editing = null; renderThread(false); };
+    ta.addEventListener("input", () => { size(); form.querySelector("[type=submit]").disabled = !ta.value.trim(); });
+    ta.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") { e.stopPropagation(); cancel(); }
+      if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); form.requestSubmit(); }
+    });
+    form.querySelector(".btn-ghost").addEventListener("click", cancel);
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const content = ta.value.trim();
+      if (!content || state.stream) return;
+      if (content === m.content) return cancel();
+      const at = state.messages.findIndex((x) => x.id === m.id);
+      state.editing = null;
+      state.messages = state.messages.slice(0, at);
+      state.messages.push({ id: "tmp-" + Date.now(), role: "user", content });
+      runStream({ content, edit_of: m.id, model: state.model });
+    });
     return el;
   }
 
@@ -311,9 +423,10 @@
     }
     const actions = el.querySelector(".msg-actions");
     actions.innerHTML = "";
+    if (!m.streaming) branchNav(el, m);
     if (!m.streaming) {
       addAction(el, "copy", "Copy", (btn) => copy(m.content, btn));
-      if (state.messages[state.messages.length - 1] === m) addAction(el, "retry", "Retry", regenerate);
+      if (state.messages[state.messages.length - 1] === m && !state.stream) addAction(el, "retry", "Retry", regenerate);
     }
   }
 
@@ -418,10 +531,21 @@
       state.stream = null;
       updateSend();
       if (raf) cancelAnimationFrame(raf);
-      if (state.currentId === convId) { renderThread(); els.input.focus(); }
+      if (state.currentId === convId) { renderThread(); els.input.focus(); refreshPath(convId); }
       const c = conv(convId);
       if (c) { c.updated_at = new Date().toISOString(); state.conversations.sort((a, b) => b.updated_at.localeCompare(a.updated_at)); renderSidebar(); }
     }
+  }
+
+  // The server is the source of truth for the tree: re-read the active path
+  // after a turn so "< n/m >" counts and ids match what was saved.
+  async function refreshPath(convId) {
+    const data = await api(`/conversations/${convId}`).catch(() => null);
+    if (!data || state.currentId !== convId || state.stream) return;
+    const errors = new Map(state.messages.filter((m) => m.error).map((m) => [m.id, m.error]));
+    state.messages = data.messages.map((m) => (errors.has(m.id) ? { ...m, error: errors.get(m.id) } : m));
+    const keep = els.thread.scrollTop;
+    renderThread(false); els.thread.scrollTop = keep;
   }
 
   function handleEvent(ev, data, assistant, convId) {
@@ -449,7 +573,7 @@
     const m = location.pathname.match(/^\/console\/chat\/([0-9a-f-]{36})/);
     const id = m ? m[1] : null;
     if (state.stream && state.stream.convId !== id) stop();
-    state.currentId = id; state.messages = [];
+    state.currentId = id; state.messages = []; state.editing = null;
     renderSidebar(); renderHeader();
     if (!id) {
       if (location.pathname !== "/console/new") history.replaceState({}, "", "/console/new");
@@ -494,7 +618,10 @@
     els.app.dataset.sidebar = "open"; store.set("gai-sidebar", "open");
   });
   els.scrim.addEventListener("click", closeMobileSidebar);
-  els.search.addEventListener("input", () => { state.filter = els.search.value; renderSidebar(); });
+  els.search.addEventListener("input", () => { state.filter = els.search.value; runSearch(); });
+  els.search.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && els.search.value) { e.stopPropagation(); els.search.value = ""; state.filter = ""; runSearch(); }
+  });
   els.title.addEventListener("click", () => {
     const c = conv(state.currentId); if (!c) return;
     const input = document.createElement("input");
