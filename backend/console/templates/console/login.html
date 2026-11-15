@@ -1,0 +1,26 @@
+{% extends "console/base.html" %}
+{% block title %}Sign in · GeorgeAI Console{% endblock %}
+{% block body %}
+<main class="auth">
+  <form class="auth-card" method="post" novalidate>
+    {% csrf_token %}
+    <div class="brand brand--lg"><span class="brand-mark" aria-hidden="true"></span>GeorgeAI <span class="brand-sub">Console</span></div>
+    <h1>Welcome back</h1>
+    <p class="auth-lede">Sign in to continue to your conversations.</p>
+    {% if form.non_field_errors %}
+      <div class="auth-error" role="alert">Email or password is incorrect.</div>
+    {% endif %}
+    <label class="field">
+      <span>Email</span>
+      <input type="email" name="username" autocomplete="email" required autofocus value="{{ form.username.value|default:'' }}">
+    </label>
+    <label class="field">
+      <span>Password</span>
+      <input type="password" name="password" autocomplete="current-password" required>
+    </label>
+    <input type="hidden" name="next" value="{{ next|default:'/console/' }}">
+    <button class="btn btn-primary btn-block" type="submit">Continue</button>
+    <p class="auth-foot">By continuing you agree to the georgeai.dev terms. <a href="/admin/">Admin</a></p>
+  </form>
+</main>
+{% endblock %}

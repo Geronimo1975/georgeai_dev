@@ -290,3 +290,6 @@ review/
 # local agent tooling
 .claude/worktrees/
 .codex/
+
+# local-only console admin login written by backend setup (never commit)
+/backend/.dev-credentials
