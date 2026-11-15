@@ -7,7 +7,12 @@ Called by deploy.sh on every deploy:
 Reads the canonical service catalog (georgeai_services.json) and writes:
     site/services/index.html          — services hub page
     site/services/<slug>/index.html   — one page per service
-    site/sitemap.xml                  — homepage + hub + all service pages
+    site/sitemap.xml                  — landing (hreflang en/de), pricing, hub, service
+                                        pages, blog, and every indexable repo-owned
+                                        page under pages/ (e.g. /cinematic/ in 5
+                                        languages, with each page's hreflang set)
+    site/sitemap-de.xml, robots-de.txt — georgeai.de: only its German landing;
+                                        nginx serves them for the .de host
 
 The SPA homepage stays untouched: these pages exist so every service has a
 real, crawlable URL with its own title/description/JSON-LD (the "biggest
@@ -15,6 +20,7 @@ GEO/SEO win" noted in the original sitemap). Content is English; the SPA
 handles i18n interactively.
 """
 import html
+from html.parser import HTMLParser
 import json
 import re
 import sys
@@ -399,9 +405,24 @@ LANDING_ALTERNATES = [("en", f"{BASE}/"), ("de", f"{DE_BASE}/"), ("x-default", f
 # Repo-owned pages copied verbatim into site/ by deploy.sh (apply_pages). Pages
 # that only make sense signed in are not listed.
 PAGES_SKIP = {"account"}
-_CANONICAL = re.compile(r'<link[^>]+rel="canonical"[^>]*href="([^"]+)"', re.I)
-_ALTERNATE = re.compile(r'<link[^>]+rel="alternate"[^>]+hreflang="([^"]+)"[^>]+href="([^"]+)"', re.I)
-_NOINDEX = re.compile(r'<meta[^>]+name="robots"[^>]+content="[^"]*noindex', re.I)
+
+
+class _HeadMeta(HTMLParser):
+    """canonical, hreflang alternates and robots noindex, whatever the attribute order."""
+
+    def __init__(self):
+        super().__init__()
+        self.canonical, self.alternates, self.noindex = None, [], False
+
+    def handle_starttag(self, tag, attrs):
+        a = {k.lower(): (v or "") for k, v in attrs}
+        rel = a.get("rel", "").lower().split()
+        if tag == "link" and "canonical" in rel and self.canonical is None:
+            self.canonical = a.get("href")
+        elif tag == "link" and "alternate" in rel and a.get("hreflang") and a.get("href"):
+            self.alternates.append((a["hreflang"], a["href"]))
+        elif tag == "meta" and a.get("name", "").lower() == "robots" and "noindex" in a.get("content", "").lower():
+            self.noindex = True
 
 
 def page_urls(pages_dir):
@@ -415,12 +436,12 @@ def page_urls(pages_dir):
         if PAGES_SKIP & set(rel.split("/")):
             continue
         url = f"{BASE}/{rel}/" if rel != "." else f"{BASE}/"
-        text = f.read_text(encoding="utf-8", errors="ignore")
-        m = _CANONICAL.search(text)
-        if not m or m.group(1) != url or _NOINDEX.search(text):
+        meta = _HeadMeta()
+        meta.feed(f.read_text(encoding="utf-8", errors="ignore"))
+        if meta.canonical != url or meta.noindex:
             continue
         depth = rel.count("/")
-        out.append((url, "0.9" if depth == 1 else "0.7", _ALTERNATE.findall(text)))
+        out.append((url, "0.9" if depth == 1 else "0.7", meta.alternates))
     return out
 
 
