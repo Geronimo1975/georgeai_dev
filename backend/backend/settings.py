@@ -54,6 +54,11 @@ INSTALLED_APPS = [
 # fake provider (LLM_PROVIDER=auto|fake|anthropic).
 ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", default="")
 LLM_PROVIDER = env("LLM_PROVIDER", default="auto")
+# DeepSeek (or any OpenAI-compatible host serving its open weights). The default
+# URL is DeepSeek's own API, which processes data in China — for client data use
+# an EU-hosted endpoint and name the processor in the Datenschutzerklärung.
+DEEPSEEK_API_KEY = env("DEEPSEEK_API_KEY", default="")
+DEEPSEEK_BASE_URL = env("DEEPSEEK_BASE_URL", default="https://api.deepseek.com")
 
 AUTH_USER_MODEL = "accounts.User"
 

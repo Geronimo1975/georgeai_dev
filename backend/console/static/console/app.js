@@ -274,21 +274,40 @@
       els.star.setAttribute("aria-label", c.is_starred ? "Unstar" : "Star");
       document.title = `${c.title || "New chat"} · GeorgeAI Console`;
     } else document.title = "GeorgeAI Console";
-    els.demo.hidden = state.provider !== "fake";
+    // Demo pill follows the selected model: Claude may be live while DeepSeek is not.
+    const info = modelInfo(state.model);
+    els.demo.hidden = info ? info.live !== false : state.provider !== "fake";
   }
 
   function modelInfo(id) { return state.models.find((m) => m.id === id) || state.models[0]; }
   function setModel(id) {
     state.model = id; store.set("gai-model", id);
     els.modelName.textContent = modelInfo(id)?.name || id;
+    renderHeader();
   }
-  els.modelBtn.addEventListener("click", (e) => openMenu(e.currentTarget, state.models.map((m) => ({
-    text: m.name, desc: m.description, checked: m.id === state.model,
-    onClick: () => {
-      setModel(m.id);
-      if (state.currentId) api(`/conversations/${state.currentId}`, { method: "PATCH", body: { model: m.id } }).catch(() => {});
-    },
-  })), "end"));
+  // PATCHes are chained so an older pick can never land after a newer one.
+  let modelSave = Promise.resolve();
+  function saveModel(convId, model) {
+    modelSave = modelSave.then(() => api(`/conversations/${convId}`, { method: "PATCH", body: { model } })).catch(() => {});
+  }
+  const knownModel = (id) => state.models.some((m) => m.id === id);
+
+  // Grouped by vendor once more than one is configured (Claude / DeepSeek).
+  els.modelBtn.addEventListener("click", (e) => {
+    const items = [], vendors = [...new Set(state.models.map((m) => m.vendor_name || ""))];
+    vendors.forEach((v, i) => {
+      if (vendors.length > 1) { if (i) items.push("-"); items.push({ label: v }); }
+      state.models.filter((m) => (m.vendor_name || "") === v).forEach((m) => items.push({
+        text: m.name, checked: m.id === state.model,
+        desc: [m.description, m.data_note, m.live === false ? "Demo mode" : ""].filter(Boolean).join(" · "),
+        onClick: () => {
+          setModel(m.id);
+          if (state.currentId) saveModel(state.currentId, m.id);
+        },
+      }));
+    });
+    openMenu(e.currentTarget, items, "end");
+  });
 
   // ------------------------------------------------------------------ thread
   function greeting() {
@@ -577,7 +596,8 @@
     renderSidebar(); renderHeader();
     if (!id) {
       if (location.pathname !== "/console/new") history.replaceState({}, "", "/console/new");
-      setModel(store.get("gai-model", state.defaultModel));
+      const saved = store.get("gai-model", state.defaultModel);
+      setModel(knownModel(saved) ? saved : state.defaultModel);
       renderThread();
     } else {
       els.main.classList.remove("is-empty");

@@ -30,7 +30,7 @@ blochează importurile minute întregi, pentru că fișierele sunt descărcate l
 | 01.03 ADR stack frontend | ✅ | Decis: SPA **fără build** (vanilla JS + Django). Motiv: repo-ul e în iCloud (`node_modules` aici e inutilizabil), un singur dezvoltator, zero toolchain. Se poate trece la Vite mai târziu fără să schimbăm API-ul. |
 | 01.04 ADR streaming | ✅ | SSE peste `fetch` POST + `ReadableStream`; Stop = abort la client, serverul salvează textul parțial. |
 | 01.06 Aplicații Django | 🟡 | O singură aplicație `console` pentru MVP; se sparge în `llm/projects/artifacts/billing` când apar acele faze. |
-| 01.08 Abstracție multi-model | 🟡 | `console/llm.py`: `AnthropicProvider` + `FakeProvider`, `LLM_PROVIDER=auto/fake/anthropic`. |
+| 01.08 Abstracție multi-model | ✅ | `console/llm.py`: fiecare model are un vendor — `AnthropicProvider`, `OpenAICompatibleProvider` (DeepSeek, `DEEPSEEK_API_KEY` + `DEEPSEEK_BASE_URL`), `FakeProvider` când vendorul nu are cheie; `LLM_PROVIDER=fake` forțează demo. |
 | 01.11 Bootstrap | ✅ | `GET /api/console/v1/bootstrap` |
 | 01.01, 01.02, 01.05, 01.07, 01.09, 01.10, 01.12–01.20 | ⬜ | Documentele din `docs/console/` urmează. |
 
@@ -47,7 +47,7 @@ blochează importurile minute întregi, pentru că fișierele sunt descărcate l
 | 02.09 Căutare | 🟡 | `GET /search?q=` în titluri + mesaje: Postgres `tsvector` `simple` + index GIN + `ts_headline`; SQLite local cade pe `icontains`. Benchmark-ul pe 50k mesaje și configurațiile per limbă sunt ⬜. |
 | 02.08 Titlu automat | ✅ | Haiku 5.5 (fake: primele 48 de caractere), apare animat în sidebar. |
 | 03.01 Client Anthropic | ✅ | Streaming, retry-uri, `cache_control` pe system prompt. |
-| 03.02 Catalog modele | ✅ | Opus / Sonnet / Haiku 5.5 în model picker. |
+| 03.02 Catalog modele | ✅ | Opus / Sonnet / Haiku 5.5 + DeepSeek Chat / Reasoner (doar cu cheie), grupate pe vendor; DeepSeek arată unde se procesează datele. |
 | 03.14 Erori API | 🟡 | Mesaje clare: overloaded, rate limit, cheie invalidă, **credit epuizat**. |
 | 03.17 System prompt | ✅ | `backend/console/prompts/base.md` |
 | 04.01 Scaffold SPA | ✅ | `/console/*` → `console/templates/console/index.html` + `static/console/`. |
@@ -78,7 +78,7 @@ setări (04.13), i18n (04.19), accesibilitate (04.18).
 07.01–07.20 · 02.16 · 03.13 · 04.14 · 09.13
 
 ## Faza 5 — Producție & conformitate
-06.02–06.20 · 08.01–08.20 · 09.14–09.16 — **blocant pentru publicare:** 06.11–06.13 (Datenschutz, AGB, AVV), 08.03 (Traefik pentru SSE), `seo/legal.json` completat.
+06.02–06.20 · 08.01–08.20 · 09.14–09.16 — **blocant pentru publicare:** 06.11–06.13 (Datenschutz, AGB, AVV — inclusiv DeepSeek ca procesator, sau un endpoint DeepSeek găzduit în UE), 08.03 (Traefik pentru SSE), `seo/legal.json` completat.
 
 ## Faza 6 — Produs & creștere
 10.01–10.20 · 01.18 · 05.17 · 05.19

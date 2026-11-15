@@ -143,9 +143,9 @@ def bootstrap(request):
             "name": getattr(u, "name", "") or u.email.split("@")[0],
             "is_staff": u.is_staff,
         },
-        "models": llm.MODELS,
+        "models": llm.catalog(),
         "default_model": llm.DEFAULT_MODEL,
-        "provider": llm.get_provider().name,
+        "provider": llm.get_provider(llm.DEFAULT_MODEL).name,
         "conversations": [conv_json(c) for c in convs],
     })
 
@@ -155,7 +155,7 @@ def bootstrap(request):
 def conversations(request):
     if request.method == "POST":
         data = body(request)
-        model = data.get("model") if data.get("model") in llm.MODEL_IDS else llm.DEFAULT_MODEL
+        model = data.get("model") if data.get("model") in llm.available_model_ids() else llm.DEFAULT_MODEL
         c = Conversation.objects.create(owner=request.user, model=model)
         return JsonResponse(conv_json(c), status=201)
     qs = Conversation.objects.filter(owner=request.user)
@@ -177,7 +177,7 @@ def conversation_detail(request, pk):
             c.title = str(data["title"]).strip()[:200]
         if "is_starred" in data:
             c.is_starred = bool(data["is_starred"])
-        if data.get("model") in llm.MODEL_IDS:
+        if data.get("model") in llm.available_model_ids():
             c.model = data["model"]
         c.save()
         return JsonResponse(conv_json(c))
@@ -209,7 +209,14 @@ def send_message(request, pk):
     c = own_conversation(request, pk)
     data = body(request)
     regenerate = bool(data.get("regenerate"))
-    model = data.get("model") if data.get("model") in llm.MODEL_IDS else (c.model or llm.DEFAULT_MODEL)
+    allowed = llm.available_model_ids()
+    requested = data.get("model") if data.get("model") in allowed else None
+    if requested is None and c.model and c.model not in allowed:
+        # The chat's model is unavailable right now (its key was removed). Don't
+        # silently answer with another vendor and don't overwrite the saved choice.
+        return error(409, "model_unavailable",
+                     f"{c.model} is not available right now. Pick another model to continue this chat.")
+    model = requested or c.model or llm.DEFAULT_MODEL
     content = str(data.get("content", "")).strip()
 
     with transaction.atomic():
@@ -251,7 +258,7 @@ def send_message(request, pk):
         c.save()  # bumps updated_at so the sidebar re-sorts
 
     needs_title = not c.title
-    provider = llm.get_provider()
+    provider = llm.get_provider(model)
     api_messages = [{"role": m.role, "content": m.content} for m in history if m.content]
     assistant_id = uuid.uuid4()
 
@@ -361,6 +368,20 @@ def _snippet(text, q, width=90):
 
 def friendly_error(exc):
     name = type(exc).__name__
+    if name == "ProviderHTTPError":  # OpenAI-compatible vendors (DeepSeek or a custom host)
+        code = exc.status_code
+        who = "DeepSeek" if llm.is_deepseek_host(exc.host) else exc.host
+        return {"type": f"http_{code}", "message": {
+            401: f"The API key for {who} is invalid. Check DEEPSEEK_API_KEY in backend/.env.",
+            402: f"The {who} account has no balance left. Top it up with that provider.",
+            429: "Rate limit reached. Please wait a moment and try again.",
+            500: "The model provider had an internal error. Please retry.",
+            503: "The model provider is overloaded. Please try again in a moment.",
+        }.get(code, f"The model provider returned an error ({code}).")}
+    if name == "IncompleteStreamError":
+        return {"type": name, "message": "The reply was cut off by the model provider. Please retry."}
+    if name in ("ConnectError", "ConnectTimeout", "ReadTimeout", "RemoteProtocolError"):
+        return {"type": name, "message": "Could not reach the model provider. Check the network and retry."}
     if "credit balance" in str(exc).lower():
         return {"type": "billing_error", "message": "The Anthropic account has no API credit left. Top up under Plans & Billing in the Anthropic Console, or run with LLM_PROVIDER=fake."}
     messages = {
