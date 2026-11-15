@@ -28,16 +28,11 @@ USER app
 
 EXPOSE 8000
 
+# Migrations run before gunicorn binds the port, so no request can reach code
+# whose tables don't exist yet (e.g. bootstrap querying a new model mid-deploy).
 # 3 workers is right for a 1-vCPU share; the access log goes to stdout so
 # `docker logs` is the single place to look. gthread, not sync: console replies
 # stream as SSE for minutes (DeepSeek Reasoner, long Opus answers). A sync
 # worker would be killed at --timeout mid-stream and block a whole process per
 # open stream; gthread workers keep heartbeating while threads stream.
-CMD ["gunicorn", "backend.wsgi:application", \
-     "--bind", "0.0.0.0:8000", \
-     "--workers", "3", \
-     "--worker-class", "gthread", \
-     "--threads", "8", \
-     "--timeout", "120", \
-     "--access-logfile", "-", \
-     "--error-logfile", "-"]
+CMD ["sh", "-c", "python manage.py migrate --noinput && exec gunicorn backend.wsgi:application --bind 0.0.0.0:8000 --workers 3 --worker-class gthread --threads 8 --timeout 120 --access-logfile - --error-logfile -"]

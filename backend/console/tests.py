@@ -1,3 +1,4 @@
+import uuid
 """Console API tests — always on the offline fake provider (prompts 09.02 / 09.06)."""
 import json
 import os
@@ -224,6 +225,31 @@ class PreferencesStylesFeedbackTests(TestCase):
         self.assertEqual(bad.status_code, 400)
         self.assertEqual(set(bad.json()["error"]["fields"]), {"theme", "personal_instructions"})
         self.assertEqual(self.client.get(f"{API}/me/preferences").json()["theme"], "light")  # nothing half-saved
+
+    def test_review_fixes_types_fallbacks_and_foreign_styles(self):
+        from .models import Conversation, Message, Style
+        # send_with_enter must be a JSON boolean; rating must not be a bool.
+        bad = self.patch(f"{API}/me/preferences", {"send_with_enter": "false"})
+        self.assertEqual(bad.status_code, 400)
+        self.assertIn("send_with_enter", bad.json()["error"]["fields"])
+        # A deleted / unknown style falls back to the default instead of 404ing the create.
+        r = self.post(f"{API}/conversations", {"style_id": str(uuid.uuid4())})
+        self.assertEqual(r.status_code, 201)
+        conv_id = r.json()["id"]
+        # A bad style id on send fails *before* the user turn is saved.
+        r = self.post(f"{API}/conversations/{conv_id}/messages", {"content": "hi", "style_id": str(uuid.uuid4())})
+        self.assertEqual(r.status_code, 404)
+        self.assertEqual(Message.objects.filter(conversation_id=conv_id).count(), 0)
+        # Another user's style attached by hand is never used in the prompt.
+        foreign = Style.objects.create(owner=self.other, name="Pirate", prompt="ARRR-SECRET")
+        Conversation.objects.filter(pk=conv_id).update(style=foreign)
+        self.assertNotIn("ARRR-SECRET", self.captured_system(conv_id, {"content": "hello"}))
+        from django.core.exceptions import ValidationError
+        c = Conversation.objects.get(pk=conv_id)
+        with self.assertRaises(ValidationError):
+            c.clean()
+        reply = Message.objects.filter(conversation_id=conv_id, role="assistant").first()
+        self.assertEqual(self.post(f"{API}/messages/{reply.id}/feedback", {"rating": True}).status_code, 400)
 
     def test_personal_instructions_and_style_reach_the_system_prompt(self):
         self.patch(f"{API}/me/preferences", {"personal_instructions": "Answer in Romanian."})

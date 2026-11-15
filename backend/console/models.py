@@ -8,7 +8,13 @@ leaf walked back to the root, and only that path is sent to the model.
 import uuid
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
+
+
+def style_usable_by(style, user_id):
+    """A preset, or a style owned by ``user_id`` — never another user's prompt."""
+    return style is not None and style.owner_id in (None, user_id)
 
 
 class Conversation(models.Model):
@@ -34,6 +40,12 @@ class Conversation(models.Model):
 
     def __str__(self):
         return self.title or "Untitled"
+
+    def clean(self):
+        # Admin edits go through here: a staff member must not attach one
+        # user's custom style (their stored instructions) to someone else's chat.
+        if self.style_id and self.owner_id and not style_usable_by(self.style, self.owner_id):
+            raise ValidationError({"style": "Pick a preset or a style owned by this conversation's owner."})
 
 
 class Message(models.Model):
@@ -111,6 +123,10 @@ class UserPreference(models.Model):
 
     def __str__(self):
         return f"Preferences of {self.user}"
+
+    def clean(self):
+        if self.default_style_id and self.user_id and not style_usable_by(self.default_style, self.user_id):
+            raise ValidationError({"default_style": "Pick a preset or a style owned by this user."})
 
 
 class MessageFeedback(models.Model):

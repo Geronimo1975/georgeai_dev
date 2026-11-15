@@ -296,6 +296,13 @@
     modelSave = modelSave.then(() => api(`/conversations/${convId}`, { method: "PATCH", body: { model } })).catch(() => {});
   }
   const knownModel = (id) => state.models.some((m) => m.id === id);
+  // New chat: the default from Settings wins; the last-used model is only the
+  // fallback when no default is set.
+  function applyDefaults() {
+    const pref = state.prefs.default_model, saved = store.get("gai-model", state.defaultModel);
+    setModel(knownModel(pref) ? pref : knownModel(saved) ? saved : state.defaultModel);
+    setStyle(state.prefs.default_style_id || null);
+  }
 
   // Grouped by vendor once more than one is configured (Claude / DeepSeek).
   els.modelBtn.addEventListener("click", (e) => {
@@ -433,13 +440,24 @@
     b.classList.toggle("is-on", m.rating === value);
   }
 
-  async function rate(m, value, comment = "") {
+  // Requests per message run one after another, so the server applies them in
+  // click order; only the newest click's outcome is painted.
+  const rateQueue = new Map();
+  function rate(m, value, comment = "") {
+    const seq = (m.rateSeq = (m.rateSeq || 0) + 1);
     const prev = m.rating || 0;
     m.rating = value; repaint(m);
-    try { await api(`/messages/${m.id}/feedback`, { method: "POST", body: { rating: value, comment } }); }
-    catch (e) { m.rating = prev; repaint(m); return toast(e.message); }
-    if (value === -1 && !comment) askFeedback(m);
-    else if (value) toast(comment ? "Thanks — feedback sent" : "Thanks for the feedback");
+    const run = (rateQueue.get(m.id) || Promise.resolve()).then(async () => {
+      let res;
+      try { res = await api(`/messages/${m.id}/feedback`, { method: "POST", body: { rating: value, comment } }); }
+      catch (e) { if (seq === m.rateSeq) { m.rating = prev; repaint(m); } return toast(e.message); }
+      if (seq !== m.rateSeq) return;
+      m.rating = res.rating; repaint(m);
+      if (value === -1 && !comment) askFeedback(m);
+      else if (value) toast(comment ? "Thanks — feedback sent" : "Thanks for the feedback");
+    });
+    rateQueue.set(m.id, run);
+    return run;
   }
 
   function repaint(m) {
@@ -549,6 +567,7 @@
   function stop() { state.stream?.controller.abort(); }
 
   async function runStream(payload) {
+    if (state.style) payload = { ...payload, style_id: state.style }; // never races the style PATCH
     const convId = state.currentId;
     const assistant = { id: "pending", role: "assistant", content: "", streaming: true };
     state.messages.push(assistant);
@@ -643,9 +662,7 @@
     renderSidebar(); renderHeader();
     if (!id) {
       if (location.pathname !== "/console/new") history.replaceState({}, "", "/console/new");
-      const saved = store.get("gai-model", state.defaultModel), pref = state.prefs.default_model;
-      setModel(knownModel(saved) ? saved : knownModel(pref) ? pref : state.defaultModel);
-      setStyle(state.prefs.default_style_id || null);
+      applyDefaults();
       renderThread();
     } else {
       els.main.classList.remove("is-empty");
@@ -709,15 +726,21 @@
 
   // Theme lives in the server preferences (02.10); localStorage mirrors it so
   // base.html can paint the right theme before the bootstrap call returns.
+  const lightQuery = matchMedia("(prefers-color-scheme: light)");
   function setTheme(t, persist = true) {
+    const prev = state.prefs.theme || store.get("gai-theme", "dark");
     store.set("gai-theme", t);
-    const eff = t === "system" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : t;
-    document.documentElement.dataset.theme = eff;
+    document.documentElement.dataset.theme = t === "system" ? (lightQuery.matches ? "light" : "dark") : t;
     if (persist && state.prefs.theme !== t) {
       state.prefs.theme = t;
-      api("/me/preferences", { method: "PATCH", body: { theme: t } }).catch(() => {});
+      api("/me/preferences", { method: "PATCH", body: { theme: t } }).catch((e) => {
+        if (state.prefs.theme !== t) return; // a newer pick already replaced it
+        state.prefs.theme = prev; setTheme(prev, false);
+        toast(`Theme not saved: ${e.message}`);
+      });
     }
   }
+  lightQuery.addEventListener("change", () => { if (store.get("gai-theme", "dark") === "system") setTheme("system", false); });
   els.userBtn.addEventListener("click", (e) => {
     const theme = store.get("gai-theme", "dark");
     const items = [
@@ -754,10 +777,16 @@
     els.styleBtn.setAttribute("aria-label", `Response style: ${st ? st.name : "Normal"}`);
   }
   function chooseStyle(id) {
+    const prev = state.style, convId = state.currentId;
     setStyle(id);
-    if (state.currentId) {
-      const c = conv(state.currentId); if (c) c.style_id = state.style;
-      api(`/conversations/${state.currentId}`, { method: "PATCH", body: { style_id: state.style } }).catch((e) => toast(e.message));
+    if (convId) {
+      const c = conv(convId); if (c) c.style_id = state.style;
+      const picked = state.style;
+      api(`/conversations/${convId}`, { method: "PATCH", body: { style_id: picked } }).catch((e) => {
+        if (c) c.style_id = prev;
+        if (state.currentId === convId && state.style === picked) setStyle(prev);
+        toast(`Style not saved: ${e.message}`);
+      });
     }
   }
   els.styleBtn.addEventListener("click", (e) => {
@@ -780,14 +809,28 @@
   }
   function renderStyleList() {
     const list = $("styleList"), mine = state.styles.filter((x) => !x.is_preset);
-    list.innerHTML = mine.length ? "" : '<li class="style-empty">No custom styles yet — create one below.</li>';
+    list.replaceChildren();
+    if (!mine.length) {
+      const empty = document.createElement("li");
+      empty.className = "style-empty"; empty.textContent = "No custom styles yet — create one below.";
+      list.append(empty);
+    }
     mine.forEach((st) => {
       const li = document.createElement("li");
       li.className = "style-row" + (editingStyle === st.id ? " is-editing" : "");
-      li.innerHTML = `<span><b>${esc(st.name)}</b>${st.description ? `<span class="field-help">${esc(st.description)}</span>` : ""}</span>
-        <button type="button" class="icon-btn" aria-label="Edit ${esc(st.name)}">${ICON.edit}</button>
-        <button type="button" class="icon-btn" aria-label="Delete ${esc(st.name)}">${ICON.trash}</button>`;
-      const [edit, del] = li.querySelectorAll("button");
+      const text = document.createElement("span"), b = document.createElement("b");
+      b.textContent = st.name; text.append(b);
+      if (st.description) {
+        const d = document.createElement("span"); d.className = "field-help"; d.textContent = st.description; text.append(d);
+      }
+      const iconButton = (icon, label) => {
+        const btn = document.createElement("button");
+        btn.type = "button"; btn.className = "icon-btn"; btn.setAttribute("aria-label", label);
+        btn.innerHTML = ICON[icon]; // static SVG constant
+        return btn;
+      };
+      const edit = iconButton("edit", `Edit ${st.name}`), del = iconButton("trash", `Delete ${st.name}`);
+      li.append(text, edit, del);
       edit.addEventListener("click", () => fillStyle(st));
       del.addEventListener("click", () => deleteStyle(st));
       list.appendChild(li);
@@ -813,6 +856,7 @@
     if (editingStyle === st.id) fillStyle(null); else renderStyleList();
     toast("Style deleted");
   }
+  let styleBusy = false;
   $("styleForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const body = { name: $("styleNameInput").value.trim(), description: $("styleDescInput").value.trim(), prompt: $("stylePromptInput").value.trim() };
@@ -821,6 +865,8 @@
     if (!body.prompt) local.prompt = "Describe how GeorgeAI should write.";
     ["name", "prompt"].forEach((f) => fieldError("serr", f, local[f]));
     if (Object.keys(local).length) return $(local.name ? "styleNameInput" : "stylePromptInput").focus();
+    if (styleBusy) return;
+    styleBusy = true; $("styleSave").disabled = true;
     $("styleState").textContent = "Saving…";
     let saved;
     try {
@@ -828,11 +874,13 @@
         ? await api(`/styles/${editingStyle}`, { method: "PATCH", body })
         : await api("/styles", { method: "POST", body });
     } catch (err) {
+      styleBusy = false; $("styleSave").disabled = false;
       $("styleState").textContent = "";
       const f = err.data?.error?.fields || {};
       Object.entries(f).forEach(([k, v]) => fieldError("serr", k, v));
       return toast(err.message);
     }
+    styleBusy = false; $("styleSave").disabled = false;
     const i = state.styles.findIndex((x) => x.id === saved.id);
     if (i >= 0) state.styles[i] = saved; else state.styles.push(saved);
     const created = !editingStyle;
@@ -868,10 +916,10 @@
     $("setName").value = p.name || "";
     $("setInstructions").value = p.personal_instructions || ""; counter();
     settingsDlg.querySelectorAll('input[name="theme"]').forEach((r) => (r.checked = r.value === (p.theme || "dark")));
-    $("setModel").innerHTML = '<option value="">Automatic (recommended)</option>' +
-      state.models.map((m) => `<option value="${esc(m.id)}">${esc((m.vendor_name ? m.vendor_name + " · " : "") + m.name)}</option>`).join("");
+    $("setModel").replaceChildren(new Option("Automatic (recommended)", ""),
+      ...state.models.map((m) => new Option((m.vendor_name ? m.vendor_name + " · " : "") + m.name, m.id)));
     $("setModel").value = knownModel(p.default_model) ? p.default_model : "";
-    $("setStyle").innerHTML = state.styles.map((x) => `<option value="${x.key === "normal" ? "" : esc(x.id)}">${esc(x.name)}</option>`).join("");
+    $("setStyle").replaceChildren(...state.styles.map((x) => new Option(x.name, x.key === "normal" ? "" : x.id)));
     $("setStyle").value = p.default_style_id && styleById(p.default_style_id) ? p.default_style_id : "";
     $("setEnter").checked = p.send_with_enter !== false;
     ["name", "personal_instructions", "default_model", "default_style_id"].forEach((f) => fieldError("err", f, ""));
@@ -900,7 +948,8 @@
       const fields = err.data?.error?.fields || {};
       Object.entries(fields).forEach(([k, v]) => fieldError("err", k, v));
       const sum = $("settingsErrors");
-      sum.innerHTML = `<b>Couldn’t save.</b> ${esc(Object.values(fields).join(" ") || err.message)}`;
+      const head = document.createElement("b"); head.textContent = "Couldn’t save.";
+      sum.replaceChildren(head, " " + (Object.values(fields).join(" ") || err.message));
       sum.hidden = false; sum.focus();
       return;
     }
@@ -910,6 +959,7 @@
     els.userName.textContent = state.user.name;
     els.userAvatar.textContent = state.user.name.slice(0, 1).toUpperCase();
     setTheme(saved.theme, false);
+    if (!state.currentId) applyDefaults();
     settingsDlg.close();
     toast("Settings saved");
   });
@@ -923,8 +973,8 @@
       conversations: data.conversations, prefs: data.preferences || {}, styles: data.styles || [] });
     if (state.prefs.name) state.user.name = state.prefs.name;
     if (state.prefs.theme) setTheme(state.prefs.theme, false);
-    els.userName.textContent = data.user.name;
-    els.userAvatar.textContent = (data.user.name || "?").slice(0, 1).toUpperCase();
+    els.userName.textContent = state.user.name;
+    els.userAvatar.textContent = (state.user.name || "?").slice(0, 1).toUpperCase();
     const saved = store.get("gai-model", data.default_model);
     setModel(state.models.some((m) => m.id === saved) ? saved : data.default_model);
     renderChips();

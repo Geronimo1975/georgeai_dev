@@ -28,7 +28,9 @@ def seed_presets(apps, schema_editor):
 
 
 def unseed_presets(apps, schema_editor):
-    apps.get_model("console", "Style").objects.filter(owner=None).delete()
+    # Only the presets this migration seeded — not global styles added later.
+    keys = [key for key, *_ in PRESETS]
+    apps.get_model("console", "Style").objects.filter(owner=None, key__in=keys).delete()
 
 
 class Migration(migrations.Migration):
