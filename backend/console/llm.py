@@ -42,6 +42,22 @@ MAX_TOKENS = 8192
 SYSTEM_PROMPT = (Path(__file__).parent / "prompts" / "base.md").read_text(encoding="utf-8")
 
 
+def build_system(personal_instructions="", style_prompt=""):
+    """Base prompt + the user's own instructions (02.10) + the chosen style (02.11).
+
+    Order matters for prompt caching: the stable base comes first, so the cached
+    prefix survives per-user additions. User text is fenced and labelled so it
+    is read as preferences, not as a replacement for the base rules.
+    """
+    parts = [SYSTEM_PROMPT.rstrip()]
+    if personal_instructions.strip():
+        parts.append("<user_preferences>\nWhat the user wants you to know about them and how to respond:\n"
+                     f"{personal_instructions.strip()}\n</user_preferences>")
+    if style_prompt.strip():
+        parts.append(f"<response_style>\n{style_prompt.strip()}\n</response_style>")
+    return "\n\n".join(parts)
+
+
 @dataclass
 class StreamResult:
     """Filled in by the provider as the stream runs; read after it ends."""

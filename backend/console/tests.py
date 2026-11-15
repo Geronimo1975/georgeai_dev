@@ -1,3 +1,4 @@
+import uuid
 """Console API tests — always on the offline fake provider (prompts 09.02 / 09.06)."""
 import json
 import os
@@ -6,7 +7,7 @@ from unittest import mock
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 
-from .models import Conversation, Message
+from .models import Conversation, Message, MessageFeedback, Style
 
 API = "/api/console/v1"
 
@@ -178,6 +179,134 @@ class ConsoleApiTests(TestCase):
         r = self.client.get("/console/")
         self.assertEqual(r.status_code, 302)
         self.assertTrue(r["Location"].startswith("/console/login/"))
+
+
+# ------------------------------------------------------------------ preferences, styles, feedback
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+@mock.patch.dict(os.environ, {"LLM_PROVIDER": "fake"})
+@mock.patch("console.llm.time.sleep", lambda s: None)
+class PreferencesStylesFeedbackTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(email="p@example.com", password="pw-123456!")
+        self.other = User.objects.create_user(email="q@example.com", password="pw-123456!")
+        self.client.force_login(self.user)
+
+    def patch(self, url, data):
+        return self.client.patch(url, json.dumps(data), content_type="application/json")
+
+    def post(self, url, data):
+        return self.client.post(url, json.dumps(data), content_type="application/json")
+
+    def captured_system(self, conv_id, payload):
+        from . import llm
+
+        seen, real = {}, llm.FakeProvider.stream
+
+        def spy(provider, model, system, messages, result):
+            seen["system"] = system
+            yield from real(provider, model, system, messages, result)
+
+        with mock.patch.object(llm.FakeProvider, "stream", spy):
+            r = self.post(f"{API}/conversations/{conv_id}/messages", payload)
+            b"".join(r.streaming_content)
+        return seen["system"]
+
+    def test_preferences_roundtrip_and_validation(self):
+        r = self.client.get(f"{API}/me/preferences").json()
+        self.assertEqual(r["theme"], "dark")
+        self.assertTrue(r["send_with_enter"])
+        r = self.patch(f"{API}/me/preferences", {"name": "George", "theme": "light", "send_with_enter": False,
+                                                 "personal_instructions": "I run a B2B agency in Munich."})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual((r.json()["name"], r.json()["theme"], r.json()["send_with_enter"]), ("George", "light", False))
+        bad = self.patch(f"{API}/me/preferences", {"theme": "neon", "personal_instructions": "x" * 4001})
+        self.assertEqual(bad.status_code, 400)
+        self.assertEqual(set(bad.json()["error"]["fields"]), {"theme", "personal_instructions"})
+        self.assertEqual(self.client.get(f"{API}/me/preferences").json()["theme"], "light")  # nothing half-saved
+
+    def test_review_fixes_types_fallbacks_and_foreign_styles(self):
+        from .models import Conversation, Message, Style
+        # send_with_enter must be a JSON boolean; rating must not be a bool.
+        bad = self.patch(f"{API}/me/preferences", {"send_with_enter": "false"})
+        self.assertEqual(bad.status_code, 400)
+        self.assertIn("send_with_enter", bad.json()["error"]["fields"])
+        # A deleted / unknown style falls back to the default instead of 404ing the create.
+        r = self.post(f"{API}/conversations", {"style_id": str(uuid.uuid4())})
+        self.assertEqual(r.status_code, 201)
+        conv_id = r.json()["id"]
+        # A bad style id on send fails *before* the user turn is saved.
+        r = self.post(f"{API}/conversations/{conv_id}/messages", {"content": "hi", "style_id": str(uuid.uuid4())})
+        self.assertEqual(r.status_code, 404)
+        self.assertEqual(Message.objects.filter(conversation_id=conv_id).count(), 0)
+        # Another user's style attached by hand is never used in the prompt.
+        foreign = Style.objects.create(owner=self.other, name="Pirate", prompt="ARRR-SECRET")
+        Conversation.objects.filter(pk=conv_id).update(style=foreign)
+        self.assertNotIn("ARRR-SECRET", self.captured_system(conv_id, {"content": "hello"}))
+        from django.core.exceptions import ValidationError
+        c = Conversation.objects.get(pk=conv_id)
+        with self.assertRaises(ValidationError):
+            c.clean()
+        reply = Message.objects.filter(conversation_id=conv_id, role="assistant").first()
+        self.assertEqual(self.post(f"{API}/messages/{reply.id}/feedback", {"rating": True}).status_code, 400)
+
+    def test_personal_instructions_and_style_reach_the_system_prompt(self):
+        self.patch(f"{API}/me/preferences", {"personal_instructions": "Answer in Romanian."})
+        concise = Style.objects.get(owner=None, key="concise")
+        c = self.post(f"{API}/conversations", {}).json()
+        system = self.captured_system(c["id"], {"content": "Hi", "style_id": str(concise.id)})
+        self.assertIn("Answer in Romanian.", system)
+        self.assertIn("Keep answers short", system)
+        self.assertTrue(system.startswith(llm_base()))  # stable prefix stays first for caching
+        self.assertEqual(Conversation.objects.get(pk=c["id"]).style, concise)
+
+    def test_custom_style_crud_and_ownership(self):
+        r = self.post(f"{API}/styles", {"name": "Pirate", "prompt": "Talk like a pirate."})
+        self.assertEqual(r.status_code, 201)
+        sid = r.json()["id"]
+        self.assertEqual(self.patch(f"{API}/styles/{sid}", {"name": "Captain"}).json()["name"], "Captain")
+        self.assertEqual(self.post(f"{API}/styles", {"name": "", "prompt": ""}).status_code, 400)
+        preset = Style.objects.get(owner=None, key="formal")
+        self.assertEqual(self.patch(f"{API}/styles/{preset.id}", {"name": "x"}).status_code, 403)
+        theirs = Style.objects.create(owner=self.other, name="Secret", prompt="x")
+        self.assertEqual(self.client.delete(f"{API}/styles/{theirs.id}").status_code, 404)
+        c = self.post(f"{API}/conversations", {}).json()
+        self.assertEqual(self.patch(f"{API}/conversations/{c['id']}", {"style_id": str(theirs.id)}).status_code, 404)
+        names = [s["name"] for s in self.client.get(f"{API}/bootstrap").json()["styles"]]
+        self.assertEqual(names[:4], ["Normal", "Concise", "Explanatory", "Formal"])
+        self.assertIn("Captain", names)
+        self.assertNotIn("Secret", names)
+        self.assertEqual(self.client.delete(f"{API}/styles/{sid}").status_code, 204)
+
+    def test_default_style_and_model_apply_to_new_chats(self):
+        formal = Style.objects.get(owner=None, key="formal")
+        self.patch(f"{API}/me/preferences", {"default_style_id": str(formal.id), "default_model": "claude-opus-5-5"})
+        c = self.post(f"{API}/conversations", {}).json()
+        self.assertEqual((c["style_id"], c["model"]), (str(formal.id), "claude-opus-5-5"))
+
+    def test_feedback_set_change_clear_and_ownership(self):
+        c = self.post(f"{API}/conversations", {}).json()
+        b"".join(self.post(f"{API}/conversations/{c['id']}/messages", {"content": "Hi"}).streaming_content)
+        reply = Message.objects.get(conversation_id=c["id"], role="assistant")
+        url = f"{API}/messages/{reply.id}/feedback"
+        self.assertEqual(self.post(url, {"rating": -1, "comment": "Too long"}).json()["rating"], -1)
+        self.assertEqual(self.client.get(f"{API}/conversations/{c['id']}").json()["messages"][-1]["rating"], -1)
+        self.assertEqual(self.post(url, {"rating": 1}).json()["comment"], "")
+        self.assertEqual(MessageFeedback.objects.count(), 1)
+        self.assertEqual(self.post(url, {"rating": 0}).json()["rating"], 0)
+        self.assertFalse(MessageFeedback.objects.exists())
+        self.assertEqual(self.post(url, {"rating": 5}).status_code, 400)
+        user_msg = Message.objects.get(conversation_id=c["id"], role="user")
+        self.assertEqual(self.post(f"{API}/messages/{user_msg.id}/feedback", {"rating": 1}).status_code, 404)
+        self.client.force_login(self.other)
+        self.assertEqual(self.post(url, {"rating": 1}).status_code, 404)
+
+
+def llm_base():
+    from . import llm
+
+    return llm.SYSTEM_PROMPT.rstrip()
 
 
 # ------------------------------------------------------------------ DeepSeek vendor

@@ -9,17 +9,20 @@ import logging
 import uuid
 from functools import wraps
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db import connection, transaction
+from django.db.models import Q
 from django.http import Http404, JsonResponse, StreamingHttpResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
 
 from . import llm
-from .models import Conversation, Message
+from .models import Conversation, Message, MessageFeedback, Style, UserPreference, style_usable_by
 
 MAX_MESSAGE_CHARS = 100_000
+MAX_STYLES = 50
 log = logging.getLogger(__name__)
 
 
@@ -59,12 +62,14 @@ def conv_json(c):
         "title": c.title,
         "model": c.model,
         "is_starred": c.is_starred,
+        "style_id": str(c.style_id) if c.style_id else None,
         "updated_at": c.updated_at.isoformat(),
     }
 
 
-def msg_json(m, siblings=None):
+def msg_json(m, siblings=None, rating=0):
     return {
+        "rating": rating,
         "id": str(m.id),
         "parent_id": str(m.parent_id) if m.parent_id else None,
         "siblings": [str(x) for x in siblings] if siblings else [str(m.id)],
@@ -88,6 +93,9 @@ class Tree:
         self.conversation = conversation
         self.msgs = list(conversation.messages.all())  # ordered by created_at
         self.by_id = {m.id: m for m in self.msgs}
+        self.ratings = dict(MessageFeedback.objects.filter(
+            message__conversation=conversation, user_id=conversation.owner_id,
+        ).values_list("message_id", "rating"))
         self.children = {}
         for m in self.msgs:
             self.children.setdefault(m.parent_id, []).append(m)
@@ -113,7 +121,32 @@ class Tree:
         return m
 
     def path_json(self, leaf=None):
-        return [msg_json(m, self.siblings(m)) for m in self.path(leaf)]
+        return [msg_json(m, self.siblings(m), self.ratings.get(m.id, 0)) for m in self.path(leaf)]
+
+
+def prefs_for(user):
+    return UserPreference.objects.get_or_create(user=user)[0]
+
+
+def visible_styles(user):
+    return Style.objects.filter(Q(owner__isnull=True) | Q(owner=user))
+
+
+def style_json(s):
+    return {"id": str(s.id), "name": s.name, "description": s.description, "prompt": s.prompt,
+            "key": s.key, "is_preset": s.is_preset}
+
+
+def prefs_json(p, user):
+    return {
+        "name": user.name,
+        "default_model": p.default_model,
+        "default_style_id": str(p.default_style_id) if p.default_style_id else None,
+        "theme": p.theme,
+        "language": p.language,
+        "personal_instructions": p.personal_instructions,
+        "send_with_enter": p.send_with_enter,
+    }
 
 
 def sse(event, data):
@@ -135,7 +168,7 @@ def console_page(request, rest=""):
 def bootstrap(request):
     u = request.user
     convs = Conversation.objects.filter(owner=u).only(
-        "id", "title", "model", "is_starred", "updated_at"
+        "id", "title", "model", "is_starred", "style_id", "updated_at"
     )[:300]
     return JsonResponse({
         "user": {
@@ -147,6 +180,8 @@ def bootstrap(request):
         "default_model": llm.DEFAULT_MODEL,
         "provider": llm.get_provider(llm.DEFAULT_MODEL).name,
         "conversations": [conv_json(c) for c in convs],
+        "preferences": prefs_json(prefs_for(u), u),
+        "styles": [style_json(s) for s in visible_styles(u)],
     })
 
 
@@ -155,8 +190,15 @@ def bootstrap(request):
 def conversations(request):
     if request.method == "POST":
         data = body(request)
-        model = data.get("model") if data.get("model") in llm.available_model_ids() else llm.DEFAULT_MODEL
-        c = Conversation.objects.create(owner=request.user, model=model)
+        prefs = prefs_for(request.user)
+        allowed = llm.available_model_ids()
+        model = next((m for m in (data.get("model"), prefs.default_model) if m in allowed), llm.DEFAULT_MODEL)
+        # A style deleted in another tab must not block a new chat: fall back
+        # to the saved default instead of 404ing the create.
+        style = _visible_style(request.user, data.get("style_id")) if data.get("style_id") else None
+        if style is None and style_usable_by(prefs.default_style, request.user.id):
+            style = prefs.default_style
+        c = Conversation.objects.create(owner=request.user, model=model, style=style)
         return JsonResponse(conv_json(c), status=201)
     qs = Conversation.objects.filter(owner=request.user)
     if q := request.GET.get("q", "").strip():
@@ -179,6 +221,8 @@ def conversation_detail(request, pk):
             c.is_starred = bool(data["is_starred"])
         if data.get("model") in llm.available_model_ids():
             c.model = data["model"]
+        if "style_id" in data:
+            c.style = _own_style(request.user, data["style_id"]) if data["style_id"] else None
         c.save()
         return JsonResponse(conv_json(c))
     return JsonResponse({**conv_json(c), "messages": Tree(c).path_json()})
@@ -219,6 +263,13 @@ def send_message(request, pk):
     model = requested or c.model or llm.DEFAULT_MODEL
     content = str(data.get("content", "")).strip()
 
+    # Resolve everything that can fail *before* the user turn is committed, so
+    # a bad style id never leaves an unanswered message behind.
+    style_change = "style_id" in data and data["style_id"] is not None
+    if style_change:
+        new_style = _own_style(request.user, data["style_id"]) if data["style_id"] else None
+    personal = prefs_for(request.user).personal_instructions
+
     with transaction.atomic():
         tree = Tree(c)
         if regenerate:
@@ -255,8 +306,13 @@ def send_message(request, pk):
             new_user = True
         c.model = model
         c.current_leaf = user_msg
+        if style_change:  # "applied to the next message" (02.11)
+            c.style = new_style
         c.save()  # bumps updated_at so the sidebar re-sorts
 
+    # Never another user's prompt, even if an admin attached one by hand.
+    style_prompt = c.style.prompt if style_usable_by(c.style, c.owner_id) else ""
+    system = llm.build_system(personal, style_prompt)
     needs_title = not c.title
     provider = llm.get_provider(model)
     api_messages = [{"role": m.role, "content": m.content} for m in history if m.content]
@@ -268,7 +324,7 @@ def send_message(request, pk):
         yield sse("message_start", {"id": str(assistant_id), "model": model})
         parts, result, state = [], llm.StreamResult(), {"status": "cancelled", "error": None}
         try:
-            for chunk in provider.stream(model, llm.SYSTEM_PROMPT, api_messages, result):
+            for chunk in provider.stream(model, system, api_messages, result):
                 parts.append(chunk)
                 yield sse("delta", {"text": chunk})
             state["status"] = "done"
@@ -298,6 +354,163 @@ def send_message(request, pk):
     resp["Cache-Control"] = "no-cache"
     resp["X-Accel-Buffering"] = "no"  # nginx/Traefik: don't buffer the stream
     return resp
+
+
+def _visible_style(user, style_id):
+    """A preset or one of the user's styles, else None."""
+    pk = _uuid(style_id)
+    return visible_styles(user).filter(pk=pk).first() if pk else None
+
+
+def _own_style(user, style_id):
+    """Like ``_visible_style`` but anything else is a 404."""
+    s = _visible_style(user, style_id)
+    if s is None:
+        raise Http404
+    return s
+
+
+@api_login_required
+@require_http_methods(["GET", "PATCH"])
+def preferences(request):
+    """GET/PATCH /me/preferences (02.10). Unknown fields are ignored; invalid
+    values are rejected with a field-level message the settings UI shows."""
+    p, u = prefs_for(request.user), request.user
+    if request.method == "PATCH":
+        data, errors, changed = body(request), {}, set()
+        if "name" in data:
+            name = str(data["name"]).strip()
+            if len(name) > 150:
+                errors["name"] = "Keep the name under 150 characters."
+            else:
+                u.name = name
+        if "default_model" in data:
+            if data["default_model"] in ("", None) or data["default_model"] in llm.available_model_ids():
+                p.default_model = data["default_model"] or ""
+                changed.add("default_model")
+            else:
+                errors["default_model"] = "That model is not available."
+        if "default_style_id" in data:
+            try:
+                p.default_style = _own_style(u, data["default_style_id"]) if data["default_style_id"] else None
+                changed.add("default_style")
+            except Http404:
+                errors["default_style_id"] = "That style does not exist."
+        if "theme" in data:
+            if data["theme"] in UserPreference.Theme.values:
+                p.theme = data["theme"]
+                changed.add("theme")
+            else:
+                errors["theme"] = "Choose system, dark or light."
+        if "language" in data:
+            if data["language"] in ("", "en", "de", "ro"):
+                p.language = data["language"]
+                changed.add("language")
+            else:
+                errors["language"] = "Choose English, Deutsch or Română."
+        if "personal_instructions" in data:
+            text = str(data["personal_instructions"] or "")
+            if len(text) > 4000:
+                errors["personal_instructions"] = "Keep it under 4,000 characters."
+            else:
+                p.personal_instructions = text
+                changed.add("personal_instructions")
+        if "send_with_enter" in data:
+            if isinstance(data["send_with_enter"], bool):
+                p.send_with_enter = data["send_with_enter"]
+                changed.add("send_with_enter")
+            else:
+                errors["send_with_enter"] = "Must be true or false."
+        if errors:
+            return JsonResponse({"error": {"type": "invalid_request_error", "message": "Some settings are invalid.",
+                                           "fields": errors}}, status=400)
+        # One transaction, and only the fields this request touched, so a
+        # concurrent PATCH of other fields isn't overwritten with stale values.
+        with transaction.atomic():
+            if "name" in data:
+                u.save(update_fields=["name"])
+            if changed:
+                p.save(update_fields=[*changed, "updated_at"])
+    return JsonResponse(prefs_json(p, u))
+
+
+def _style_fields(data, s, errors):
+    """Apply the posted fields to ``s``; returns the names it changed."""
+    changed = [f for f in ("name", "description", "prompt") if f in data]
+    if "name" in data:
+        name = str(data["name"] or "").strip()
+        if not name or len(name) > 60:
+            errors["name"] = "Give the style a name of up to 60 characters."
+        s.name = name[:60]
+    if "description" in data:
+        s.description = str(data["description"] or "").strip()[:160]
+    if "prompt" in data:
+        text = str(data["prompt"] or "").strip()
+        if not text or len(text) > 4000:
+            errors["prompt"] = "Describe the style in up to 4,000 characters."
+        s.prompt = text[:4000]
+    return changed
+
+
+@api_login_required
+@require_http_methods(["GET", "POST"])
+def styles(request):
+    if request.method == "POST":
+        data, errors = body(request), {}
+        s = Style(owner=request.user)
+        _style_fields({"name": "", "prompt": "", **data}, s, errors)
+        if errors:
+            return JsonResponse({"error": {"type": "invalid_request_error", "message": "The style is incomplete.",
+                                           "fields": errors}}, status=400)
+        with transaction.atomic():
+            # Lock the user row so two concurrent creates can't both pass the cap.
+            get_user_model().objects.select_for_update().filter(pk=request.user.pk).first()
+            if Style.objects.filter(owner=request.user).count() >= MAX_STYLES:
+                return error(400, "invalid_request_error", f"You can keep up to {MAX_STYLES} custom styles.")
+            s.save()
+        return JsonResponse(style_json(s), status=201)
+    return JsonResponse({"data": [style_json(s) for s in visible_styles(request.user)]})
+
+
+@api_login_required
+@require_http_methods(["PATCH", "DELETE"])
+def style_detail(request, pk):
+    s = _own_style(request.user, pk)
+    if s.is_preset:
+        return error(403, "permission_error", "Preset styles can't be changed. Create your own instead.")
+    if request.method == "DELETE":
+        s.delete()
+        return JsonResponse({}, status=204)
+    errors = {}
+    changed = _style_fields(body(request), s, errors)
+    if errors:
+        return JsonResponse({"error": {"type": "invalid_request_error", "message": "The style is incomplete.",
+                                       "fields": errors}}, status=400)
+    if changed:
+        s.save(update_fields=changed)
+    return JsonResponse(style_json(s))
+
+
+@api_login_required
+@require_http_methods(["POST"])
+def message_feedback(request, pk):
+    """👍/👎 (+ optional comment) on one of the user's assistant replies; rating 0 clears it."""
+    try:
+        m = Message.objects.get(pk=pk, conversation__owner=request.user, role=Message.Role.ASSISTANT)
+    except Message.DoesNotExist:
+        raise Http404
+    data = body(request)
+    rating = data.get("rating")
+    if isinstance(rating, bool) or rating not in (1, -1, 0):
+        return error(400, "invalid_request_error", "rating must be 1, -1 or 0.")
+    if rating == 0:
+        MessageFeedback.objects.filter(message=m, user=request.user).delete()
+        return JsonResponse({"message_id": str(m.id), "rating": 0, "comment": ""})
+    fb, _ = MessageFeedback.objects.update_or_create(
+        message=m, user=request.user,
+        defaults={"rating": rating, "comment": str(data.get("comment") or "").strip()[:2000]},
+    )
+    return JsonResponse({"message_id": str(m.id), "rating": fb.rating, "comment": fb.comment})
 
 
 def _uuid(value):
