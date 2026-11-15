@@ -7,7 +7,12 @@ Called by deploy.sh on every deploy:
 Reads the canonical service catalog (georgeai_services.json) and writes:
     site/services/index.html          — services hub page
     site/services/<slug>/index.html   — one page per service
-    site/sitemap.xml                  — homepage + hub + all service pages
+    site/sitemap.xml                  — landing (hreflang en/de), pricing, hub, service
+                                        pages, blog, and every indexable repo-owned
+                                        page under pages/ (e.g. /cinematic/ in 5
+                                        languages, with each page's hreflang set)
+    site/sitemap-de.xml, robots-de.txt — georgeai.de: only its German landing;
+                                        nginx serves them for the .de host
 
 The SPA homepage stays untouched: these pages exist so every service has a
 real, crawlable URL with its own title/description/JSON-LD (the "biggest
@@ -15,6 +20,7 @@ GEO/SEO win" noted in the original sitemap). Content is English; the SPA
 handles i18n interactively.
 """
 import html
+from html.parser import HTMLParser
 import json
 import re
 import sys
@@ -393,18 +399,80 @@ def blog_hub_jsonld(posts):
     }
 
 
+DE_BASE = "https://georgeai.de"
+# The landing at / exists in two languages on two domains (console/landing.html).
+LANDING_ALTERNATES = [("en", f"{BASE}/"), ("de", f"{DE_BASE}/"), ("x-default", f"{BASE}/")]
+# Repo-owned pages copied verbatim into site/ by deploy.sh (apply_pages). Pages
+# that only make sense signed in are not listed.
+PAGES_SKIP = {"account"}
+
+
+class _HeadMeta(HTMLParser):
+    """canonical, hreflang alternates and robots noindex, whatever the attribute order."""
+
+    def __init__(self):
+        super().__init__()
+        self.canonical, self.alternates, self.noindex = None, [], False
+
+    def handle_starttag(self, tag, attrs):
+        a = {k.lower(): (v or "") for k, v in attrs}
+        rel = a.get("rel", "").lower().split()
+        if tag == "link" and "canonical" in rel and self.canonical is None:
+            self.canonical = a.get("href")
+        elif tag == "link" and "alternate" in rel and a.get("hreflang") and a.get("href"):
+            self.alternates.append((a["hreflang"], a["href"]))
+        elif tag == "meta" and a.get("name", "").lower() == "robots" and "noindex" in a.get("content", "").lower():
+            self.noindex = True
+
+
+def page_urls(pages_dir):
+    """(url, priority, alternates) for each indexable repo-owned page whose
+    canonical points at itself; hreflang alternates are read from the page."""
+    out = []
+    if not pages_dir.is_dir():
+        return out
+    for f in sorted(pages_dir.rglob("index.html")):
+        rel = f.parent.relative_to(pages_dir).as_posix()
+        if PAGES_SKIP & set(rel.split("/")):
+            continue
+        url = f"{BASE}/{rel}/" if rel != "." else f"{BASE}/"
+        meta = _HeadMeta()
+        meta.feed(f.read_text(encoding="utf-8", errors="ignore"))
+        if meta.canonical != url or meta.noindex:
+            continue
+        depth = rel.count("/")
+        out.append((url, "0.9" if depth == 1 else "0.7", meta.alternates))
+    return out
+
+
 def sitemap(urls, today):
-    entries = "".join(
-        f"\n  <url>\n    <loc>{u}</loc>\n    <lastmod>{today}</lastmod>\n"
-        f"    <changefreq>{'weekly' if u.rstrip('/') == BASE.rstrip('/') else 'monthly'}</changefreq>\n"
-        f"    <priority>{p}</priority>\n  </url>"
-        for u, p in urls
-    )
+    """urls: (loc, priority) or (loc, priority, [(hreflang, href), ...])."""
+    def entry(u, p, alts=()):
+        links = "".join(f'\n    <xhtml:link rel="alternate" hreflang="{h}" href="{esc(a)}"/>' for h, a in alts)
+        freq = "weekly" if u.rstrip("/") in (BASE, DE_BASE) else "monthly"
+        return (f"\n  <url>\n    <loc>{esc(u)}</loc>\n    <lastmod>{today}</lastmod>\n"
+                f"    <changefreq>{freq}</changefreq>\n    <priority>{p}</priority>{links}\n  </url>")
+    entries = "".join(entry(*u) for u in urls)
     return (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
-        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
+        'xmlns:xhtml="http://www.w3.org/1999/xhtml">'
         f"{entries}\n</urlset>\n"
     )
+
+
+def write_de_files(site, today):
+    """georgeai.de serves only the German landing; everything else there is a
+    duplicate that canonicalizes to georgeai.dev. nginx serves these two files
+    for the .de host (deploy/nginx.conf, map $host $seo_variant)."""
+    (site / "sitemap-de.xml").write_text(
+        sitemap([(f"{DE_BASE}/", "1.0", LANDING_ALTERNATES)], today), encoding="utf-8")
+    robots = site / "robots.txt"
+    if robots.is_file():
+        text = robots.read_text(encoding="utf-8").replace(
+            f"Sitemap: {BASE}/sitemap.xml", f"Sitemap: {DE_BASE}/sitemap.xml")
+        (site / "robots-de.txt").write_text(
+            text.replace("# georgeai.dev — robots policy", "# georgeai.de — robots policy"), encoding="utf-8")
 
 
 def main():
@@ -415,7 +483,7 @@ def main():
     slugs = {s["name"]: slugify(s["name"]) for s in data["services"]}
     today = date.today().isoformat()
 
-    urls = [(f"{BASE}/", "1.0"), (f"{BASE}/pricing/", "0.9"), (f"{BASE}/services/", "0.9")]
+    urls = [(f"{BASE}/", "1.0", LANDING_ALTERNATES), (f"{BASE}/pricing/", "0.9"), (f"{BASE}/services/", "0.9")]
     for svc in data["services"]:
         slug = slugs[svc["name"]]
         canonical = f"{BASE}/services/{slug}/"
@@ -475,8 +543,15 @@ def main():
             urls.insert(2, (f"{BASE}/blog/", "0.8"))
         n_posts = len(posts)
 
+    # repo-owned pages (pages/ next to the services JSON), e.g. /cinematic/ in 5 languages
+    extra = page_urls(Path(sys.argv[1]).resolve().parent / "pages")
+    known = {u[0] for u in urls}
+    urls.extend(u for u in extra if u[0] not in known)
+
     (site / "sitemap.xml").write_text(sitemap(urls, today), encoding="utf-8")
-    print(f"generated {len(data['services'])} service pages + {n_posts} blog posts + sitemap ({len(urls)} urls)")
+    write_de_files(site, today)
+    print(f"generated {len(data['services'])} service pages + {n_posts} blog posts + "
+          f"sitemap ({len(urls)} urls, {len(extra)} from pages/) + sitemap-de.xml")
 
 
 if __name__ == "__main__":

@@ -311,7 +311,7 @@ apply_prune() {
   # surface anything new the next export drops in, without deleting it
   local known=" index.html GeorgeAI.dc.html assets services blog pricing about work \
 auth.js audit.js support.js services-data.js legal-data.js responsive.css \
-robots.txt sitemap.xml llms.txt favicon.svg \
+robots.txt sitemap.xml robots-de.txt sitemap-de.xml llms.txt favicon.svg \
 favicon.ico favicon-32.png apple-touch-icon.png logo-mark.png logo-mark-ink.png logo-512.png "
   local entry unexpected=""
   for entry in "$SITE_DIR"/* "$SITE_DIR"/.[!.]*; do

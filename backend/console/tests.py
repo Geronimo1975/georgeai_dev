@@ -526,6 +526,8 @@ class PasswordlessLoginTests(TestCase):
         self.assertContains(de, "Zur Konsole")
         self.assertContains(en, 'lang="en"')
         self.assertContains(en, "Open the console")
+        self.assertContains(de, '<link rel="canonical" href="https://georgeai.de/">')
+        self.assertContains(en, '<link rel="canonical" href="https://georgeai.dev/">')
         self.assertContains(self.client.get("/console/login/", HTTP_HOST="georgeai.de"), "Code per E-Mail senden")
 
 
