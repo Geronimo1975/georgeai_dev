@@ -424,3 +424,23 @@ class DeepSeekProviderTests(TestCase):
         c.refresh_from_db()
         self.assertEqual(c.model, "deepseek-chat")
         self.assertFalse(c.messages.exists())
+
+
+class HostLanguageTests(TestCase):
+    """georgeai.de serves German, georgeai.dev (and anything else) English."""
+
+    def test_language_for_host(self):
+        from .middleware import language_for_host
+        self.assertEqual(language_for_host("georgeai.de"), "de")
+        self.assertEqual(language_for_host("www.georgeai.de:443"), "de")
+        self.assertEqual(language_for_host("georgeai.dev"), "en")
+        self.assertEqual(language_for_host("evilgeorgeai.de"), "en")
+
+    @override_settings(ALLOWED_HOSTS=["georgeai.de", "georgeai.dev"], SECURE_SSL_REDIRECT=False)
+    def test_admin_login_is_german_on_de(self):
+        de = self.client.get("/admin/login/", HTTP_HOST="georgeai.de")
+        en = self.client.get("/admin/login/", HTTP_HOST="georgeai.dev")
+        self.assertEqual(de["Content-Language"], "de")
+        self.assertContains(de, "Passwort")
+        self.assertEqual(en["Content-Language"], "en")
+        self.assertContains(en, "Password")
