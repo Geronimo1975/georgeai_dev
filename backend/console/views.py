@@ -177,8 +177,8 @@ def bootstrap(request):
             "is_staff": u.is_staff,
         },
         "models": llm.catalog(),
-        "default_model": llm.DEFAULT_MODEL,
-        "provider": llm.get_provider(llm.DEFAULT_MODEL).name,
+        "default_model": llm.default_model(),
+        "provider": llm.get_provider(llm.default_model()).name,
         "conversations": [conv_json(c) for c in convs],
         "preferences": prefs_json(prefs_for(u), u),
         "styles": [style_json(s) for s in visible_styles(u)],
@@ -192,7 +192,7 @@ def conversations(request):
         data = body(request)
         prefs = prefs_for(request.user)
         allowed = llm.available_model_ids()
-        model = next((m for m in (data.get("model"), prefs.default_model) if m in allowed), llm.DEFAULT_MODEL)
+        model = next((m for m in (data.get("model"), prefs.default_model) if m in allowed), llm.default_model())
         # A style deleted in another tab must not block a new chat: fall back
         # to the saved default instead of 404ing the create.
         style = _visible_style(request.user, data.get("style_id")) if data.get("style_id") else None
@@ -260,7 +260,7 @@ def send_message(request, pk):
         # silently answer with another vendor and don't overwrite the saved choice.
         return error(409, "model_unavailable",
                      f"{c.model} is not available right now. Pick another model to continue this chat.")
-    model = requested or c.model or llm.DEFAULT_MODEL
+    model = requested or c.model or llm.default_model()
     content = str(data.get("content", "")).strip()
 
     # Resolve everything that can fail *before* the user turn is committed, so

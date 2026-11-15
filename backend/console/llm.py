@@ -270,8 +270,16 @@ def available_model_ids():
     return {m["id"] for m in catalog()}
 
 
+def default_model():
+    """CONSOLE_DEFAULT_MODEL when it names a model that is available right now
+    (e.g. deepseek-chat while the Anthropic account has no credit), else the
+    catalog default."""
+    wanted = getattr(settings, "CONSOLE_DEFAULT_MODEL", "")
+    return wanted if wanted and wanted in available_model_ids() else DEFAULT_MODEL
+
+
 def get_provider(model=None):
-    vendor = VENDOR_OF.get(model or DEFAULT_MODEL, "anthropic")
+    vendor = VENDOR_OF.get(model or default_model(), "anthropic")
     choice = provider_choice()
     if not vendor_live(vendor):  # also covers LLM_PROVIDER=fake and a pin to another vendor
         return FakeProvider()
