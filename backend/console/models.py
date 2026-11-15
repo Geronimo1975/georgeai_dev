@@ -144,3 +144,32 @@ class MessageFeedback(models.Model):
 
     def __str__(self):
         return f"{'👍' if self.rating > 0 else '👎'} {self.message_id}"
+
+
+class LoginCode(models.Model):
+    """A one-time sign-in code sent by email (passwordless console login).
+
+    Only an HMAC of the code is stored. A code is valid for ``TTL`` and allows
+    ``MAX_ATTEMPTS`` guesses; requesting a new one invalidates older ones.
+    """
+
+    TTL_SECONDS = 600
+    MAX_ATTEMPTS = 5
+
+    email = models.EmailField()
+    code_hash = models.CharField(max_length=64)
+    ip = models.GenericIPAddressField(null=True, blank=True)
+    attempts = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    expires_at = models.DateTimeField()
+    used_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [  # the per-email and per-IP rate-limit counts
+            models.Index(fields=["email", "created_at"], name="logincode_email_created"),
+            models.Index(fields=["ip", "created_at"], name="logincode_ip_created"),
+        ]
+
+    def __str__(self):
+        return f"code for {self.email}"

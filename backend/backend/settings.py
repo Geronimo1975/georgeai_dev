@@ -177,10 +177,28 @@ SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", default=not DEBUG)
 CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=not DEBUG)
 CSRF_TRUSTED_ORIGINS = env.list(
     "CSRF_TRUSTED_ORIGINS",
-    default=["https://georgeai.dev", "https://www.georgeai.dev"],
+    default=["https://georgeai.dev", "https://www.georgeai.dev", "https://georgeai.de", "https://www.georgeai.de"],
 )
 
 LOGIN_URL = "/admin/login/"
+
+# ---------------------------------------------------------------------------
+# email — console sign-in codes. SMTP in production via env; without EMAIL_HOST
+# the codes are printed to the log (local dev / tests).
+# ---------------------------------------------------------------------------
+EMAIL_HOST = env("EMAIL_HOST", default="")
+EMAIL_BACKEND = env(
+    "EMAIL_BACKEND",
+    default="django.core.mail.backends.smtp.EmailBackend" if EMAIL_HOST
+    else "django.core.mail.backends.console.EmailBackend",
+)
+EMAIL_PORT = env.int("EMAIL_PORT", default=587)
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=EMAIL_PORT == 587)
+EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=EMAIL_PORT == 465)
+EMAIL_TIMEOUT = 15
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="GeorgeAI <no-reply@georgeai.dev>")
 
 # ---------------------------------------------------------------------------
 # transport security
