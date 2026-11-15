@@ -1,6 +1,7 @@
 {% extends "console/base.html" %}
 {% block title %}{{ t.title }}{% endblock %}
 {% block robots %}<meta name="robots" content="index, follow">
+<link rel="canonical" href="{{ t.canonical }}">
 <link rel="alternate" hreflang="en" href="https://georgeai.dev/">
 <link rel="alternate" hreflang="de" href="https://georgeai.de/">
 <link rel="alternate" hreflang="x-default" href="https://georgeai.dev/">{% endblock %}

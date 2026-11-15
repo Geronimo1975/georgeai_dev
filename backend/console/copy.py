@@ -8,6 +8,7 @@ strings, and no build step to compile .mo files on deploy.
 COPY = {
     "en": {
         "lang": "en",
+        "canonical": "https://georgeai.dev/",
         # landing
         "title": "GeorgeAI Console — your AI automation workspace",
         "description": "GeorgeAI Console: run an AI visibility audit, n8n automations and Python/Django apps from one workspace.",
@@ -91,6 +92,7 @@ COPY = {
     },
     "de": {
         "lang": "de",
+        "canonical": "https://georgeai.de/",
         "title": "GeorgeAI Console — dein Arbeitsplatz für KI-Automatisierung",
         "description": "GeorgeAI Console: KI-Sichtbarkeitsaudit, n8n-Automatisierungen und Python/Django-Apps an einem Ort.",
         "nav_signin": "Anmelden",
