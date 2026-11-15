@@ -1,25 +1,39 @@
 """Model catalog + provider abstraction (prompts 01.08 / 03.01 / 03.02 / 09.02).
 
-``get_provider()`` returns the Anthropic provider when ``ANTHROPIC_API_KEY`` is
-set and the SDK is installed, otherwise a deterministic fake that streams a
-canned reply — so the console works offline and in tests at zero API cost.
-Force one with ``LLM_PROVIDER=fake|anthropic``.
+Each model belongs to a vendor. ``get_provider(model)`` returns that vendor's
+live provider when its key is configured, otherwise a deterministic fake that
+streams a canned reply — so the console works offline and in tests at zero API
+cost. ``LLM_PROVIDER=fake`` forces the fake for every model.
+
+Vendors:
+  anthropic — ``ANTHROPIC_API_KEY``, official SDK.
+  deepseek  — ``DEEPSEEK_API_KEY``; any OpenAI-compatible chat-completions
+              endpoint at ``DEEPSEEK_BASE_URL`` (default: DeepSeek's own API,
+              servers in China). Point it at an EU host serving the open
+              DeepSeek weights to keep data in the EU — no code change.
 """
+import json
 import os
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
+from urllib.parse import urlparse
 
 from django.conf import settings
 
 MODELS = [
-    {"id": "claude-sonnet-5-5", "name": "Sonnet 5.5", "description": "Smart, efficient model for everyday use", "default": True},
-    {"id": "claude-opus-5-5", "name": "Opus 5.5", "description": "Most capable for complex work"},
-    {"id": "claude-haiku-5-5", "name": "Haiku 5.5", "description": "Fastest for quick answers"},
+    {"id": "claude-sonnet-5-5", "vendor": "anthropic", "name": "Sonnet 5.5", "description": "Smart, efficient model for everyday use", "default": True},
+    {"id": "claude-opus-5-5", "vendor": "anthropic", "name": "Opus 5.5", "description": "Most capable for complex work"},
+    {"id": "claude-haiku-5-5", "vendor": "anthropic", "name": "Haiku 5.5", "description": "Fastest for quick answers"},
+    {"id": "deepseek-chat", "vendor": "deepseek", "name": "DeepSeek Chat", "description": "Fast general-purpose open model"},
+    {"id": "deepseek-reasoner", "vendor": "deepseek", "name": "DeepSeek Reasoner", "description": "Thinks step by step before answering"},
 ]
+VENDORS = {"anthropic": "Claude", "deepseek": "DeepSeek"}
 MODEL_IDS = {m["id"] for m in MODELS}
+VENDOR_OF = {m["id"]: m["vendor"] for m in MODELS}
 DEFAULT_MODEL = next(m["id"] for m in MODELS if m.get("default"))
 TITLE_MODEL = "claude-haiku-5-5"
+DEEPSEEK_TITLE_MODEL = "deepseek-chat"
 MAX_TOKENS = 8192
 
 SYSTEM_PROMPT = (Path(__file__).parent / "prompts" / "base.md").read_text(encoding="utf-8")
@@ -41,12 +55,12 @@ class FakeProvider:
         last = messages[-1]["content"] if messages else ""
         reply = (
             f"**Demo mode** — this reply comes from the offline fake provider instead of "
-            f"`{model}` (no `ANTHROPIC_API_KEY`, or `LLM_PROVIDER=fake`).\n\n"
+            f"`{model}` (no API key for that model's vendor, or `LLM_PROVIDER=fake`).\n\n"
             f"You wrote:\n\n> {last[:400]}\n\n"
             "Everything else is real: the message was saved, streamed token by token, "
             "and is visible in the Django admin.\n\n"
-            "```python\n# backend/.env\nANTHROPIC_API_KEY=sk-ant-...\n```\n\n"
-            "Add a key with API credit and restart without `LLM_PROVIDER=fake` to talk to Claude."
+            "```python\n# backend/.env\nANTHROPIC_API_KEY=sk-ant-...\nDEEPSEEK_API_KEY=sk-...\n```\n\n"
+            "Add a key with API credit and restart without `LLM_PROVIDER=fake` to get real replies."
         )
         result.input_tokens = sum(len(m["content"]) // 4 for m in messages)
         for word in reply.split(" "):
@@ -97,15 +111,129 @@ class AnthropicProvider:
             return FakeProvider().title(first_user_message)
 
 
-def get_provider():
-    choice = os.environ.get("LLM_PROVIDER", getattr(settings, "LLM_PROVIDER", "auto"))
-    key = getattr(settings, "ANTHROPIC_API_KEY", "")
-    if choice == "fake":
-        return FakeProvider()
-    if key and choice in ("auto", "anthropic"):
+class OpenAICompatibleProvider:
+    """Streams from an OpenAI-style ``/chat/completions`` endpoint (DeepSeek).
+
+    Plain httpx (already installed with the Anthropic SDK) instead of another
+    SDK: the protocol is a POST plus ``data:`` lines, and keeping it generic
+    means any compatible host works by changing the base URL.
+    """
+    name = "deepseek"
+
+    def __init__(self, api_key, base_url, title_model=DEEPSEEK_TITLE_MODEL, transport=None):
+        import httpx
+
+        self.base_url = base_url.rstrip("/")
+        self.title_model = title_model
+        self.client = httpx.Client(
+            headers={"Authorization": f"Bearer {api_key}"},
+            timeout=httpx.Timeout(60.0, read=300.0),
+            transport=transport,
+        )
+
+    def _payload(self, model, system, messages, **extra):
+        return {
+            "model": model,
+            "messages": [{"role": "system", "content": system}, *messages],
+            "max_tokens": MAX_TOKENS,
+            **extra,
+        }
+
+    def stream(self, model, system, messages, result):
+        payload = self._payload(model, system, messages, stream=True,
+                                stream_options={"include_usage": True})
+        with self.client.stream("POST", f"{self.base_url}/chat/completions", json=payload) as resp:
+            if resp.status_code >= 400:
+                resp.read()
+                resp.raise_for_status()
+            for line in resp.iter_lines():
+                if not line.startswith("data:"):
+                    continue
+                data = line[5:].strip()
+                if data == "[DONE]":
+                    break
+                chunk = json.loads(data)
+                if usage := chunk.get("usage"):
+                    result.input_tokens = usage.get("prompt_tokens", 0)
+                    result.output_tokens = usage.get("completion_tokens", 0)
+                for choice in chunk.get("choices") or []:
+                    # deepseek-reasoner also streams ``reasoning_content``; only the
+                    # final answer is shown and stored, as on claude.ai.
+                    if text := (choice.get("delta") or {}).get("content"):
+                        yield text
+                    if reason := choice.get("finish_reason"):
+                        result.stop_reason = {"stop": "end_turn", "length": "max_tokens"}.get(reason, reason)
+
+    def title(self, first_user_message):
         try:
-            return AnthropicProvider(key)
-        except ImportError:
-            if choice == "anthropic":
-                raise
-    return FakeProvider()
+            resp = self.client.post(f"{self.base_url}/chat/completions", json={
+                "model": self.title_model,
+                "max_tokens": 30,
+                "messages": [
+                    {"role": "system", "content": "Write a 3-6 word title for a chat that starts with the user's message. "
+                     "Use the message's language. Reply with the title only, no quotes or punctuation at the end."},
+                    {"role": "user", "content": first_user_message[:2000]},
+                ],
+            })
+            resp.raise_for_status()
+            title = resp.json()["choices"][0]["message"]["content"].strip().strip('"')
+            return title[:120] or FakeProvider().title(first_user_message)
+        except Exception:  # title is cosmetic — never fail the turn over it
+            return FakeProvider().title(first_user_message)
+
+
+def _forced_fake():
+    return os.environ.get("LLM_PROVIDER", getattr(settings, "LLM_PROVIDER", "auto")) == "fake"
+
+
+def vendor_live(vendor):
+    """True when real replies are possible for this vendor (key set, not forced fake)."""
+    if _forced_fake():
+        return False
+    if vendor == "anthropic":
+        return bool(getattr(settings, "ANTHROPIC_API_KEY", ""))
+    if vendor == "deepseek":
+        return bool(getattr(settings, "DEEPSEEK_API_KEY", ""))
+    return False
+
+
+def deepseek_host():
+    return urlparse(getattr(settings, "DEEPSEEK_BASE_URL", "") or "https://api.deepseek.com").hostname or ""
+
+
+def catalog():
+    """Models for the picker. DeepSeek is listed only once a key is set — no
+    point offering a vendor that can only answer in demo mode."""
+    out = []
+    for m in MODELS:
+        if m["vendor"] == "deepseek" and not getattr(settings, "DEEPSEEK_API_KEY", ""):
+            continue
+        item = {**m, "vendor_name": VENDORS[m["vendor"]], "live": vendor_live(m["vendor"])}
+        if m["vendor"] == "deepseek":
+            host = deepseek_host()
+            item["data_note"] = ("Processed by DeepSeek on servers in China" if host.endswith("deepseek.com")
+                                 else f"Processed via {host}")
+        out.append(item)
+    return out
+
+
+def available_model_ids():
+    return {m["id"] for m in catalog()}
+
+
+def get_provider(model=None):
+    vendor = VENDOR_OF.get(model or DEFAULT_MODEL, "anthropic")
+    choice = os.environ.get("LLM_PROVIDER", getattr(settings, "LLM_PROVIDER", "auto"))
+    if choice == "fake" or not vendor_live(vendor):
+        return FakeProvider()
+    if vendor == "deepseek":
+        return OpenAICompatibleProvider(
+            settings.DEEPSEEK_API_KEY,
+            getattr(settings, "DEEPSEEK_BASE_URL", "") or "https://api.deepseek.com",
+        )
+    try:
+        return AnthropicProvider(settings.ANTHROPIC_API_KEY)
+    except ImportError:
+        if choice == "anthropic":
+            raise
+        return FakeProvider()

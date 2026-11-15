@@ -178,3 +178,86 @@ class ConsoleApiTests(TestCase):
         r = self.client.get("/console/")
         self.assertEqual(r.status_code, 302)
         self.assertTrue(r["Location"].startswith("/console/login/"))
+
+
+# ------------------------------------------------------------------ DeepSeek vendor
+
+def _deepseek_transport(seen, status=200):
+    """httpx MockTransport speaking the OpenAI-compatible streaming protocol."""
+    import httpx
+
+    def handler(request):
+        body = json.loads(request.content)
+        seen.append(body)
+        if status != 200:
+            return httpx.Response(status, json={"error": {"message": "nope"}})
+        if not body.get("stream"):  # title call
+            return httpx.Response(200, json={"choices": [{"message": {"content": "DeepSeek Title"}}]})
+        chunks = [
+            {"choices": [{"delta": {"reasoning_content": "thinking…"}}]},
+            {"choices": [{"delta": {"content": "Hello "}}]},
+            {"choices": [{"delta": {"content": "from DeepSeek"}, "finish_reason": "stop"}]},
+            {"choices": [], "usage": {"prompt_tokens": 12, "completion_tokens": 4}},
+        ]
+        sse_body = "".join(f"data: {json.dumps(c)}\n\n" for c in chunks) + "data: [DONE]\n\n"
+        return httpx.Response(200, content=sse_body.encode(), headers={"content-type": "text/event-stream"})
+
+    return httpx.MockTransport(handler)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False, DEEPSEEK_API_KEY="test-key",
+                   DEEPSEEK_BASE_URL="https://eu.example.test/v1", ANTHROPIC_API_KEY="")
+@mock.patch.dict(os.environ, {"LLM_PROVIDER": "auto"})
+class DeepSeekProviderTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(email="d@example.com", password="pw-123456!")
+        self.client.force_login(self.user)
+        self.seen = []
+
+    def run_turn(self, status=200):
+        import httpx
+
+        real = httpx.Client
+        transport = _deepseek_transport(self.seen, status)
+
+        def client(*args, **kwargs):
+            kwargs["transport"] = transport
+            return real(*args, **kwargs)
+
+        c = Conversation.objects.create(owner=self.user)
+        with mock.patch("httpx.Client", client):
+            r = self.client.post(f"{API}/conversations/{c.id}/messages",
+                                 json.dumps({"content": "Hi", "model": "deepseek-chat"}),
+                                 content_type="application/json")
+            body = b"".join(r.streaming_content).decode()
+        return c, body
+
+    def test_catalog_lists_deepseek_with_data_note(self):
+        models = {m["id"]: m for m in self.client.get(f"{API}/bootstrap").json()["models"]}
+        self.assertTrue(models["deepseek-chat"]["live"])
+        self.assertFalse(models["claude-sonnet-5-5"]["live"])  # no Anthropic key here
+        self.assertIn("eu.example.test", models["deepseek-chat"]["data_note"])
+
+    @override_settings(DEEPSEEK_API_KEY="")
+    def test_deepseek_hidden_without_key(self):
+        ids = [m["id"] for m in self.client.get(f"{API}/bootstrap").json()["models"]]
+        self.assertNotIn("deepseek-chat", ids)
+
+    def test_streams_reply_usage_and_title(self):
+        c, body = self.run_turn()
+        reply = Message.objects.get(conversation=c, role="assistant")
+        self.assertEqual(reply.content, "Hello from DeepSeek")  # reasoning not stored
+        self.assertEqual((reply.input_tokens, reply.output_tokens), (12, 4))
+        self.assertEqual(reply.stop_reason, "end_turn")
+        self.assertEqual(reply.model, "deepseek-chat")
+        c.refresh_from_db()
+        self.assertEqual(c.title, "DeepSeek Title")
+        sent = self.seen[0]
+        self.assertEqual(sent["messages"][0]["role"], "system")
+        self.assertEqual(sent["messages"][-1], {"role": "user", "content": "Hi"})
+
+    def test_insufficient_balance_is_explained(self):
+        c, body = self.run_turn(status=402)
+        self.assertIn("event: error", body)
+        self.assertIn("no balance", body)
+        self.assertEqual(Message.objects.get(conversation=c, role="assistant").stop_reason, "error")
