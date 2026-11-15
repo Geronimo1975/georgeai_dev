@@ -59,6 +59,8 @@ LLM_PROVIDER = env("LLM_PROVIDER", default="auto")
 # an EU-hosted endpoint and name the processor in the Datenschutzerklärung.
 DEEPSEEK_API_KEY = env("DEEPSEEK_API_KEY", default="")
 DEEPSEEK_BASE_URL = env("DEEPSEEK_BASE_URL", default="https://api.deepseek.com")
+# Model new chats start on (must be available, else the catalog default is used).
+CONSOLE_DEFAULT_MODEL = env("CONSOLE_DEFAULT_MODEL", default="")
 
 AUTH_USER_MODEL = "accounts.User"
 

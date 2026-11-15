@@ -528,3 +528,15 @@ class PasswordlessLoginTests(TestCase):
         self.assertContains(en, "Open the console")
         self.assertContains(self.client.get("/console/login/", HTTP_HOST="georgeai.de"), "Code per E-Mail senden")
 
+
+
+class DefaultModelTests(TestCase):
+    @override_settings(DEEPSEEK_API_KEY="k", ANTHROPIC_API_KEY="", LLM_PROVIDER="auto", CONSOLE_DEFAULT_MODEL="deepseek-chat")
+    def test_env_default_used_when_available(self):
+        from . import llm
+        self.assertEqual(llm.default_model(), "deepseek-chat")
+
+    @override_settings(DEEPSEEK_API_KEY="", CONSOLE_DEFAULT_MODEL="deepseek-chat")
+    def test_unavailable_env_default_falls_back(self):
+        from . import llm
+        self.assertEqual(llm.default_model(), llm.DEFAULT_MODEL)
