@@ -4,7 +4,7 @@
   {# vendored, pinned: marked 12.0.2 + DOMPurify 3.1.6 (no third-party CDN at runtime) #}
   <script src="{% static 'console/vendor/marked.min.js' %}" defer></script>
   <script src="{% static 'console/vendor/purify.min.js' %}" defer></script>
-  <script src="{% static 'console/app.js' %}?v=0.3.1" defer></script>
+  <script src="{% static 'console/app.js' %}?v=0.4.0" defer></script>
 {% endblock %}
 {% block body %}
 <div class="app" id="app" data-sidebar="open">
@@ -76,6 +76,10 @@
             </button>
           </div>
           <div class="composer-right">
+            <button class="style-btn" type="button" id="styleBtn" aria-haspopup="menu" aria-label="Response style">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M4 12h16M4 17h7"/><circle cx="17" cy="7" r="2"/><circle cx="14" cy="17" r="2"/></svg>
+              <span id="styleName"></span>
+            </button>
             <button class="model-btn" type="button" id="modelBtn" aria-haspopup="menu">
               <span id="modelName"></span>
               <svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg>
@@ -92,6 +96,120 @@
     </div>
   </main>
 </div>
+
+<dialog class="dialog" id="settingsDialog" aria-labelledby="settingsTitle">
+  <form class="dialog-card" id="settingsForm" method="dialog" novalidate>
+    <header class="dialog-head">
+      <h2 id="settingsTitle">Settings</h2>
+      <button class="icon-btn" type="button" data-close aria-label="Close settings"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </header>
+    <div class="dialog-body settings">
+      <nav class="tabs" role="tablist" aria-label="Settings sections">
+        <button type="button" role="tab" id="tab-profile" aria-controls="panel-profile" aria-selected="true">Profile</button>
+        <button type="button" role="tab" id="tab-appearance" aria-controls="panel-appearance" aria-selected="false" tabindex="-1">Appearance</button>
+        <button type="button" role="tab" id="tab-chat" aria-controls="panel-chat" aria-selected="false" tabindex="-1">Chat</button>
+      </nav>
+      <div class="panels">
+        <div class="error-summary" id="settingsErrors" role="alert" tabindex="-1" hidden></div>
+        <section role="tabpanel" id="panel-profile" aria-labelledby="tab-profile">
+          <div class="field">
+            <label for="setName">What should GeorgeAI call you?</label>
+            <input id="setName" name="name" maxlength="150" autocomplete="name">
+            <p class="field-error" id="err-name" hidden></p>
+          </div>
+          <div class="field">
+            <label for="setInstructions">What should GeorgeAI know about you?</label>
+            <p class="field-help" id="help-instructions">Your role, your company, how you like answers. Added to every new reply.</p>
+            <textarea id="setInstructions" name="personal_instructions" rows="6" maxlength="4000" aria-describedby="help-instructions count-instructions"></textarea>
+            <p class="field-count" id="count-instructions" aria-live="polite"></p>
+            <p class="field-error" id="err-personal_instructions" hidden></p>
+          </div>
+        </section>
+        <section role="tabpanel" id="panel-appearance" aria-labelledby="tab-appearance" hidden>
+          <fieldset class="field">
+            <legend>Theme</legend>
+            <div class="seg" role="radiogroup">
+              <label><input type="radio" name="theme" value="dark"><span>Dark</span></label>
+              <label><input type="radio" name="theme" value="light"><span>Light</span></label>
+              <label><input type="radio" name="theme" value="system"><span>Match system</span></label>
+            </div>
+          </fieldset>
+        </section>
+        <section role="tabpanel" id="panel-chat" aria-labelledby="tab-chat" hidden>
+          <div class="field">
+            <label for="setModel">Default model for new chats</label>
+            <select id="setModel" name="default_model"></select>
+            <p class="field-error" id="err-default_model" hidden></p>
+          </div>
+          <div class="field">
+            <label for="setStyle">Default style for new chats</label>
+            <select id="setStyle" name="default_style_id"></select>
+            <p class="field-error" id="err-default_style_id" hidden></p>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="setEnter" name="send_with_enter">
+            <span class="toggle-track" aria-hidden="true"></span>
+            <span><b>Send with Enter</b><span class="field-help">Off: Enter adds a new line, ⌘/Ctrl + Enter sends.</span></span>
+          </label>
+        </section>
+      </div>
+    </div>
+    <footer class="dialog-foot">
+      <span class="save-state" id="settingsState" role="status"></span>
+      <button class="btn-ghost" type="button" data-close>Cancel</button>
+      <button class="btn-accent" type="submit" id="settingsSave">Save</button>
+    </footer>
+  </form>
+</dialog>
+
+<dialog class="dialog" id="styleDialog" aria-labelledby="styleTitle">
+  <form class="dialog-card" id="styleForm" method="dialog" novalidate>
+    <header class="dialog-head">
+      <h2 id="styleTitle">Styles</h2>
+      <button class="icon-btn" type="button" data-close aria-label="Close styles"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </header>
+    <div class="dialog-body">
+      <p class="field-help">A style is a short instruction added to every reply in the chats that use it.</p>
+      <ul class="style-list" id="styleList"></ul>
+      <div class="field">
+        <label for="styleNameInput">Name</label>
+        <input id="styleNameInput" name="name" maxlength="60" placeholder="e.g. Client email">
+        <p class="field-error" id="serr-name" hidden></p>
+      </div>
+      <div class="field">
+        <label for="styleDescInput">Short description <span class="optional">(optional)</span></label>
+        <input id="styleDescInput" name="description" maxlength="160">
+      </div>
+      <div class="field">
+        <label for="stylePromptInput">How should GeorgeAI write?</label>
+        <textarea id="stylePromptInput" name="prompt" rows="5" maxlength="4000" placeholder="e.g. Write like a German B2B consultant: formal Sie, short paragraphs, end with a clear next step."></textarea>
+        <p class="field-error" id="serr-prompt" hidden></p>
+      </div>
+    </div>
+    <footer class="dialog-foot">
+      <span class="save-state" id="styleState" role="status"></span>
+      <button class="btn-ghost" type="button" id="styleReset">New style</button>
+      <button class="btn-accent" type="submit" id="styleSave">Create style</button>
+    </footer>
+  </form>
+</dialog>
+
+<dialog class="dialog dialog--sm" id="feedbackDialog" aria-labelledby="feedbackTitle">
+  <form class="dialog-card" id="feedbackForm" method="dialog">
+    <header class="dialog-head">
+      <h2 id="feedbackTitle">What went wrong?</h2>
+      <button class="icon-btn" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </header>
+    <div class="dialog-body">
+      <label class="sr-only" for="feedbackText">Feedback</label>
+      <textarea id="feedbackText" rows="4" maxlength="2000" placeholder="Optional — what was wrong or missing? It helps improve the answers."></textarea>
+    </div>
+    <footer class="dialog-foot">
+      <button class="btn-ghost" type="button" data-close>Skip</button>
+      <button class="btn-accent" type="submit">Send feedback</button>
+    </footer>
+  </form>
+</dialog>
 
 <div class="menu" id="menu" role="menu" hidden></div>
 <div class="toast" id="toast" role="status" hidden></div>

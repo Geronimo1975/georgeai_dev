@@ -8,7 +8,7 @@
   const els = {
     app: $("app"), main: $("main"), convList: $("convList"), search: $("searchInput"),
     thread: $("thread"), inner: $("threadInner"), input: $("input"), composer: $("composer"),
-    send: $("sendBtn"), modelBtn: $("modelBtn"), modelName: $("modelName"), greeting: $("greeting"),
+    send: $("sendBtn"), modelBtn: $("modelBtn"), styleBtn: $("styleBtn"), styleName: $("styleName"), modelName: $("modelName"), greeting: $("greeting"),
     chips: $("chips"), title: $("convTitle"), actions: $("convActions"), star: $("starBtn"),
     del: $("deleteBtn"), demo: $("demoPill"), menu: $("menu"), toast: $("toast"), jump: $("jumpBtn"),
     userBtn: $("userBtn"), userName: $("userName"), userAvatar: $("userAvatar"), scrim: $("scrim"),
@@ -30,6 +30,10 @@
     shield: '<svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/></svg>',
     out: '<svg viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H3"/></svg>',
     ok: '<svg viewBox="0 0 24 24" class="check"><path d="m5 12 5 5 9-10"/></svg>',
+    up: '<svg viewBox="0 0 24 24"><path d="M7 11v9H4v-9zM7 11l4-8a2 2 0 0 1 2 2v4h5.5a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 17.3 20H7"/></svg>',
+    down: '<svg viewBox="0 0 24 24"><path d="M7 13V4H4v9zM7 13l4 8a2 2 0 0 0 2-2v-4h5.5a2 2 0 0 0 2-2.3l-1.2-7A2 2 0 0 0 17.3 4H7"/></svg>',
+    gear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+    plus: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
     prev: '<svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>',
     next: '<svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>',
   };
@@ -46,6 +50,7 @@
     conversations: [], currentId: null, messages: [],
     model: null, stream: null, filter: "", stick: true,
     searchResults: null, editing: null,
+    prefs: {}, styles: [], style: null,
   };
 
   // ------------------------------------------------------------------ utils
@@ -66,7 +71,7 @@
     if (res.status === 401) { location.href = "/console/login/?next=" + encodeURIComponent(location.pathname); throw new Error("auth"); }
     if (res.status === 204) return null;
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data?.error?.message || `Request failed (${res.status})`);
+    if (!res.ok) { const err = new Error(data?.error?.message || `Request failed (${res.status})`); err.data = data; throw err; }
     return data;
   }
 
@@ -420,6 +425,41 @@
     return el;
   }
 
+  // 👍/👎 (04.08): toggle, aria-pressed; 👎 asks for an optional comment.
+  function rateButton(el, m, value, icon, label) {
+    addAction(el, icon, label, () => rate(m, m.rating === value ? 0 : value));
+    const b = el.querySelector(".msg-actions").lastElementChild;
+    b.setAttribute("aria-pressed", String(m.rating === value));
+    b.classList.toggle("is-on", m.rating === value);
+  }
+
+  async function rate(m, value, comment = "") {
+    const prev = m.rating || 0;
+    m.rating = value; repaint(m);
+    try { await api(`/messages/${m.id}/feedback`, { method: "POST", body: { rating: value, comment } }); }
+    catch (e) { m.rating = prev; repaint(m); return toast(e.message); }
+    if (value === -1 && !comment) askFeedback(m);
+    else if (value) toast(comment ? "Thanks — feedback sent" : "Thanks for the feedback");
+  }
+
+  function repaint(m) {
+    const el = els.inner.querySelector(`.msg[data-id="${m.id}"]`);
+    if (el && m.role === "assistant") paintAssistant(el, m);
+  }
+
+  const feedbackDlg = $("feedbackDialog");
+  function askFeedback(m) {
+    $("feedbackText").value = "";
+    feedbackDlg._msg = m;
+    feedbackDlg.showModal();
+  }
+  $("feedbackForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const m = feedbackDlg._msg, text = $("feedbackText").value.trim();
+    feedbackDlg.close();
+    if (m && text) rate(m, -1, text);
+  });
+
   function addAction(el, icon, label, fn) {
     const b = document.createElement("button");
     b.type = "button"; b.className = "icon-btn"; b.innerHTML = ICON[icon];
@@ -445,6 +485,10 @@
     if (!m.streaming) branchNav(el, m);
     if (!m.streaming) {
       addAction(el, "copy", "Copy", (btn) => copy(m.content, btn));
+      if (!String(m.id).startsWith("pending") && m.content) {
+        rateButton(el, m, 1, "up", "Good response");
+        rateButton(el, m, -1, "down", "Bad response");
+      }
       if (state.messages[state.messages.length - 1] === m && !state.stream) addAction(el, "retry", "Retry", regenerate);
     }
   }
@@ -470,7 +514,10 @@
   const draftKey = () => `gai-draft:${state.currentId || "new"}`;
   els.input.addEventListener("input", () => { autosize(); updateSend(); store.set(draftKey(), els.input.value); });
   els.input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); if (!state.stream) submit(); }
+    if (e.key !== "Enter" || e.shiftKey || e.isComposing) return;
+    const mod = e.metaKey || e.ctrlKey;
+    if (state.prefs.send_with_enter === false && !mod) return; // newline; ⌘/Ctrl+Enter sends
+    e.preventDefault(); if (!state.stream) submit();
   });
   els.composer.addEventListener("submit", (e) => { e.preventDefault(); state.stream ? stop() : submit(); });
 
@@ -480,7 +527,7 @@
     store.set(draftKey(), ""); // clear before currentId changes, or the "new" draft lingers
     if (!state.currentId) {
       let c;
-      try { c = await api("/conversations", { method: "POST", body: { model: state.model } }); }
+      try { c = await api("/conversations", { method: "POST", body: { model: state.model, style_id: state.style } }); }
       catch (e) { return toast(e.message); }
       state.conversations.unshift(c);
       state.currentId = c.id; state.messages = [];
@@ -596,8 +643,9 @@
     renderSidebar(); renderHeader();
     if (!id) {
       if (location.pathname !== "/console/new") history.replaceState({}, "", "/console/new");
-      const saved = store.get("gai-model", state.defaultModel);
-      setModel(knownModel(saved) ? saved : state.defaultModel);
+      const saved = store.get("gai-model", state.defaultModel), pref = state.prefs.default_model;
+      setModel(knownModel(saved) ? saved : knownModel(pref) ? pref : state.defaultModel);
+      setStyle(state.prefs.default_style_id || null);
       renderThread();
     } else {
       els.main.classList.remove("is-empty");
@@ -607,6 +655,7 @@
         if (state.currentId !== id) return;
         state.messages = data.messages;
         if (data.model && state.models.some((x) => x.id === data.model)) setModel(data.model);
+        setStyle(data.style_id || null);
         renderThread();
       } catch (e) {
         if (e.message === "auth") return;
@@ -658,15 +707,23 @@
   els.star.addEventListener("click", () => state.currentId && toggleStar(state.currentId));
   els.del.addEventListener("click", () => state.currentId && deleteConv(state.currentId));
 
-  function setTheme(t) {
+  // Theme lives in the server preferences (02.10); localStorage mirrors it so
+  // base.html can paint the right theme before the bootstrap call returns.
+  function setTheme(t, persist = true) {
     store.set("gai-theme", t);
     const eff = t === "system" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : t;
     document.documentElement.dataset.theme = eff;
+    if (persist && state.prefs.theme !== t) {
+      state.prefs.theme = t;
+      api("/me/preferences", { method: "PATCH", body: { theme: t } }).catch(() => {});
+    }
   }
   els.userBtn.addEventListener("click", (e) => {
     const theme = store.get("gai-theme", "dark");
     const items = [
       { label: state.user.email },
+      { icon: "gear", text: "Settings", onClick: () => openSettings() },
+      "-",
       { icon: "sun", text: "Dark", checked: theme === "dark", onClick: () => setTheme("dark") },
       { icon: "sun", text: "Light", checked: theme === "light", onClick: () => setTheme("light") },
       { icon: "sun", text: "Match system", checked: theme === "system", onClick: () => setTheme("system") },
@@ -681,7 +738,180 @@
     const mod = e.metaKey || e.ctrlKey;
     if (mod && e.key.toLowerCase() === "k") { e.preventDefault(); if (mobile()) { els.app.dataset.mobileOpen = ""; els.scrim.hidden = false; } els.search.focus(); }
     else if (mod && e.shiftKey && e.key.toLowerCase() === "o") { e.preventDefault(); navigate("/console/new"); }
+    else if (mod && e.key === ",") { e.preventDefault(); openSettings(); }
+    else if (e.key === "Escape" && document.querySelector("dialog[open]")) { /* the dialog closes itself */ }
     else if (e.key === "Escape") { if (!els.menu.hidden) closeMenu(); else if (state.stream) stop(); else closeMobileSidebar(); }
+  });
+
+  // ------------------------------------------------------------------ styles (02.11)
+  const styleById = (id) => state.styles.find((x) => x.id === id);
+  function setStyle(id) {
+    const st = styleById(id);
+    state.style = st ? st.id : null;
+    const custom = st && st.key !== "normal";
+    els.styleName.textContent = custom ? st.name : "";
+    els.styleBtn.classList.toggle("is-set", !!custom);
+    els.styleBtn.setAttribute("aria-label", `Response style: ${st ? st.name : "Normal"}`);
+  }
+  function chooseStyle(id) {
+    setStyle(id);
+    if (state.currentId) {
+      const c = conv(state.currentId); if (c) c.style_id = state.style;
+      api(`/conversations/${state.currentId}`, { method: "PATCH", body: { style_id: state.style } }).catch((e) => toast(e.message));
+    }
+  }
+  els.styleBtn.addEventListener("click", (e) => {
+    const presets = state.styles.filter((x) => x.is_preset), mine = state.styles.filter((x) => !x.is_preset);
+    const item = (x) => ({ text: x.name, desc: x.description, checked: (state.style || presetId("normal")) === x.id, onClick: () => chooseStyle(x.id) });
+    const items = [{ label: "Response style" }, ...presets.map(item)];
+    if (mine.length) items.push("-", { label: "Your styles" }, ...mine.map(item));
+    items.push("-", { icon: "plus", text: "Create & edit styles", onClick: () => openStyles() });
+    openMenu(e.currentTarget, items, "end");
+  });
+  const presetId = (key) => state.styles.find((x) => x.key === key && x.is_preset)?.id;
+
+  const styleDlg = $("styleDialog");
+  let editingStyle = null;
+  function fieldError(prefix, field, msg) {
+    const el = $(`${prefix}-${field}`); if (!el) return;
+    el.textContent = msg || ""; el.hidden = !msg;
+    const input = el.closest(".field")?.querySelector("input, textarea, select");
+    if (input) { input.toggleAttribute("aria-invalid", !!msg); if (msg) input.setAttribute("aria-errormessage", el.id); }
+  }
+  function renderStyleList() {
+    const list = $("styleList"), mine = state.styles.filter((x) => !x.is_preset);
+    list.innerHTML = mine.length ? "" : '<li class="style-empty">No custom styles yet — create one below.</li>';
+    mine.forEach((st) => {
+      const li = document.createElement("li");
+      li.className = "style-row" + (editingStyle === st.id ? " is-editing" : "");
+      li.innerHTML = `<span><b>${esc(st.name)}</b>${st.description ? `<span class="field-help">${esc(st.description)}</span>` : ""}</span>
+        <button type="button" class="icon-btn" aria-label="Edit ${esc(st.name)}">${ICON.edit}</button>
+        <button type="button" class="icon-btn" aria-label="Delete ${esc(st.name)}">${ICON.trash}</button>`;
+      const [edit, del] = li.querySelectorAll("button");
+      edit.addEventListener("click", () => fillStyle(st));
+      del.addEventListener("click", () => deleteStyle(st));
+      list.appendChild(li);
+    });
+  }
+  function fillStyle(st) {
+    editingStyle = st ? st.id : null;
+    $("styleNameInput").value = st?.name || ""; $("styleDescInput").value = st?.description || ""; $("stylePromptInput").value = st?.prompt || "";
+    $("styleSave").textContent = st ? "Save changes" : "Create style";
+    ["name", "prompt"].forEach((f) => fieldError("serr", f, ""));
+    $("styleState").textContent = "";
+    renderStyleList();
+    $("styleNameInput").focus();
+  }
+  function openStyles() { fillStyle(null); styleDlg.showModal(); }
+  $("styleReset").addEventListener("click", () => fillStyle(null));
+  async function deleteStyle(st) {
+    if (!confirm(`Delete the style “${st.name}”? Chats using it go back to Normal.`)) return;
+    try { await api(`/styles/${st.id}`, { method: "DELETE" }); } catch (e) { return toast(e.message); }
+    state.styles = state.styles.filter((x) => x.id !== st.id);
+    if (state.style === st.id) setStyle(null);
+    if (state.prefs.default_style_id === st.id) state.prefs.default_style_id = null;
+    if (editingStyle === st.id) fillStyle(null); else renderStyleList();
+    toast("Style deleted");
+  }
+  $("styleForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const body = { name: $("styleNameInput").value.trim(), description: $("styleDescInput").value.trim(), prompt: $("stylePromptInput").value.trim() };
+    const local = {};
+    if (!body.name) local.name = "Give the style a name.";
+    if (!body.prompt) local.prompt = "Describe how GeorgeAI should write.";
+    ["name", "prompt"].forEach((f) => fieldError("serr", f, local[f]));
+    if (Object.keys(local).length) return $(local.name ? "styleNameInput" : "stylePromptInput").focus();
+    $("styleState").textContent = "Saving…";
+    let saved;
+    try {
+      saved = editingStyle
+        ? await api(`/styles/${editingStyle}`, { method: "PATCH", body })
+        : await api("/styles", { method: "POST", body });
+    } catch (err) {
+      $("styleState").textContent = "";
+      const f = err.data?.error?.fields || {};
+      Object.entries(f).forEach(([k, v]) => fieldError("serr", k, v));
+      return toast(err.message);
+    }
+    const i = state.styles.findIndex((x) => x.id === saved.id);
+    if (i >= 0) state.styles[i] = saved; else state.styles.push(saved);
+    const created = !editingStyle;
+    fillStyle(saved);
+    $("styleState").textContent = created ? "Created" : "Saved";
+    if (created) chooseStyle(saved.id);
+    else if (state.style === saved.id) setStyle(saved.id);
+  });
+
+  // ------------------------------------------------------------------ settings (02.10 / 04.13)
+  const settingsDlg = $("settingsDialog");
+  const tabs = [...settingsDlg.querySelectorAll('[role="tab"]')];
+  function showTab(tab, focus) {
+    tabs.forEach((t) => {
+      const on = t === tab;
+      t.setAttribute("aria-selected", String(on)); t.tabIndex = on ? 0 : -1;
+      $(t.getAttribute("aria-controls")).hidden = !on;
+    });
+    if (focus) tab.focus();
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener("click", () => showTab(t));
+    t.addEventListener("keydown", (e) => {
+      const d = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key];
+      if (d) { e.preventDefault(); showTab(tabs[(i + d + tabs.length) % tabs.length], true); }
+    });
+  });
+  const counter = () => { $("count-instructions").textContent = `${$("setInstructions").value.length.toLocaleString()} / 4,000`; };
+  $("setInstructions").addEventListener("input", counter);
+  function openSettings() {
+    closeMenu();
+    const p = state.prefs;
+    $("setName").value = p.name || "";
+    $("setInstructions").value = p.personal_instructions || ""; counter();
+    settingsDlg.querySelectorAll('input[name="theme"]').forEach((r) => (r.checked = r.value === (p.theme || "dark")));
+    $("setModel").innerHTML = '<option value="">Automatic (recommended)</option>' +
+      state.models.map((m) => `<option value="${esc(m.id)}">${esc((m.vendor_name ? m.vendor_name + " · " : "") + m.name)}</option>`).join("");
+    $("setModel").value = knownModel(p.default_model) ? p.default_model : "";
+    $("setStyle").innerHTML = state.styles.map((x) => `<option value="${x.key === "normal" ? "" : esc(x.id)}">${esc(x.name)}</option>`).join("");
+    $("setStyle").value = p.default_style_id && styleById(p.default_style_id) ? p.default_style_id : "";
+    $("setEnter").checked = p.send_with_enter !== false;
+    ["name", "personal_instructions", "default_model", "default_style_id"].forEach((f) => fieldError("err", f, ""));
+    $("settingsErrors").hidden = true; $("settingsState").textContent = "";
+    showTab(tabs[0]);
+    settingsDlg.showModal();
+    $("setName").focus();
+  }
+  document.querySelectorAll("dialog [data-close]").forEach((b) => b.addEventListener("click", () => b.closest("dialog").close()));
+  document.querySelectorAll("dialog").forEach((d) => d.addEventListener("click", (e) => { if (e.target === d) d.close(); }));
+  $("settingsForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const body = {
+      name: $("setName").value.trim(),
+      personal_instructions: $("setInstructions").value,
+      theme: settingsDlg.querySelector('input[name="theme"]:checked')?.value || "dark",
+      default_model: $("setModel").value,
+      default_style_id: $("setStyle").value || null,
+      send_with_enter: $("setEnter").checked,
+    };
+    $("settingsSave").disabled = true; $("settingsState").textContent = "Saving…";
+    let saved;
+    try { saved = await api("/me/preferences", { method: "PATCH", body }); }
+    catch (err) {
+      $("settingsSave").disabled = false; $("settingsState").textContent = "";
+      const fields = err.data?.error?.fields || {};
+      Object.entries(fields).forEach(([k, v]) => fieldError("err", k, v));
+      const sum = $("settingsErrors");
+      sum.innerHTML = `<b>Couldn’t save.</b> ${esc(Object.values(fields).join(" ") || err.message)}`;
+      sum.hidden = false; sum.focus();
+      return;
+    }
+    $("settingsSave").disabled = false;
+    state.prefs = saved;
+    state.user.name = saved.name || state.user.email.split("@")[0];
+    els.userName.textContent = state.user.name;
+    els.userAvatar.textContent = state.user.name.slice(0, 1).toUpperCase();
+    setTheme(saved.theme, false);
+    settingsDlg.close();
+    toast("Settings saved");
   });
 
   // ------------------------------------------------------------------ boot
@@ -689,7 +919,10 @@
     if (store.get("gai-sidebar", "open") === "closed") els.app.dataset.sidebar = "closed";
     let data;
     try { data = await api("/bootstrap"); } catch (e) { if (e.message !== "auth") toast(e.message); return; }
-    Object.assign(state, { user: data.user, models: data.models, provider: data.provider, defaultModel: data.default_model, conversations: data.conversations });
+    Object.assign(state, { user: data.user, models: data.models, provider: data.provider, defaultModel: data.default_model,
+      conversations: data.conversations, prefs: data.preferences || {}, styles: data.styles || [] });
+    if (state.prefs.name) state.user.name = state.prefs.name;
+    if (state.prefs.theme) setTheme(state.prefs.theme, false);
     els.userName.textContent = data.user.name;
     els.userAvatar.textContent = (data.user.name || "?").slice(0, 1).toUpperCase();
     const saved = store.get("gai-model", data.default_model);

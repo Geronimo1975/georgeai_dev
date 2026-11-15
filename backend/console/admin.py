@@ -2,7 +2,7 @@
 from django.contrib import admin
 from django.db.models import Count, Sum
 
-from .models import Conversation, Message
+from .models import Conversation, Message, MessageFeedback, Style, UserPreference
 
 
 class MessageInline(admin.TabularInline):
@@ -26,6 +26,7 @@ class ConversationAdmin(admin.ModelAdmin):
     readonly_fields = ("id", "created_at", "updated_at")
     inlines = [MessageInline]
     date_hierarchy = "updated_at"
+    raw_id_fields = ("owner", "current_leaf", "style")
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("owner").annotate(
@@ -49,3 +50,37 @@ class MessageAdmin(admin.ModelAdmin):
     search_fields = ("content", "conversation__title", "conversation__owner__email")
     readonly_fields = ("id", "created_at")
     raw_id_fields = ("conversation", "parent")
+
+
+@admin.register(Style)
+class StyleAdmin(admin.ModelAdmin):
+    list_display = ("name", "owner", "key", "position", "created_at")
+    list_filter = (("owner", admin.EmptyFieldListFilter),)
+    search_fields = ("name", "prompt", "owner__email")
+    raw_id_fields = ("owner",)
+
+
+@admin.register(UserPreference)
+class UserPreferenceAdmin(admin.ModelAdmin):
+    list_display = ("user", "default_model", "default_style", "theme", "language", "send_with_enter", "updated_at")
+    list_filter = ("theme", "language", "default_model")
+    search_fields = ("user__email",)
+    raw_id_fields = ("user", "default_style")
+
+
+@admin.register(MessageFeedback)
+class MessageFeedbackAdmin(admin.ModelAdmin):
+    """What users rated — the quickest signal for prompt and model quality."""
+    list_display = ("__str__", "user", "rating", "short_comment", "model", "created_at")
+    list_filter = ("rating", "message__model", "created_at")
+    search_fields = ("comment", "message__content", "user__email")
+    raw_id_fields = ("message", "user")
+    list_select_related = ("message", "user")
+
+    @admin.display(description="comment")
+    def short_comment(self, obj):
+        return (obj.comment[:80] + "…") if len(obj.comment) > 80 else obj.comment
+
+    @admin.display(description="model", ordering="message__model")
+    def model(self, obj):
+        return obj.message.model
