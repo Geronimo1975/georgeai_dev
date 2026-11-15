@@ -77,6 +77,32 @@ services:
       - "traefik.http.routers.georgeai-www.middlewares=georgeai-www-redirect"
       - "traefik.http.routers.georgeai-www.service=georgeai"
 
+      # ---- German domain (georgeai.de): same container; Django renders the
+      # German landing / sign-in from the Host header. www -> apex like .dev.
+      # The old redesign preview moved to preview.georgeai.de (its own stack).
+      - "traefik.http.middlewares.georgeai-de-www-redirect.redirectregex.regex=^https?://www\\.georgeai\\.de/(.*)"
+      - "traefik.http.middlewares.georgeai-de-www-redirect.redirectregex.replacement=https://georgeai.de/$${1}"
+      - "traefik.http.middlewares.georgeai-de-www-redirect.redirectregex.permanent=true"
+      - "traefik.http.routers.georgeai-de-http.rule=Host(`georgeai.de`)"
+      - "traefik.http.routers.georgeai-de-http.entrypoints=web"
+      - "traefik.http.routers.georgeai-de-http.middlewares=georgeai-https-redirect"
+      - "traefik.http.routers.georgeai-de-http.service=georgeai"
+      - "traefik.http.routers.georgeai-de.rule=Host(`georgeai.de`)"
+      - "traefik.http.routers.georgeai-de.entrypoints=websecure"
+      - "traefik.http.routers.georgeai-de.tls=true"
+      - "traefik.http.routers.georgeai-de.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.georgeai-de.service=georgeai"
+      - "traefik.http.routers.georgeai-de-www-http.rule=Host(`www.georgeai.de`)"
+      - "traefik.http.routers.georgeai-de-www-http.entrypoints=web"
+      - "traefik.http.routers.georgeai-de-www-http.middlewares=georgeai-de-www-redirect"
+      - "traefik.http.routers.georgeai-de-www-http.service=georgeai"
+      - "traefik.http.routers.georgeai-de-www.rule=Host(`www.georgeai.de`)"
+      - "traefik.http.routers.georgeai-de-www.entrypoints=websecure"
+      - "traefik.http.routers.georgeai-de-www.tls=true"
+      - "traefik.http.routers.georgeai-de-www.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.georgeai-de-www.middlewares=georgeai-de-www-redirect"
+      - "traefik.http.routers.georgeai-de-www.service=georgeai"
+
 networks:
   gethub-network:
     external: true

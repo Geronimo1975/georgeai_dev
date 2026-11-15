@@ -10,8 +10,11 @@ from pathlib import Path
 from django.conf import settings
 from django.core.exceptions import SuspiciousFileOperation
 from django.http import FileResponse, Http404
+from django.shortcuts import render
 from django.utils._os import safe_join
 from django.views.decorators.csrf import ensure_csrf_cookie
+
+from console.copy import COPY, copy_for
 
 
 @ensure_csrf_cookie
@@ -21,6 +24,14 @@ def serve_frontend(request, path=""):
     Decorated with ensure_csrf_cookie so the SPA always receives a csrftoken
     cookie that auth.js can read and echo back as the X-CSRFToken header.
     """
+    # The site root is the console landing: English on georgeai.dev, German on
+    # georgeai.de (HostLanguageMiddleware picks the language). The marketing
+    # export stays reachable at /index.html, /cinematic/, /services/, ...
+    if path == "":
+        lang = request.GET.get("lang") if settings.DEBUG else None  # local preview: /?lang=de
+        t = COPY.get(lang) or copy_for(request)
+        return render(request, "console/landing.html", {"t": t})
+
     if path == "" or path.endswith("/"):
         path += "index.html"
 

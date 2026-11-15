@@ -1,0 +1,268 @@
+{% extends "console/base.html" %}
+{% block title %}{{ t.title }}{% endblock %}
+{% block robots %}<meta name="robots" content="index, follow">
+<link rel="alternate" hreflang="en" href="https://georgeai.dev/">
+<link rel="alternate" hreflang="de" href="https://georgeai.de/">
+<link rel="alternate" hreflang="x-default" href="https://georgeai.dev/">{% endblock %}
+{% block head %}
+<meta name="description" content="{{ t.description }}">
+<style>
+  /* Landing — hero: agent card · hub · toolbelt, then catalog and three value
+     rows. Uses the console tokens from app.css; mono for meta labels. */
+  .lp { --mono-ls: .08em; min-height: 100dvh; background:
+        radial-gradient(60% 40% at 50% 0%, var(--accent-soft), transparent 70%),
+        radial-gradient(circle at 1px 1px, rgba(255,255,255,.055) 1px, transparent 0) 0 0 / 18px 18px,
+        var(--canvas); }
+  [data-theme="light"] .lp { background:
+        radial-gradient(60% 40% at 50% 0%, var(--accent-soft), transparent 70%),
+        radial-gradient(circle at 1px 1px, rgba(2,6,10,.07) 1px, transparent 0) 0 0 / 18px 18px, var(--canvas); }
+  .lp a { text-decoration: none; }
+  .wrap { width: 100%; max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+  .mono { font-family: var(--mono); letter-spacing: var(--mono-ls); }
+
+  /* top bar */
+  .lp-top { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px); background: color-mix(in srgb, var(--canvas) 78%, transparent); border-bottom: 1px solid transparent; }
+  .lp-top .wrap { display: flex; align-items: center; gap: 8px; height: 64px; }
+  .lp-top nav { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+  .lp-top nav a { display: inline-flex; align-items: center; height: 40px; padding: 0 12px; border-radius: var(--radius-sm); color: var(--muted); font-size: 14px; font-weight: 500; }
+  .lp-top nav a:hover { color: var(--ink); background: var(--surface-2); }
+  .lp-top nav .btn { height: 40px; padding: 0 16px; color: var(--accent-ink); }
+  .lp-top nav .btn:hover { color: var(--accent-ink); }
+
+  /* hero */
+  .lp-hero { text-align: center; padding: 56px 0 24px; }
+  .badge { display: inline-flex; align-items: center; gap: 8px; min-height: 32px; padding: 6px 14px; max-width: 100%; text-wrap: balance; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-2); font-size: 12.5px; }
+  .badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+  .lp-hero h1 { margin: 22px auto 0; max-width: 16ch; font-size: clamp(34px, 6.2vw, 64px); line-height: 1.02; letter-spacing: -.035em; font-weight: 700; color: var(--ink); }
+  .turn { margin: 18px 0 0; font-size: clamp(16px, 2.4vw, 22px); color: var(--muted); }
+  .turn .role { color: var(--ink); font-weight: 600; border-right: 2px solid var(--accent); padding-right: 3px; white-space: nowrap; }
+
+  .stage { display: grid; grid-template-columns: 1fr minmax(220px, 300px) 1fr; gap: 28px; align-items: center; margin: 44px 0 0; text-align: left; }
+  .label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; margin: 0 0 10px; }
+  .agent { padding: 18px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow); }
+  .agent-head { display: flex; align-items: center; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+  .agent-head b { display: block; color: var(--ink); font-size: 16px; }
+  .agent-head small { color: var(--muted); font-size: 12px; }
+  .steps { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 4px; }
+  .steps li { display: flex; align-items: center; gap: 10px; min-height: 34px; color: var(--ink-2); font-size: 13px; }
+  .steps li::before { content: "▚"; color: var(--accent); font-size: 11px; width: 14px; }
+  .steps li::after { content: "✓"; margin-left: auto; color: #36c48a; font-size: 12px; }
+  .steps li.draft::before { content: "✎"; }
+  .steps li.pending { color: var(--muted); }
+  .steps li.pending::after { content: "…"; color: var(--muted); }
+
+  .hub { position: relative; aspect-ratio: 1; display: grid; place-items: center; }
+  .hub .ring { position: absolute; inset: 0; border-radius: 50%; border: 1px solid var(--line); }
+  .hub .ring:nth-child(2) { inset: 14%; border-color: var(--line-strong); }
+  .hub .ring:nth-child(3) { inset: 28%; border-color: color-mix(in srgb, var(--accent) 45%, transparent); box-shadow: 0 0 60px var(--accent-soft) inset, 0 0 80px var(--accent-soft); }
+  .hub .core { position: relative; width: 34%; aspect-ratio: 1; border-radius: 28%; background: var(--accent); display: grid; place-items: center; box-shadow: 0 20px 60px rgba(251,94,49,.35); }
+  .hub .core::after { content: ""; width: 46%; aspect-ratio: 1; border: 9px solid var(--accent-ink); border-right-color: transparent; border-radius: 50%; transform: rotate(-30deg); }
+  .hub .orbit { position: absolute; inset: 0; border-radius: 50%; animation: spin 18s linear infinite; }
+  .hub .orbit::before { content: ""; position: absolute; top: -4px; left: 50%; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .cmd { margin: 18px auto 0; display: flex; align-items: center; gap: 8px; width: max-content; max-width: 100%; padding: 9px 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--code-bg); color: var(--ink-2); font-size: 12.5px; overflow: hidden; }
+  .cmd .p { color: var(--muted); } .cmd .ok { color: #36c48a; white-space: nowrap; }
+  .cmd code { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font: inherit; }
+
+  .tools { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .tool { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--ink); font-size: 14px; font-weight: 600; }
+  .tool i { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; font-style: normal; font-size: 12px; font-weight: 700; color: var(--canvas); flex: none; }
+  .tools-foot { display: flex; justify-content: space-between; gap: 8px; margin-top: 10px; font-size: 12px; color: var(--muted); }
+  .tools-foot b { color: #36c48a; font-weight: 600; }
+
+  /* start composer */
+  .start { margin: 56px auto 0; max-width: 720px; text-align: left; }
+  .lp-composer { display: block; padding: 14px; border: 1px solid var(--line-strong); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow); transition: border-color var(--t-fast); }
+  .lp-composer:hover { border-color: var(--accent); }
+  .lp-composer .ph { display: block; min-height: 48px; padding: 4px 2px; color: var(--muted); font-size: 15.5px; }
+  .lp-composer .bar { display: flex; align-items: center; gap: 8px; }
+  .pill { display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 12px; border-radius: var(--radius-sm); border: 1px solid var(--line); background: var(--surface-2); color: var(--muted); font-size: 13px; }
+  .pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+  .lp-composer .go { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 16px; border-radius: var(--radius); background: var(--accent); color: var(--accent-ink); font-weight: 600; font-size: 14px; }
+
+  /* catalog */
+  section.block { padding: 96px 0 0; }
+  .catalog { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-top: 18px; }
+  .cat { padding: 18px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); }
+  .cat h3 { margin: 0 0 12px; font-size: 14px; font-weight: 700; color: var(--ink); }
+  .cat ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .cat li b { display: block; color: var(--ink-2); font-size: 13.5px; font-weight: 600; }
+  .cat li span { color: var(--muted); font-size: 12.5px; }
+  .more { display: inline-flex; align-items: center; gap: 6px; margin-top: 18px; height: 40px; color: var(--ink-2); font-weight: 600; font-size: 14px; }
+  .more:hover { color: var(--accent); }
+
+  /* value rows */
+  .rows { display: grid; gap: 14px; }
+  .row { display: grid; grid-template-columns: 1.1fr 1fr; gap: 28px; align-items: center; padding: 32px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); }
+  .row h2 { margin: 0; font-size: clamp(24px, 3.4vw, 34px); letter-spacing: -.025em; line-height: 1.1; color: var(--ink); }
+  .row p { margin: 12px 0 0; color: var(--ink-2); font-size: 16px; line-height: 1.6; max-width: 46ch; }
+  .row ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .row li { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); color: var(--ink-2); font-size: 14px; }
+  .row li::before { content: "✓"; color: var(--accent); font-weight: 700; }
+
+  /* final cta */
+  .cta { margin: 96px 0 0; padding: 56px 24px; text-align: center; border: 1px solid var(--line); border-radius: var(--radius-lg);
+         background: radial-gradient(70% 90% at 50% 0%, var(--accent-soft), transparent 70%), var(--surface); }
+  .cta h2 { margin: 0 auto; max-width: 20ch; font-size: clamp(26px, 4vw, 42px); letter-spacing: -.03em; line-height: 1.08; color: var(--ink); }
+  .cta p { margin: 14px auto 0; max-width: 48ch; color: var(--ink-2); }
+  .cta .actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 26px; }
+  .btn-ghost-lg { display: inline-flex; align-items: center; height: 44px; padding: 0 18px; border-radius: var(--radius); border: 1px solid var(--line-strong); color: var(--ink); font-weight: 600; }
+  .btn-ghost-lg:hover { background: var(--surface-2); }
+
+  .lp-foot { margin-top: 72px; border-top: 1px solid var(--line); }
+  .lp-foot .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; padding-top: 20px; padding-bottom: 28px; color: var(--muted); font-size: 13px; }
+  .lp-foot .spacer { flex: 1; }
+  .lp-foot a { display: inline-flex; align-items: center; min-height: 32px; color: var(--muted); } .lp-foot a:hover { color: var(--ink); }
+
+  @media (max-width: 960px) {
+    .stage { grid-template-columns: 1fr; max-width: 520px; margin-left: auto; margin-right: auto; }
+    .hub { max-width: 220px; margin: 0 auto; width: 100%; }
+    .row { grid-template-columns: 1fr; padding: 24px; }
+  }
+  @media (max-width: 560px) {
+    .wrap { padding: 0 16px; }
+    .lp-top nav a:not(.btn) { display: none; }
+    .lp-hero { padding-top: 36px; }
+    .badge { font-size: 11px; letter-spacing: .03em; }
+    .lp-composer .go span { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { .hub .orbit { animation: none; } .turn .role { border-right: 0; } }
+</style>
+{% endblock %}
+{% block body %}
+<div class="lp">
+  <header class="lp-top">
+    <div class="wrap">
+      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"></span>GeorgeAI <span class="brand-sub">Console</span></a>
+      <nav aria-label="Main">
+        <a href="{{ t.foot_site_href }}">{{ t.foot_site }}</a>
+        <a href="{{ t.foot_other_href }}" hreflang="{% if t.lang == 'en' %}de{% else %}en{% endif %}">{{ t.foot_other }}</a>
+        <a href="/console/login/">{{ t.nav_signin }}</a>
+        <a class="btn btn-primary" href="/console/login/?next=/console/new">{{ t.nav_start }}</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="lp-hero wrap">
+      <span class="badge mono">{{ t.badge }}</span>
+      <h1>{{ t.h1 }}</h1>
+      <p class="turn">{{ t.turn }} <span class="role" id="role" data-roles="{{ t.roles|join:'|' }}">{{ t.roles.0 }}</span></p>
+
+      <div class="stage">
+        <div>
+          <p class="label mono">{{ t.agent_label }}</p>
+          <div class="agent">
+            <div class="agent-head">
+              <span class="brand-mark" aria-hidden="true" style="width:36px;height:36px;border-radius:10px"></span>
+              <div><b>GeorgeAI</b><small class="mono">{{ t.agent_task }}</small></div>
+            </div>
+            <ul class="steps mono" id="steps">
+              {% for s in t.steps %}<li{% if forloop.last %} class="draft"{% endif %}>{{ s }}</li>{% endfor %}
+            </ul>
+          </div>
+        </div>
+
+        <div>
+          <div class="hub" aria-hidden="true">
+            <span class="ring"></span><span class="ring"></span><span class="ring"></span>
+            <span class="orbit"></span>
+            <span class="core"></span>
+          </div>
+          <div class="cmd mono"><span class="p">$</span><code>{{ t.command }}</code><span class="ok">✓ 200</span></div>
+        </div>
+
+        <div>
+          <p class="label mono">{{ t.toolbelt }}</p>
+          <div class="tools">
+            <div class="tool"><i style="background:#ea4b71">n8n</i>n8n</div>
+            <div class="tool"><i style="background:#44b78b">dj</i>Django</div>
+            <div class="tool"><i style="background:#5b9bf3">pg</i>PostgreSQL</div>
+            <div class="tool"><i style="background:#d97757">Cl</i>Claude</div>
+            <div class="tool"><i style="background:#7c8cff">DS</i>DeepSeek</div>
+            <div class="tool"><i style="background:#8f7bff">S</i>Stripe</div>
+          </div>
+          <div class="tools-foot mono"><span>{{ t.toolbelt_more }}</span><b>{{ t.toolbelt_note }}</b></div>
+        </div>
+      </div>
+
+      <div class="start">
+        <p class="label mono">{{ t.start_h }}</p>
+        <a class="lp-composer" href="/console/login/?next=/console/new" aria-label="{{ t.composer_aria }}">
+          <span class="ph">{{ t.composer_ph }}</span>
+          <span class="bar"><span class="pill">{{ t.composer_pill }}</span>
+            <span class="go"><span>{{ t.composer_go }}</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          </span>
+        </a>
+      </div>
+    </section>
+
+    <section class="block wrap" aria-labelledby="catalog-h">
+      <p class="label mono" id="catalog-h">{{ t.catalog_label }}</p>
+      <div class="catalog">
+        {% for cat in t.catalog %}
+        <div class="cat">
+          <h3>{{ cat.0 }}</h3>
+          <ul>{% for item in cat.1 %}<li><b>{{ item.0 }}</b><span>{{ item.1 }}</span></li>{% endfor %}</ul>
+        </div>
+        {% endfor %}
+      </div>
+      <a class="more" href="/services/">{{ t.catalog_all }} <span aria-hidden="true">→</span></a>
+    </section>
+
+    <section class="block wrap rows">
+      <div class="row"><div><h2>{{ t.f1_h }}</h2><p>{{ t.f1_p }}</p></div><ul>{% for b in t.f1_b %}<li>{{ b }}</li>{% endfor %}</ul></div>
+      <div class="row"><div><h2>{{ t.f2_h }}</h2><p>{{ t.f2_p }}</p></div><ul>{% for b in t.f2_b %}<li>{{ b }}</li>{% endfor %}</ul></div>
+      <div class="row"><div><h2>{{ t.f3_h }}</h2><p>{{ t.f3_p }}</p></div><ul>{% for b in t.f3_b %}<li>{{ b }}</li>{% endfor %}</ul></div>
+    </section>
+
+    <section class="wrap">
+      <div class="cta">
+        <h2>{{ t.cta_h }}</h2>
+        <p>{{ t.cta_p }}</p>
+        <div class="actions">
+          <a class="btn btn-primary" href="/console/login/?next=/console/new">{{ t.nav_start }}</a>
+          <a class="btn-ghost-lg" href="{{ t.cta_pricing_href }}">{{ t.cta_pricing }}</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="lp-foot">
+    <div class="wrap">
+      <span>© {% now "Y" %} GeorgeAI</span>
+      <span class="spacer"></span>
+      <a href="{{ t.foot_site_href }}">{{ t.foot_site }}</a>
+      <a href="/pricing/">{{ t.cta_pricing }}</a>
+      <a href="{{ t.foot_other_href }}" hreflang="{% if t.lang == 'en' %}de{% else %}en{% endif %}">{{ t.foot_other }}</a>
+      <a href="/console/login/">{{ t.nav_signin }}</a>
+    </div>
+  </footer>
+</div>
+<script>
+  // Rotating role ("Turn GeorgeAI into …") and step ticks. Static for reduced motion.
+  (function () {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var el = document.getElementById("role"), roles = el.dataset.roles.split("|"), i = 0;
+    function type(text, n) {
+      el.textContent = text.slice(0, n);
+      if (n < text.length) return setTimeout(function () { type(text, n + 1); }, 38);
+      setTimeout(erase, 1800);
+    }
+    function erase() {
+      var t = el.textContent;
+      if (t.length) { el.textContent = t.slice(0, -1); return setTimeout(erase, 18); }
+      i = (i + 1) % roles.length; type(roles[i], 0);
+    }
+    setTimeout(erase, 1800);
+    var steps = document.querySelectorAll("#steps li"), k = 0;
+    function tick() {
+      steps.forEach(function (li, j) { li.classList.toggle("pending", j >= k); });
+      k = k >= steps.length ? 0 : k + 1;
+      setTimeout(tick, k === 0 ? 1400 : 700);
+    }
+    tick();
+  })();
+</script>
+{% endblock %}

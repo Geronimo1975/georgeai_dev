@@ -4,6 +4,7 @@ Django's own admin and Jazzmin ship German catalogs, so activating "de" is all
 the admin needs. Runs instead of LocaleMiddleware on purpose: the domain is the
 language choice here, not the browser's Accept-Language header.
 """
+from django.conf import settings
 from django.utils import translation
 
 GERMAN_HOSTS = ("georgeai.de", "www.georgeai.de")
@@ -20,6 +21,8 @@ class HostLanguageMiddleware:
 
     def __call__(self, request):
         lang = language_for_host(request.get_host())
+        if settings.DEBUG and request.GET.get("lang") in ("en", "de"):  # local preview only
+            lang = request.GET["lang"]
         translation.activate(lang)
         request.LANGUAGE_CODE = lang
         response = self.get_response(request)

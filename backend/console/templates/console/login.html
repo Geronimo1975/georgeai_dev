@@ -1,26 +1,21 @@
 {% extends "console/base.html" %}
-{% block title %}Sign in · GeorgeAI Console{% endblock %}
+{% block title %}{{ t.signin_title }}{% endblock %}
 {% block body %}
 <main class="auth">
-  <form class="auth-card" method="post" novalidate>
+  <form class="auth-card" method="post" action="/console/login/" novalidate>
     {% csrf_token %}
-    <div class="brand brand--lg"><span class="brand-mark" aria-hidden="true"></span>GeorgeAI <span class="brand-sub">Console</span></div>
-    <h1>Welcome back</h1>
-    <p class="auth-lede">Sign in to continue to your conversations.</p>
-    {% if form.non_field_errors %}
-      <div class="auth-error" role="alert">Email or password is incorrect.</div>
-    {% endif %}
+    <a class="brand brand--lg" href="/"><span class="brand-mark" aria-hidden="true"></span>GeorgeAI <span class="brand-sub">Console</span></a>
+    <h1>{{ t.signin_h1 }}</h1>
+    <p class="auth-lede">{{ t.signin_lede }}</p>
+    {% if error %}<div class="auth-error" role="alert" id="auth-error">{{ error }}</div>{% endif %}
     <label class="field">
-      <span>Email</span>
-      <input type="email" name="username" autocomplete="email" required autofocus value="{{ form.username.value|default:'' }}">
-    </label>
-    <label class="field">
-      <span>Password</span>
-      <input type="password" name="password" autocomplete="current-password" required>
+      <span>{{ t.email_label }}</span>
+      <input type="email" name="email" autocomplete="email" inputmode="email" required autofocus
+             value="{{ email }}" {% if error %}aria-invalid="true" aria-describedby="auth-error"{% endif %}>
     </label>
     <input type="hidden" name="next" value="{{ next|default:'/console/' }}">
-    <button class="btn btn-primary btn-block" type="submit">Continue</button>
-    <p class="auth-foot">By continuing you agree to the georgeai.dev terms. <a href="/admin/">Admin</a></p>
+    <button class="btn btn-primary btn-block" type="submit">{{ t.send_code }}</button>
+    <p class="auth-foot">{{ t.terms }}</p>
   </form>
 </main>
 {% endblock %}

@@ -444,3 +444,54 @@ class HostLanguageTests(TestCase):
         self.assertContains(de, "Passwort")
         self.assertEqual(en["Content-Language"], "en")
         self.assertContains(en, "Password")
+
+
+@override_settings(SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "georgeai.de", "georgeai.dev"],
+                   EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+class PasswordlessLoginTests(TestCase):
+    def code_from_mail(self):
+        import re
+        from django.core import mail
+        return re.search(r"\b(\d{6})\b", mail.outbox[-1].body).group(1)
+
+    def test_signup_and_login_with_emailed_code(self):
+        from django.core import mail
+        r = self.client.post("/console/login/", {"email": "New.Lead@Example.com", "next": "/console/new"})
+        self.assertRedirects(r, "/console/login/code/", fetch_redirect_response=False)
+        self.assertEqual(mail.outbox[-1].to, ["new.lead@example.com"])
+        from .models import LoginCode
+        self.assertNotIn(self.code_from_mail(), LoginCode.objects.get().code_hash)  # only a hash is stored
+        r = self.client.post("/console/login/code/", {"code": self.code_from_mail()})
+        self.assertRedirects(r, "/console/new", fetch_redirect_response=False)
+        user = get_user_model().objects.get(email="new.lead@example.com")
+        self.assertFalse(user.has_usable_password())
+        self.assertEqual(self.client.get("/api/console/v1/bootstrap").status_code, 200)
+
+    def test_wrong_code_attempts_expiry_and_reuse(self):
+        self.client.post("/console/login/", {"email": "a@example.com"})
+        good = self.code_from_mail()
+        bad = "000000" if good != "000000" else "111111"
+        for _ in range(5):
+            self.assertEqual(self.client.post("/console/login/code/", {"code": bad}).status_code, 400)
+        r = self.client.post("/console/login/code/", {"code": good})  # locked after 5 misses
+        self.assertEqual(r.status_code, 400)
+        self.assertFalse(get_user_model().objects.filter(email="a@example.com").exists())
+
+    def test_rate_limit_and_open_redirect(self):
+        for _ in range(3):
+            self.client.post("/console/login/", {"email": "b@example.com", "next": "https://evil.example/"})
+        self.assertEqual(self.client.post("/console/login/", {"email": "b@example.com"}).status_code, 429)
+        code = self.code_from_mail()
+        self.client.post("/console/login/", {"email": "c@example.com", "next": "https://evil.example/"})
+        r = self.client.post("/console/login/code/", {"code": self.code_from_mail()})
+        self.assertEqual(r["Location"], "/console/")
+        del code
+
+    def test_landing_and_signin_language_by_host(self):
+        de = self.client.get("/", HTTP_HOST="georgeai.de")
+        en = self.client.get("/", HTTP_HOST="georgeai.dev")
+        self.assertContains(de, 'lang="de"')
+        self.assertContains(de, "Zur Konsole")
+        self.assertContains(en, 'lang="en"')
+        self.assertContains(en, "Open the console")
+        self.assertContains(self.client.get("/console/login/", HTTP_HOST="georgeai.de"), "Code per E-Mail senden")
