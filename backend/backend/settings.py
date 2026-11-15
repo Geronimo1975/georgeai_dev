@@ -66,6 +66,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",  # /static/ in production (nginx proxies it)
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "console.middleware.HostLanguageMiddleware",  # georgeai.de → German, else English
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -115,7 +116,8 @@ AUTH_PASSWORD_VALIDATORS = [
 # ---------------------------------------------------------------------------
 # i18n
 # ---------------------------------------------------------------------------
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "en"
+LANGUAGES = [("en", "English"), ("de", "Deutsch")]
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
@@ -245,5 +247,17 @@ JAZZMIN_SETTINGS = {
         "console.Message": "fas fa-comment-dots",
     },
     "order_with_respect_to": ["console", "accounts", "auth"],
+    # Same look as the console: its "C" mark, its tokens and font (console/admin.css).
+    "site_logo": "console/brand-mark.svg",
+    "login_logo": "console/brand-mark.svg",
+    "login_logo_dark": "console/brand-mark.svg",
+    "site_icon": "console/brand-mark.svg",
+    "site_logo_classes": "",
+    "custom_css": "console/admin.css",
+    "show_ui_builder": False,
 }
-JAZZMIN_UI_TWEAKS = {"theme": "darkly", "dark_mode_theme": "darkly", "navbar": "navbar-dark"}
+JAZZMIN_UI_TWEAKS = {
+    "theme": "darkly", "dark_mode_theme": "darkly",
+    "navbar": "navbar-dark", "sidebar": "sidebar-dark-primary", "accent": "accent-orange",
+    "brand_colour": False, "sidebar_nav_flat_style": True,
+}
