@@ -768,6 +768,9 @@
 
   // ------------------------------------------------------------------ styles (02.11)
   const styleById = (id) => state.styles.find((x) => x.id === id);
+  // Parse one of the static ICON strings into an SVG node (no HTML sink).
+  const iconNode = (name) => document.importNode(
+    new DOMParser().parseFromString(ICON[name].replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"'), "image/svg+xml").documentElement, true);
   function setStyle(id) {
     const st = styleById(id);
     state.style = st ? st.id : null;
@@ -826,7 +829,7 @@
       const iconButton = (icon, label) => {
         const btn = document.createElement("button");
         btn.type = "button"; btn.className = "icon-btn"; btn.setAttribute("aria-label", label);
-        btn.innerHTML = ICON[icon]; // static SVG constant
+        btn.append(iconNode(icon));
         return btn;
       };
       const edit = iconButton("edit", `Edit ${st.name}`), del = iconButton("trash", `Delete ${st.name}`);
