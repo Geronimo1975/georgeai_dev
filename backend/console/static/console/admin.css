@@ -167,7 +167,7 @@ input[type="number"], input[type="search"], input[type="url"], input[type="date"
 label, .form-label, .col-form-label { color: var(--gai-ink-2); font-weight: 500; }
 .form-check-input:checked { background-color: var(--gai-accent) !important; border-color: var(--gai-accent) !important; }
 .errorlist, .errornote, .invalid-feedback { color: var(--gai-danger) !important; }
-.callout.callout-danger { border-left: 3px solid var(--gai-danger) !important; }
+.callout.callout-danger { border-color: rgba(255,107,107,.4) !important; background: rgba(255,107,107,.06) !important; }
 .callout.callout-danger p { color: var(--gai-ink-2); margin: 0; }
 
 /* buttons — same shapes as the console */
@@ -208,10 +208,10 @@ form#changelist-search button, .search-form .btn {
 /* badges / alerts / tabs */
 .badge.bg-primary, .badge-primary, .badge.bg-info, .badge.bg-success { background: var(--gai-accent-soft) !important; color: var(--gai-accent) !important; }
 .alert { border-radius: var(--gai-radius) !important; border: 1px solid var(--gai-line) !important; background: var(--gai-surface) !important; color: var(--gai-ink-2) !important; }
-.alert-success { border-left: 3px solid #3ecf8e !important; }
-.alert-info { border-left: 3px solid var(--gai-accent) !important; }
-.alert-warning { border-left: 3px solid #f5b544 !important; }
-.alert-danger, .alert-error { border-left: 3px solid var(--gai-danger) !important; }
+.alert-success { border-color: rgba(62,207,142,.4) !important; background: rgba(62,207,142,.06) !important; }
+.alert-info { border-color: rgba(251,94,49,.4) !important; background: var(--gai-accent-soft) !important; }
+.alert-warning { border-color: rgba(245,181,68,.4) !important; background: rgba(245,181,68,.06) !important; }
+.alert-danger, .alert-error { border-color: rgba(255,107,107,.4) !important; background: rgba(255,107,107,.06) !important; }
 .nav-tabs { border-color: var(--gai-line) !important; }
 .nav-tabs .nav-link { color: var(--gai-muted) !important; border: 0 !important; }
 .nav-tabs .nav-link.active { color: var(--gai-ink) !important; background: transparent !important; box-shadow: inset 0 -2px 0 var(--gai-accent); }
