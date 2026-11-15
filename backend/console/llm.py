@@ -13,6 +13,7 @@ Vendors:
               DeepSeek weights to keep data in the EU — no code change.
 """
 import json
+import logging
 import os
 import time
 from dataclasses import dataclass, field
@@ -20,6 +21,8 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from django.conf import settings
+
+log = logging.getLogger(__name__)
 
 MODELS = [
     {"id": "claude-sonnet-5-5", "vendor": "anthropic", "name": "Sonnet 5.5", "description": "Smart, efficient model for everyday use", "default": True},
@@ -107,8 +110,26 @@ class AnthropicProvider:
             )
             title = "".join(b.text for b in msg.content if b.type == "text").strip().strip('"')
             return title[:120] or FakeProvider().title(first_user_message)
-        except Exception:  # title is cosmetic — never fail the turn over it
+        except Exception as exc:  # title is cosmetic — never fail the turn over it
+            log.warning("console title generation failed (anthropic): %s: %s", type(exc).__name__, exc)
             return FakeProvider().title(first_user_message)
+
+
+class ProviderHTTPError(Exception):
+    """Non-2xx answer from an OpenAI-compatible endpoint; ``friendly_error`` maps it."""
+
+    def __init__(self, status_code, host):
+        super().__init__(f"HTTP {status_code} from {host}")
+        self.status_code, self.host = status_code, host
+
+
+class IncompleteStreamError(Exception):
+    pass
+
+
+def is_deepseek_host(host):
+    """DeepSeek's own API — exact domain match, so ``evil-deepseek.com`` is not it."""
+    return host == "deepseek.com" or host.endswith(".deepseek.com")
 
 
 class OpenAICompatibleProvider:
@@ -124,6 +145,7 @@ class OpenAICompatibleProvider:
         import httpx
 
         self.base_url = base_url.rstrip("/")
+        self.host = urlparse(self.base_url).hostname or ""
         self.title_model = title_model
         self.client = httpx.Client(
             headers={"Authorization": f"Bearer {api_key}"},
@@ -142,15 +164,17 @@ class OpenAICompatibleProvider:
     def stream(self, model, system, messages, result):
         payload = self._payload(model, system, messages, stream=True,
                                 stream_options={"include_usage": True})
+        done = False
         with self.client.stream("POST", f"{self.base_url}/chat/completions", json=payload) as resp:
-            if resp.status_code >= 400:
+            if not resp.is_success:  # 3xx included: redirects are not followed, so never "success"
                 resp.read()
-                resp.raise_for_status()
+                raise ProviderHTTPError(resp.status_code, self.host)
             for line in resp.iter_lines():
                 if not line.startswith("data:"):
                     continue
                 data = line[5:].strip()
                 if data == "[DONE]":
+                    done = True
                     break
                 chunk = json.loads(data)
                 if usage := chunk.get("usage"):
@@ -163,6 +187,10 @@ class OpenAICompatibleProvider:
                         yield text
                     if reason := choice.get("finish_reason"):
                         result.stop_reason = {"stop": "end_turn", "length": "max_tokens"}.get(reason, reason)
+        if not done:
+            # A body that just ends without the terminator is a cut connection,
+            # not a finished answer — surface it instead of saving it as complete.
+            raise IncompleteStreamError("The model provider closed the stream before finishing.")
 
     def title(self, first_user_message):
         try:
@@ -178,17 +206,20 @@ class OpenAICompatibleProvider:
             resp.raise_for_status()
             title = resp.json()["choices"][0]["message"]["content"].strip().strip('"')
             return title[:120] or FakeProvider().title(first_user_message)
-        except Exception:  # title is cosmetic — never fail the turn over it
+        except Exception as exc:  # title is cosmetic — never fail the turn over it
+            log.warning("console title generation failed (%s): %s: %s", self.host, type(exc).__name__, exc)
             return FakeProvider().title(first_user_message)
 
 
-def _forced_fake():
-    return os.environ.get("LLM_PROVIDER", getattr(settings, "LLM_PROVIDER", "auto")) == "fake"
+def provider_choice():
+    return os.environ.get("LLM_PROVIDER", getattr(settings, "LLM_PROVIDER", "auto"))
 
 
 def vendor_live(vendor):
-    """True when real replies are possible for this vendor (key set, not forced fake)."""
-    if _forced_fake():
+    """True when real replies are possible for this vendor: its key is set and
+    ``LLM_PROVIDER`` neither forces the fake nor pins another vendor."""
+    choice = provider_choice()
+    if choice == "fake" or (choice in VENDORS and choice != vendor):
         return False
     if vendor == "anthropic":
         return bool(getattr(settings, "ANTHROPIC_API_KEY", ""))
@@ -202,16 +233,18 @@ def deepseek_host():
 
 
 def catalog():
-    """Models for the picker. DeepSeek is listed only once a key is set — no
-    point offering a vendor that can only answer in demo mode."""
-    out = []
+    """Models for the picker. DeepSeek is listed only once a key is set and no
+    other vendor is pinned — no point offering it in demo mode only."""
+    out, choice = [], provider_choice()
     for m in MODELS:
-        if m["vendor"] == "deepseek" and not getattr(settings, "DEEPSEEK_API_KEY", ""):
+        if m["vendor"] == "deepseek" and (
+            not getattr(settings, "DEEPSEEK_API_KEY", "") or choice not in ("auto", "fake", "deepseek")
+        ):
             continue
         item = {**m, "vendor_name": VENDORS[m["vendor"]], "live": vendor_live(m["vendor"])}
         if m["vendor"] == "deepseek":
             host = deepseek_host()
-            item["data_note"] = ("Processed by DeepSeek on servers in China" if host.endswith("deepseek.com")
+            item["data_note"] = ("Processed by DeepSeek on servers in China" if is_deepseek_host(host)
                                  else f"Processed via {host}")
         out.append(item)
     return out
@@ -223,8 +256,8 @@ def available_model_ids():
 
 def get_provider(model=None):
     vendor = VENDOR_OF.get(model or DEFAULT_MODEL, "anthropic")
-    choice = os.environ.get("LLM_PROVIDER", getattr(settings, "LLM_PROVIDER", "auto"))
-    if choice == "fake" or not vendor_live(vendor):
+    choice = provider_choice()
+    if not vendor_live(vendor):  # also covers LLM_PROVIDER=fake and a pin to another vendor
         return FakeProvider()
     if vendor == "deepseek":
         return OpenAICompatibleProvider(

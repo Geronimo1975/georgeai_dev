@@ -210,7 +210,13 @@ def send_message(request, pk):
     data = body(request)
     regenerate = bool(data.get("regenerate"))
     allowed = llm.available_model_ids()
-    model = data.get("model") if data.get("model") in allowed else (c.model if c.model in allowed else llm.DEFAULT_MODEL)
+    requested = data.get("model") if data.get("model") in allowed else None
+    if requested is None and c.model and c.model not in allowed:
+        # The chat's model is unavailable right now (its key was removed). Don't
+        # silently answer with another vendor and don't overwrite the saved choice.
+        return error(409, "model_unavailable",
+                     f"{c.model} is not available right now. Pick another model to continue this chat.")
+    model = requested or c.model or llm.DEFAULT_MODEL
     content = str(data.get("content", "")).strip()
 
     with transaction.atomic():
@@ -362,16 +368,19 @@ def _snippet(text, q, width=90):
 
 def friendly_error(exc):
     name = type(exc).__name__
-    if name == "HTTPStatusError":  # OpenAI-compatible vendors (DeepSeek) via httpx
-        code = exc.response.status_code
+    if name == "ProviderHTTPError":  # OpenAI-compatible vendors (DeepSeek or a custom host)
+        code = exc.status_code
+        who = "DeepSeek" if llm.is_deepseek_host(exc.host) else exc.host
         return {"type": f"http_{code}", "message": {
-            401: "The DeepSeek API key is invalid. Check DEEPSEEK_API_KEY in backend/.env.",
-            402: "The DeepSeek account has no balance left. Top it up on the DeepSeek platform.",
+            401: f"The API key for {who} is invalid. Check DEEPSEEK_API_KEY in backend/.env.",
+            402: f"The {who} account has no balance left. Top it up with that provider.",
             429: "Rate limit reached. Please wait a moment and try again.",
             500: "The model provider had an internal error. Please retry.",
             503: "The model provider is overloaded. Please try again in a moment.",
         }.get(code, f"The model provider returned an error ({code}).")}
-    if name in ("ConnectError", "ConnectTimeout", "ReadTimeout"):
+    if name == "IncompleteStreamError":
+        return {"type": name, "message": "The reply was cut off by the model provider. Please retry."}
+    if name in ("ConnectError", "ConnectTimeout", "ReadTimeout", "RemoteProtocolError"):
         return {"type": name, "message": "Could not reach the model provider. Check the network and retry."}
     if "credit balance" in str(exc).lower():
         return {"type": "billing_error", "message": "The Anthropic account has no API credit left. Top up under Plans & Billing in the Anthropic Console, or run with LLM_PROVIDER=fake."}

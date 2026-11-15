@@ -5,4 +5,5 @@ psycopg[binary]>=3.2,<4      # PostgreSQL driver
 djangorestframework>=3.15,<4  # API layer (session auth)
 django-jazzmin>=3.0,<4       # admin theme
 gunicorn>=23,<24            # production WSGI server (used when we replace nginx)
+httpx>=0.27,<1             # GeorgeAI Console: OpenAI-compatible providers (DeepSeek)
 anthropic>=0.40,<1         # GeorgeAI Console LLM provider (optional: falls back to a fake provider)

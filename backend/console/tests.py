@@ -182,7 +182,7 @@ class ConsoleApiTests(TestCase):
 
 # ------------------------------------------------------------------ DeepSeek vendor
 
-def _deepseek_transport(seen, status=200):
+def _deepseek_transport(seen, status=200, truncate=False):
     """httpx MockTransport speaking the OpenAI-compatible streaming protocol."""
     import httpx
 
@@ -199,7 +199,9 @@ def _deepseek_transport(seen, status=200):
             {"choices": [{"delta": {"content": "from DeepSeek"}, "finish_reason": "stop"}]},
             {"choices": [], "usage": {"prompt_tokens": 12, "completion_tokens": 4}},
         ]
-        sse_body = "".join(f"data: {json.dumps(c)}\n\n" for c in chunks) + "data: [DONE]\n\n"
+        sse_body = "".join(f"data: {json.dumps(c)}\n\n" for c in chunks[: 2 if truncate else None])
+        if not truncate:
+            sse_body += "data: [DONE]\n\n"
         return httpx.Response(200, content=sse_body.encode(), headers={"content-type": "text/event-stream"})
 
     return httpx.MockTransport(handler)
@@ -214,11 +216,11 @@ class DeepSeekProviderTests(TestCase):
         self.client.force_login(self.user)
         self.seen = []
 
-    def run_turn(self, status=200):
+    def run_turn(self, status=200, truncate=False):
         import httpx
 
         real = httpx.Client
-        transport = _deepseek_transport(self.seen, status)
+        transport = _deepseek_transport(self.seen, status, truncate)
 
         def client(*args, **kwargs):
             kwargs["transport"] = transport
@@ -261,3 +263,35 @@ class DeepSeekProviderTests(TestCase):
         self.assertIn("event: error", body)
         self.assertIn("no balance", body)
         self.assertEqual(Message.objects.get(conversation=c, role="assistant").stop_reason, "error")
+
+    def test_cut_stream_is_an_error_not_a_finished_reply(self):
+        c, body = self.run_turn(truncate=True)
+        self.assertIn("cut off", body)
+        self.assertEqual(Message.objects.get(conversation=c, role="assistant").stop_reason, "error")
+
+    def test_redirect_is_not_success(self):
+        c, body = self.run_turn(status=307)
+        self.assertIn("event: error", body)
+
+    @mock.patch.dict(os.environ, {"LLM_PROVIDER": "anthropic"})
+    def test_anthropic_pin_hides_and_never_routes_to_deepseek(self):
+        from . import llm
+
+        ids = [m["id"] for m in self.client.get(f"{API}/bootstrap").json()["models"]]
+        self.assertNotIn("deepseek-chat", ids)
+        self.assertEqual(llm.get_provider("deepseek-chat").name, "fake")
+
+    @override_settings(DEEPSEEK_BASE_URL="https://api.evil-deepseek.com/v1")
+    def test_lookalike_host_is_not_called_deepseek(self):
+        note = {m["id"]: m for m in self.client.get(f"{API}/bootstrap").json()["models"]}["deepseek-chat"]["data_note"]
+        self.assertEqual(note, "Processed via api.evil-deepseek.com")
+
+    def test_unavailable_saved_model_is_kept_not_swapped(self):
+        c = Conversation.objects.create(owner=self.user, model="deepseek-chat")
+        with self.settings(DEEPSEEK_API_KEY=""):
+            r = self.client.post(f"{API}/conversations/{c.id}/messages", json.dumps({"content": "Hi"}),
+                                 content_type="application/json")
+        self.assertEqual(r.status_code, 409)
+        c.refresh_from_db()
+        self.assertEqual(c.model, "deepseek-chat")
+        self.assertFalse(c.messages.exists())

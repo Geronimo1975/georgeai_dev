@@ -285,6 +285,13 @@
     els.modelName.textContent = modelInfo(id)?.name || id;
     renderHeader();
   }
+  // PATCHes are chained so an older pick can never land after a newer one.
+  let modelSave = Promise.resolve();
+  function saveModel(convId, model) {
+    modelSave = modelSave.then(() => api(`/conversations/${convId}`, { method: "PATCH", body: { model } })).catch(() => {});
+  }
+  const knownModel = (id) => state.models.some((m) => m.id === id);
+
   // Grouped by vendor once more than one is configured (Claude / DeepSeek).
   els.modelBtn.addEventListener("click", (e) => {
     const items = [], vendors = [...new Set(state.models.map((m) => m.vendor_name || ""))];
@@ -295,7 +302,7 @@
         desc: [m.description, m.data_note, m.live === false ? "Demo mode" : ""].filter(Boolean).join(" · "),
         onClick: () => {
           setModel(m.id);
-          if (state.currentId) api(`/conversations/${state.currentId}`, { method: "PATCH", body: { model: m.id } }).catch(() => {});
+          if (state.currentId) saveModel(state.currentId, m.id);
         },
       }));
     });
@@ -589,7 +596,8 @@
     renderSidebar(); renderHeader();
     if (!id) {
       if (location.pathname !== "/console/new") history.replaceState({}, "", "/console/new");
-      setModel(store.get("gai-model", state.defaultModel));
+      const saved = store.get("gai-model", state.defaultModel);
+      setModel(knownModel(saved) ? saved : state.defaultModel);
       renderThread();
     } else {
       els.main.classList.remove("is-empty");
