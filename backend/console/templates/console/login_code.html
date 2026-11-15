@@ -10,6 +10,7 @@
     {% if notice %}<div class="auth-notice" role="status">{{ notice }}</div>{% endif %}
     <form method="post" class="auth-form" novalidate>
       {% csrf_token %}
+      <input type="hidden" name="a" value="{{ token }}">
       <label class="field">
         <span>{{ t.code_label }}</span>
         <input class="code-input" type="text" name="code" inputmode="numeric" autocomplete="one-time-code"
@@ -19,7 +20,7 @@
       <button class="btn btn-primary btn-block" type="submit">{{ t.verify }}</button>
     </form>
     <div class="auth-links">
-      <form method="post">{% csrf_token %}<button class="link-btn" type="submit" name="resend" value="1">{{ t.resend }}</button></form>
+      <form method="post">{% csrf_token %}<input type="hidden" name="a" value="{{ token }}"><button class="link-btn" type="submit" name="resend" value="1">{{ t.resend }}</button></form>
       <a href="/console/login/">{{ t.other_email }}</a>
     </div>
   </div>

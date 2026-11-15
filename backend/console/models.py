@@ -156,7 +156,7 @@ class LoginCode(models.Model):
     TTL_SECONDS = 600
     MAX_ATTEMPTS = 5
 
-    email = models.EmailField(db_index=True)
+    email = models.EmailField()
     code_hash = models.CharField(max_length=64)
     ip = models.GenericIPAddressField(null=True, blank=True)
     attempts = models.PositiveSmallIntegerField(default=0)
@@ -166,6 +166,10 @@ class LoginCode(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        indexes = [  # the per-email and per-IP rate-limit counts
+            models.Index(fields=["email", "created_at"], name="logincode_email_created"),
+            models.Index(fields=["ip", "created_at"], name="logincode_ip_created"),
+        ]
 
     def __str__(self):
         return f"code for {self.email}"

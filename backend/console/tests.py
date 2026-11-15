@@ -454,38 +454,70 @@ class PasswordlessLoginTests(TestCase):
         from django.core import mail
         return re.search(r"\b(\d{6})\b", mail.outbox[-1].body).group(1)
 
+    def start(self, email, nxt="/console/"):
+        r = self.client.post("/console/login/", {"email": email, "next": nxt})
+        self.assertEqual(r.status_code, 302, r.content[:200])
+        self.assertTrue(r["Location"].startswith("/console/login/code/?a="))
+        return r["Location"].split("?a=", 1)[1]
+
+    def verify(self, token, code):
+        return self.client.post("/console/login/code/", {"a": token, "code": code})
+
     def test_signup_and_login_with_emailed_code(self):
         from django.core import mail
-        r = self.client.post("/console/login/", {"email": "New.Lead@Example.com", "next": "/console/new"})
-        self.assertRedirects(r, "/console/login/code/", fetch_redirect_response=False)
-        self.assertEqual(mail.outbox[-1].to, ["new.lead@example.com"])
+        from .auth_views import code_hash
         from .models import LoginCode
-        self.assertNotIn(self.code_from_mail(), LoginCode.objects.get().code_hash)  # only a hash is stored
-        r = self.client.post("/console/login/code/", {"code": self.code_from_mail()})
+        token = self.start("New.Lead@Example.com", "/console/new")
+        self.assertEqual(mail.outbox[-1].to, ["new.lead@example.com"])
+        code = self.code_from_mail()
+        self.assertEqual(LoginCode.objects.get().code_hash, code_hash("new.lead@example.com", code))  # keyed HMAC
+        r = self.verify(token, code)
         self.assertRedirects(r, "/console/new", fetch_redirect_response=False)
         user = get_user_model().objects.get(email="new.lead@example.com")
         self.assertFalse(user.has_usable_password())
         self.assertEqual(self.client.get("/api/console/v1/bootstrap").status_code, 200)
 
-    def test_wrong_code_attempts_expiry_and_reuse(self):
-        self.client.post("/console/login/", {"email": "a@example.com"})
+    def test_wrong_code_attempts_and_lockout(self):
+        token = self.start("a@example.com")
         good = self.code_from_mail()
         bad = "000000" if good != "000000" else "111111"
         for _ in range(5):
-            self.assertEqual(self.client.post("/console/login/code/", {"code": bad}).status_code, 400)
-        r = self.client.post("/console/login/code/", {"code": good})  # locked after 5 misses
-        self.assertEqual(r.status_code, 400)
+            self.assertEqual(self.verify(token, bad).status_code, 400)
+        self.assertEqual(self.verify(token, good).status_code, 400)  # locked after 5 misses
         self.assertFalse(get_user_model().objects.filter(email="a@example.com").exists())
 
-    def test_rate_limit_and_open_redirect(self):
+    def test_rate_limit_keeps_next_and_blocks_open_redirect(self):
         for _ in range(3):
-            self.client.post("/console/login/", {"email": "b@example.com", "next": "https://evil.example/"})
-        self.assertEqual(self.client.post("/console/login/", {"email": "b@example.com"}).status_code, 429)
-        code = self.code_from_mail()
-        self.client.post("/console/login/", {"email": "c@example.com", "next": "https://evil.example/"})
-        r = self.client.post("/console/login/code/", {"code": self.code_from_mail()})
-        self.assertEqual(r["Location"], "/console/")
-        del code
+            self.start("b@example.com", "https://evil.example/")
+        r = self.client.post("/console/login/", {"email": "b@example.com", "next": "/console/new"})
+        self.assertEqual(r.status_code, 429)
+        self.assertContains(r, 'value="/console/new"', status_code=429)  # destination survives the error
+        token = self.start("c@example.com", "https://evil.example/")
+        self.assertEqual(self.verify(token, self.code_from_mail())["Location"], "/console/")
+
+    def test_failed_delivery_keeps_previous_code(self):
+        token = self.start("d@example.com")
+        first = self.code_from_mail()
+        with mock.patch("console.auth_views.send_mail", side_effect=OSError("smtp down")):
+            r = self.client.post("/console/login/code/", {"a": token, "resend": "1"})
+        self.assertEqual(r.status_code, 503)
+        self.assertRedirects(self.verify(token, first), "/console/", fetch_redirect_response=False)
+
+    def test_tampered_token_and_ambiguous_case(self):
+        self.assertRedirects(self.client.get("/console/login/code/?a=forged"), "/console/login/",
+                             fetch_redirect_response=False)
+        User = get_user_model()
+        User.objects.create_user(email="Mixed@example.com", password="x-12345678")
+        User.objects.create_user(email="mixed@example.com", password="x-12345678")
+        token = self.start("mixed@example.com")
+        self.assertEqual(self.verify(token, self.code_from_mail()).status_code, 400)
+
+    @override_settings(DEBUG=False, EMAIL_BACKEND="django.core.mail.backends.console.EmailBackend")
+    def test_no_smtp_in_production_refuses_to_issue(self):
+        r = self.client.post("/console/login/", {"email": "e@example.com"})
+        self.assertEqual(r.status_code, 503)
+        from .models import LoginCode
+        self.assertFalse(LoginCode.objects.exists())
 
     def test_landing_and_signin_language_by_host(self):
         de = self.client.get("/", HTTP_HOST="georgeai.de")
@@ -495,3 +527,4 @@ class PasswordlessLoginTests(TestCase):
         self.assertContains(en, 'lang="en"')
         self.assertContains(en, "Open the console")
         self.assertContains(self.client.get("/console/login/", HTTP_HOST="georgeai.de"), "Code per E-Mail senden")
+
