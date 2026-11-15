@@ -21,7 +21,8 @@
         radial-gradient(circle at 1px 1px, rgba(2,6,10,.07) 1px, transparent 0) 0 0 / 18px 18px, var(--canvas); }
   .lp a { text-decoration: none; }
   .wrap { width: 100%; max-width: 1180px; margin: 0 auto; padding: 0 24px; }
-  .mono { font-family: var(--mono); letter-spacing: var(--mono-ls); }
+  .mono { font-family: var(--mono); letter-spacing: 0; }
+  .label.mono { letter-spacing: var(--mono-ls); } /* wide tracking only on short uppercase labels */
 
   /* top bar */
   .lp-top { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px); background: color-mix(in srgb, var(--canvas) 78%, transparent); border-bottom: 1px solid transparent; }
@@ -126,7 +127,7 @@
     .wrap { padding: 0 16px; }
     .lp-top nav a:not(.btn) { display: none; }
     .lp-hero { padding-top: 36px; }
-    .badge { font-size: 11px; letter-spacing: .03em; }
+    .badge { font-size: 11px; }
     .lp-composer .go span { display: none; }
   }
   @media (prefers-reduced-motion: reduce) { .hub .orbit { animation: none; } .turn .role { border-right: 0; } }
