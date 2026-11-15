@@ -4,13 +4,16 @@ import os
 from unittest import mock
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from .models import Conversation, Message
 
 API = "/api/console/v1"
 
 
+# CI runs with DEBUG=False, which turns SECURE_SSL_REDIRECT on and 301s every
+# plain-http test request (same reason as accounts/tests.py).
+@override_settings(SECURE_SSL_REDIRECT=False)
 @mock.patch.dict(os.environ, {"LLM_PROVIDER": "fake"})
 @mock.patch("console.llm.time.sleep", lambda s: None)
 class ConsoleApiTests(TestCase):
